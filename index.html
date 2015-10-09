@@ -5,7 +5,7 @@
   </head> 
   <body>
     <script src="traceur.js"></script>
-    <script src="https://google.github.io/traceur-compiler/src/bootstrap.js"></script>
+    <script src="bootstrap.js"></script>
     <script type="module">
       class Greeter {
         constructor(message) {
@@ -17,8 +17,7 @@
           element.innerHTML = this.message;
         }
       };
-
-      var greeter = new Greeter('Hello, world!');
+      var greeter = new Greeter('Hello, Awy!');
       greeter.greet();
     </script>
     <h1 id="message"></h1>
