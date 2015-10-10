@@ -2,23 +2,21 @@
 <html> 
   <head>
     <title>Hello World!</title>
+    <!-- https://google.github.io/traceur-compiler/bin/traceur.js -->
+    <script src="lib/traceur.js"></script>
+    <!-- https://github.com/ModuleLoader/es6-module-loader/blob/master/dist/es6-module-loader-dev.src.js -->
+    <script src="lib/es6-loader.js"></script>
+    <!-- https://github.com/systemjs/systemjs/blob/master/dist/system.src.js 
+    <script src="lib/system.js"></script> -->
   </head> 
   <body>
-    <script src="traceur.js"></script>
-    <script src="bootstrap.js"></script>
     <script type="module">
-      class Greeter {
-        constructor(message) {
-          this.message = message;
-        }
-
-        greet() {
-          var element = document.querySelector('#message');
-          element.innerHTML = this.message;
-        }
-      };
-      var greeter = new Greeter('Hello, Awy!');
-      greeter.greet();
+        System.paths['app/*'] = '/app/*.js';
+        //System.paths['angular2/*'] = 'node_modules/angular2/es6/dev/*.js';
+        System.import('app/bootstrap').then(function(awy) {
+            var app = new awy.App('Hello, Awy!');
+            app.run();
+        });
     </script>
     <h1 id="message"></h1>
   </body> 
