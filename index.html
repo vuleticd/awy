@@ -2,22 +2,20 @@
 <html> 
   <head>
     <title>Hello World!</title>
-    <!-- https://google.github.io/traceur-compiler/bin/traceur.js -->
-    <script src="lib/traceur.js"></script>
     <!-- https://github.com/ModuleLoader/es6-module-loader/blob/master/dist/es6-module-loader-dev.src.js -->
-    <script src="lib/es6-loader.js"></script>
-    <!-- https://github.com/systemjs/systemjs/blob/master/dist/system.src.js 
-    <script src="lib/system.js"></script> -->
+    <script src="lib/es6-loader.js"></script>  
+    <script src="config.js"></script>
+    <!-- https://github.com/systemjs/systemjs/blob/master/dist/system.src.js  
+    <script src="lib/system.js"></script>  -->
   </head> 
-  <body>
+  <body class="container">
     <script type="module">
-        System.paths['app/*'] = '/app/*.js';
-        //System.paths['angular2/*'] = 'node_modules/angular2/es6/dev/*.js';
-        System.import('app/bootstrap').then(function(awy) {
+        System.import('bootstrap').then(function(awy) {
             var app = new awy.App('Hello, Awy!');
             app.run();
         });
     </script>
+
     <h1 id="message"></h1>
   </body> 
 </html>
