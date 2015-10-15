@@ -6,8 +6,7 @@ System.paths['*'] = '/app/*.js';
 System.traceurOptions = {
     annotations: true,
     types: true,
-    memberVariables: true,
-    debug: true
+    memberVariables: true
 };
 
 /*
