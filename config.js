@@ -4,7 +4,7 @@ System.paths['traceur'] = '/lib/traceur.js';
 System.paths['*'] = '/app/*.js';
 
 System.traceurOptions = {
-    annotations: true,
+    //annotations: true,
     types: true,
     memberVariables: true
 };

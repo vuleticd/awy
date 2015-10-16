@@ -5,15 +5,12 @@
     <!-- https://github.com/ModuleLoader/es6-module-loader/blob/master/dist/es6-module-loader-dev.src.js -->
     <script src="lib/es6-loader.js"></script>  
     <script src="config.js"></script>
-    <!-- https://github.com/systemjs/systemjs/blob/master/dist/system.src.js  
+    <!-- https://github.com/systemjs/systemjs/blob/master/dist/system.src.js   
     <script src="lib/system.js"></script>  -->
   </head> 
-  <body class="container">
+  <body class="container" awy-app>
     <script type="module">
-        System.import('bootstrap').then(function(awy) {
-            var app = new awy.App('Hello, Awy!');
-            app.run();
-        });
+        System.import('bootstrap');
     </script>
 
     <h1 id="message"></h1>
