@@ -8,8 +8,3 @@ System.traceurOptions = {
     types: true,
     memberVariables: true
 };
-
-/*
-System.import('app/bootstrap');
-*/
-
