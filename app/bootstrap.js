@@ -4,7 +4,7 @@ import Util from 'core/model/util';
 let app = null;
 
 class Bootstrap {
-    constructor(message) {
+    constructor() {
       this.logger = Logger.getInstance('Bootstrap');
       this.util = Util;
       this.isInitialized = false;

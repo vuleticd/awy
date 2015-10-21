@@ -8,3 +8,6 @@ System.traceurOptions = {
     types: true,
     memberVariables: true
 };
+
+System.trace = true;
+//System.execute = false;
