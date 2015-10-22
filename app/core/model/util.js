@@ -1,4 +1,7 @@
 class Util {
+  /* 
+   * window.document.readyState implementation
+   */
   static ready(global) {
     return new Promise((resolve, reject) => {
       if (global.document.readyState === 'complete') {
@@ -14,6 +17,16 @@ class Util {
         resolve(global.document);
       }
     });
+  }
+  /* 
+   * return all object properties and their values
+   */
+  static entries(obj) {
+    let result = [];
+    for (let key of Object.keys(obj)) {
+      result.push( [key, obj[key]] );
+    }
+      return result;
   }
 }
 

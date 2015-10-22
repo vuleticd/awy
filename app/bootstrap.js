@@ -1,4 +1,4 @@
-import Logger from 'log/model/logger';
+import Logger from 'core/model/logger';
 import Util from 'core/model/util';
 
 let app = null;
@@ -18,7 +18,7 @@ class Bootstrap {
       this.isInitialized = true;
     }
 
-    run() {
+    run(area) {
       return this.util.ready(window).then(doc => {
         this.initialize();
         let appHost = doc.querySelectorAll('[awy-app]');
@@ -26,12 +26,11 @@ class Bootstrap {
           System.import('core/model/app').then(m => {
             app = new m.App();
             app.host = appHost[i];
-            app.run();
+            app.run(area);
           });
         }
       });
     }
 };
 
-var boot = new Bootstrap();
-boot.run();
+export default Bootstrap;

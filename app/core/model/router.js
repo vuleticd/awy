@@ -1,4 +1,4 @@
-import Logger from 'log/model/logger';
+import Logger from 'core/model/logger';
 
 let instance = null;
 let singletonEnforcer = {};
@@ -13,9 +13,6 @@ class Router {
         this.mode = null;
         this.root = '/';
         this.current = null;
-        window.addEventListener(document.body, 'click', function() {
-            console.log('clicked');
-        });
     }
 
     static getInstance(): Router {

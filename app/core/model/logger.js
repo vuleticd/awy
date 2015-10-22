@@ -63,7 +63,7 @@ class Logger {
 
 USAGE
 
-import Logger from 'log/model/logger';  // IMPORT/USE
+import Logger from 'core/model/logger';  // IMPORT/USE
 
 this.logger = Logger.getInstance('app');  // INIT
 
