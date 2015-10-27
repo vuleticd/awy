@@ -11,3 +11,19 @@ System.traceurOptions = {
 
 System.trace = true;
 //System.execute = false;
+
+var modules = false;
+System.import('modules').then(m => { modules = m.default; });
+var systemNormalize = System.normalize;
+// override the normalization function
+System.normalize = function(name, parentName, parentAddress) {
+	//console.log(modules); 
+	//console.log(name + "++" + parentName + "++" + parentAddress);
+	return systemNormalize.call(this, name, parentName, parentAddress);
+	/*
+	if (name == 'my/custom/rule')
+	  return 'custom/name';
+	else
+	  return systemNormalize.call(this, name, parentName, parentAddress);
+	*/
+}

@@ -1,3 +1,4 @@
+import {Aobject} from 'core/model/aobject';
 /**
 * @todo
 * - implement global configuration for logging per enviroment
@@ -6,15 +7,19 @@
 let instances = {};
 let singletonEnforcer = {};
 
-class Logger {
+class Core_Model_Logger extends Aobject {
   constructor(id: string, key: Object) {
+    super();
+    /*
     if (key !== singletonEnforcer) {
       throw new Error('You cannot instantiate "Logger". Use the "getInstance" API instead.');
     }
-    this.id = id;
+    */
+    this.id = id || 'Default';
     this.slice = Array.prototype.slice;
     this.levels = {none: 0, error: 1, warn: 2, info: 3, debug: 4};
     this._level = this.levels.debug;
+    return instances[this.id] || (instances[this.id] = this);
   }
 
   setLevel(level: number): void {
@@ -22,8 +27,8 @@ class Logger {
   }
 
 
-  static getInstance(id: string): Logger {
-    return instances[id] || (instances[id] = new Logger(id, singletonEnforcer));
+  static getInstance(id: string): Core_Model_Logger {
+    return instances[id] || (instances[id] = new Core_Model_Logger(id, singletonEnforcer));
   }
 
   log(level, args) {
@@ -65,13 +70,25 @@ USAGE
 
 import Logger from 'core/model/logger';  // IMPORT/USE
 
-this.logger = Logger.getInstance('app');  // INIT
+this.logger = Aobject.i(Logger, 'Bootstrap');  // INIT
 
 this.logger.setLevel(0-4);  // SET LOGGING LEVEL FOR INSTANCE SCOPE 
 
 this.logger.log('error',this.message); //  LOG
 this.logger.error(this.message);  // OR LOG
 
+Logger.i(false, 'Bootstrap'); // RETREIVE Bootstrap SINGLETON INSTANCE
+Aobject.i(Logger, 'Bootstrap');  // RETREIVE Bootstrap SINGLETON INSTANCE
+
+Logger.i(true, 'Bootstrap');  //  LAUNCH NEW Bootstrap LOGGER INSTANCE
+
+Aobject.i(Logger, 'Bootstrap1') // LAUNCH NEW Bootstrap1 LOGGER 
+
+
+Aobject.i(Logger);  // INIT Default LOGGER
+Logger.i(); // RETREIVE Default LOGGER INSTANCE
+
+
 */
 
-export default Logger
+export default Core_Model_Logger

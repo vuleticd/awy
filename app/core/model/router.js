@@ -1,25 +1,29 @@
+import {Aobject} from 'core/model/aobject';
 import Logger from 'core/model/logger';
 
 let instance = null;
 let singletonEnforcer = {};
 
-class Router {
+class Core_Model_Router extends Aobject {
     constructor(key: Object) {
+        super();
+        /*
         if (key !== singletonEnforcer) {
           throw new Error('You cannot instantiate "Router". Use the "getInstance" API instead.');
         }
-        this.logger = Logger.getInstance('Router');
+        */
+        this.logger = Aobject.i(Logger, 'Router');
         this.routes = [];
         this.mode = null;
         this.root = '/';
         this.current = null;
     }
 
-    static getInstance(): Router {
-        return instance || (instance = new Router(singletonEnforcer));
+    static getInstance(): Core_Model_Router {
+        return instance || (instance = new Core_Model_Router(singletonEnforcer));
     }
 
-    config(options): Router {
+    config(options): Core_Model_Router {
         this.mode = options && options.mode && options.mode == 'history' 
                     && !!(history.pushState) ? 'history' : 'hash';
         this.root = options && options.root ? '/' + this.clearSlashes(options.root) + '/' : '/';
@@ -43,7 +47,7 @@ class Router {
         return path.toString().replace(/\/$/, '').replace(/^\//, '');
     }
 
-    add(re, handler): Router {
+    add(re, handler): Core_Model_Router {
         if(typeof re == 'function') {
             handler = re;
             re = '';
@@ -52,7 +56,7 @@ class Router {
         return this;
     }
 
-    remove(param): Router {
+    remove(param): Core_Model_Router {
         for(var i=0, r; i<this.routes.length, r = this.routes[i]; i++) {
             if(r.handler === param || r.re.toString() === param.toString()) {
                 this.routes.splice(i, 1); 
@@ -62,14 +66,14 @@ class Router {
         return this;
     }
 
-    flush(): Router {
+    flush(): Core_Model_Router {
         this.routes = [];
         this.mode = null;
         this.root = '/';
         return this;
     }
 
-    check(f): Router {
+    check(f): Core_Model_Router {
         var fragment = f || this.getFragment();
         for(var i=0; i<this.routes.length; i++) {
             var match = fragment.match(this.routes[i].re);
@@ -82,7 +86,7 @@ class Router {
         return this;
     }
 
-    listen(): Router {
+    listen(): Core_Model_Router {
         //this.current = this.getFragment();
         clearInterval(this.interval);
         this.interval = setInterval(this.loop.bind(this), 50);
@@ -96,7 +100,7 @@ class Router {
         } 
     }
 
-    navigate(path): Router {
+    navigate(path): Core_Model_Router {
         path = path ? path : '';
         if(this.mode === 'history') {
             history.pushState(null, null, this.root + this.clearSlashes(path));
@@ -113,7 +117,7 @@ USAGE
 
 import Router from 'core/model/router';  // IMPORT/USE
 
-this.router = Router.getInstance();  // INIT
+this.router = Aobject.i(Router);  // INIT
 
 this.router.config({ mode: 'history'}); // CONFIGURE
 
@@ -125,4 +129,4 @@ this.router.navigate(path);  // RUN TIME REDIRECTION
 
 */
 
-export default Router
+export default Core_Model_Router

@@ -1,19 +1,21 @@
+import {Aobject,ObjectRegistry} from 'core/model/aobject';
 import Modules from 'modules';
 import Logger from 'core/model/logger';
 import Util from 'core/model/util';
 
-class Module {
+class Core_Model_Module extends Aobject {
 	constructor(key: Object) {
-        this.logger = Logger.getInstance('Module');
+		super();
+        this.logger = Aobject.i(Logger, 'Module');
         this.config = [];
     }
 
 	bootstrap() {
-
+		this.onBeforeBootstrap();
 	}
 
 	scan() {
-		let modulessDefined = Util.entries(Modules);
+		let modulessDefined = Util.i().entries(Modules);
 		return Promise.all(modulessDefined.map(function([key, value]) {
 			if (value.enabled) {
 				return System.import(key + '/etc/config').then(m => {
@@ -27,6 +29,14 @@ class Module {
 	get configuration() {
 		return this.config;
 	}
+
+	processOverrides() {
+		ObjectRegistry.overrideClass('one','two');
+	}
+
+	onBeforeBootstrap() {
+		this.processOverrides();
+	}
 }
 
-export default Module
+export default Core_Model_Module

@@ -1,13 +1,16 @@
+import {Aobject} from 'core/model/aobject';
+import Module from 'core/model/module';
 import Logger from 'core/model/logger';
 import Router from 'core/model/router';
-import Module from 'core/model/module';
 
-export class App {
+
+export class Core_Model_App extends Aobject {
 	constructor() {
-      this.logger = Logger.getInstance('App');
-      this.router = Router.getInstance();
+      super();
+      this.logger = Aobject.i(Logger, 'App');
+      this.router = Aobject.i(Router);
       this.router.config({ mode: 'history'});
-      this.moduleRegistry = new Module();
+      this.moduleRegistry = Aobject.i(Module);
       this.isInitialized = false;
       this.host = null;
     }
@@ -53,6 +56,9 @@ export class App {
     }
     */
     return this.moduleRegistry.scan();
+    /*
+    this.moduleRegistry->processRequires();
+    */
   }
 
   initConfig() {

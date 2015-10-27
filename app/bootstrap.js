@@ -1,12 +1,13 @@
+import {Aobject} from 'core/model/aobject';
 import Logger from 'core/model/logger';
 import Util from 'core/model/util';
 
 let app = null;
 
-class Bootstrap {
+class Bootstrap extends Aobject {
     constructor() {
-      this.logger = Logger.getInstance('Bootstrap');
-      this.util = Util;
+      super();
+      this.dbg = Aobject.i(Logger, 'Bootstrap');
       this.isInitialized = false;
     }
 
@@ -18,13 +19,13 @@ class Bootstrap {
       this.isInitialized = true;
     }
 
-    run(area) {
-      return this.util.ready(window).then(doc => {
+    run(area) {    
+      return Util.i().ready(window).then(doc => {
         this.initialize();
         let appHost = doc.querySelectorAll('[awy-app]');
         for (var i = 0, ii = appHost.length; i < ii; ++i) {
           System.import('core/model/app').then(m => {
-            app = new m.App();
+            app = new m.Core_Model_App();
             app.host = appHost[i];
             app.run(area);
           });
