@@ -30,6 +30,44 @@ class Core_Model_Util extends Aobject {
     }
       return result;
   }
+  /*
+   * Merges any number of objects / parameters recursively
+   */
+  objectMerge(...rest) {
+      let base = rest.shift();
+      for (let append of rest) {
+        // base is not mergable, replace instead with last argument passed
+        if (typeof base !== 'object') {
+          return append;
+        }
+        // both base and argument are arrays
+        if (Array.isArray(append) && Array.isArray(base)) {
+            for (let val of append) {
+              if (this.contains(base, val)) {
+                  base[base.indexOf(val)] = val;
+                  append.splice(append.indexOf(val), 1);
+              }
+            }
+            base.push(...append);
+        }
+        // both base and argument are objects
+        let key;
+        for (key in append) {
+            if (key in base) {
+              base[key] = this.objectMerge(base[key], append[key]);
+            } else {
+              Object.assign(base,append);
+            }
+        }
+      }
+      return base;
+  }
+  /* 
+   * return true/false if value is found in array
+   */
+  contains(haystack, needle) {
+    return !!~haystack.indexOf(needle);
+  }
 }
 
 export default Core_Model_Util
