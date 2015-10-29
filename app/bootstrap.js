@@ -12,6 +12,7 @@ class Bootstrap extends Aobject {
     }
 
     initialize(): void {
+      this.Core_Helper_View; // __call implementation
       if (this.isInitialized) {
         return;
       }
@@ -19,7 +20,7 @@ class Bootstrap extends Aobject {
       this.isInitialized = true;
     }
 
-    run(area) {    
+    run(area) {
       return Util.i().ready(window).then(doc => {
         this.initialize();
         let appHost = doc.querySelectorAll('[awy-app]');

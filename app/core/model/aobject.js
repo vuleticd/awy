@@ -1,4 +1,15 @@
-export class Aobject {
+var handler = {
+    get: function(target, name, receiver){
+        console.log(target);
+        console.log(name);
+        //console.log(receiver);
+    }
+};
+
+function Proto() { }
+Proto.prototype = new Proxy({}, handler);
+
+export class Aobject extends Proto {
     /**
      * get singleton of TestClass which extends the Object | TestClass::i();
      * get singleton of $obj | Aobject.i($obj);
@@ -50,6 +61,7 @@ export class ObjectRegistry extends Aobject {
         //console.log('overrideClass');
     }
 }
+
 
 /*
 
