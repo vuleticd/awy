@@ -1,18 +1,16 @@
 import {Aobject} from 'core/model/aobject';
-import Logger from 'core/model/logger';
-import Util from 'core/model/util';
 
 let app = null;
 
 class Bootstrap extends Aobject {
     constructor() {
       super();
-      this.dbg = Aobject.i(Logger, 'Bootstrap');
+      this.dbg = Aobject.i('Core_Model_Logger', 'Bootstrap');
+      this.dbg.then(debug => { debug.warn('sdsdsdsds'); });
       this.isInitialized = false;
     }
 
     initialize(): void {
-      this.Core_Helper_View; // __call implementation
       if (this.isInitialized) {
         return;
       }
@@ -21,16 +19,25 @@ class Bootstrap extends Aobject {
     }
 
     run(area) {
-      return Util.i().ready(window).then(doc => {
-        this.initialize();
-        let appHost = doc.querySelectorAll('[awy-app]');
-        for (var i = 0, ii = appHost.length; i < ii; ++i) {
-          System.import('core/model/app').then(m => {
-            app = new m.Core_Model_App();
-            app.host = appHost[i];
-            app.run(area);
-          });
-        }
+      let appHost = false;
+      this.Core_Model_Util.then(util => {
+          return util.ready(window);
+      }, error => {
+          console.log('Error in On Ready');
+          console.log(error);
+      }).then(doc => {
+          this.initialize();
+          appHost = doc.querySelectorAll('[awy-app]');
+          return this.Core_Model_App;
+      }, error => {
+          console.log('Error in Application Initialization');
+          console.log(error);
+      }).then(app => {
+          app.host = appHost[0];
+          return app.run(area);
+      }, error => {
+          console.log('Error in Application Execution');
+          console.log(error);
       });
     }
 };

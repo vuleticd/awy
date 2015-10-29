@@ -1,4 +1,5 @@
 import {Aobject} from 'core/model/aobject';
+/*
 import Module from 'core/model/module';
 import Logger from 'core/model/logger';
 import Router from 'core/model/router';
@@ -6,45 +7,51 @@ import Request from 'core/model/router/request';
 import Response from 'core/model/router/response';
 import Config from 'core/model/config';
 import Layout from 'core/model/layout';
+*/
 
-
-export class Core_Model_App extends Aobject {
+class Core_Model_App extends Aobject {
 	constructor() {
       super();
+      /*
       this.logger = Aobject.i(Logger, 'App');
-      this.router = Aobject.i(Router);
-      this.router.config({ mode: 'history'});
+      this.Core_Model_Router.then(router => {
+        router.config({ mode: 'history'});
+      });// = Aobject.i(Router);
+      
+      //this.router.config({ mode: 'history'});
       this.moduleRegistry = Aobject.i(Module);
+      */
       this.isInitialized = false;
       this.host = null;
     }
 
 	run(area='frontend') {
-    this.init(area).then(m => {
-      // bootstrap modules
-      this.moduleRegistry.bootstrap();
-      /*
-        // run module migration scripts if necessary
-        $this->BMigrate->migrateModules(true);
-        // dispatch requested controller action
-        $this->BRouting->dispatch();
-        // If session variables were changed, update session
-        $this->BSession->close();
-      */
-      this.logger.info(this.moduleRegistry.configuration);
-      this.logger.info(area);
-      this.router.listen();
-    }, reason => {
-      //console.log(reason);
-      Layout.i().addView('core/errors', {template: '/app/core/views/core/errors.html'});
-      Layout.i().rootView = 'core/errors';
-      Layout.i().view('core/errors').set('errors', reason);
-      Response.i().output();
-      //console.log(Layout.i().view('core/errors').set('errors', reason));
-      /*
-      $this->BResponse->output();
-      */
-    });
+    
+    // this.init(area).then(m => {
+    //   // bootstrap modules
+    //   this.moduleRegistry.bootstrap();
+    //   /*
+    //     // run module migration scripts if necessary
+    //     $this->BMigrate->migrateModules(true);
+    //     // dispatch requested controller action
+    //     $this->BRouting->dispatch();
+    //     // If session variables were changed, update session
+    //     $this->BSession->close();
+    //   */
+    //   this.logger.info(this.moduleRegistry.configuration);
+    //   this.logger.info(area);
+    //   this.router.listen();
+    // }, reason => {
+    //   //console.log(reason);
+    //   Layout.i().addView('core/errors', {template: '/app/core/views/core/errors.html'});
+    //   Layout.i().rootView = 'core/errors';
+    //   Layout.i().view('core/errors').set('errors', reason);
+    //   Response.i().output();
+    //   //console.log(Layout.i().view('core/errors').set('errors', reason));
+    //   /*
+    //   $this->BResponse->output();
+    //   */
+    // });
     //this.logger.info(System.loads);
 		
 	}
@@ -112,3 +119,5 @@ export class Core_Model_App extends Aobject {
     }.bind(this));
   }
 }
+
+export default Core_Model_App
