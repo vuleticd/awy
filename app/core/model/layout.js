@@ -33,7 +33,7 @@ class Core_Model_Layout extends Aobject {
     }
 
     get rootView() {
-        return this._rootViewName ? this.getView(this._rootViewName) : null;
+        return this._rootViewName ? this.view(this._rootViewName) : null;
     }
 
     view(viewName) {
@@ -66,6 +66,26 @@ class Core_Model_Layout extends Aobject {
         }
 
         return this;
+    }
+
+    render(routeName = null, args = {}) {
+        //$this->dispatch('render:before', $routeName, $args);
+
+        //let rootView = this.rootView;
+        //BDebug::debug('LAYOUT.RENDER ' . var_export(this.rootView, 1));
+        if (!this.rootView) {
+            //BDebug::error($this->BLocale->_('Main view not found: %s', $this->_rootViewName));
+        }
+        this.rootView.setParam('raw_text', 'BUG')
+        //console.log(this.rootView.setParam('raw_text', 'BUG'));
+        let result = this.rootView.render(args);
+
+        //$args['output'] =& $result;
+        //$this->dispatch('render:after', $routeName, $args);
+
+        //$this->BSession->dirty(false); // disallow session change during layout render
+
+        return result;
     }
 }
 

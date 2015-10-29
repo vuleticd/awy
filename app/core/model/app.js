@@ -3,6 +3,7 @@ import Module from 'core/model/module';
 import Logger from 'core/model/logger';
 import Router from 'core/model/router';
 import Request from 'core/model/router/request';
+import Response from 'core/model/router/response';
 import Config from 'core/model/config';
 import Layout from 'core/model/layout';
 
@@ -38,6 +39,7 @@ export class Core_Model_App extends Aobject {
       Layout.i().addView('core/errors', {template: '/app/core/views/core/errors.html'});
       Layout.i().rootView = 'core/errors';
       Layout.i().view('core/errors').set('errors', reason);
+      Response.i().output();
       //console.log(Layout.i().view('core/errors').set('errors', reason));
       /*
       $this->BResponse->output();
@@ -99,7 +101,7 @@ export class Core_Model_App extends Aobject {
       config.add(localConfig, true);
 
       let errors = {};
-      //errors.permissions = ['test'];
+      errors.permissions = ['test'];
       if (Object.keys(errors).length) {
             reject(errors);
             return;
