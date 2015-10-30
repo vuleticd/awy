@@ -1,8 +1,6 @@
-import {Aobject} from 'core/model/aobject';
-import Config from 'core/model/config';
 import Layout from 'core/model/layout';
 
-class Core_Model_Router_Response extends Aobject {
+class Core_Model_Router_Response extends Class {
 	constructor() {
 		super();
         this._contentType = 'text/html';
@@ -29,8 +27,11 @@ class Core_Model_Router_Response extends Aobject {
                 this._content = this._content;// is_string($this->_content) ? $this->_content : $this->BUtil->toJson($this->_content);
             }
         } else if (null === this._content) {
-            this._content = Layout.i().render();
-            console.log(this._content);
+            Class.i('Core_Model_Layout').then(l => {
+                this._content = l.render();
+                console.log(this._content);
+            });
+            //this._content = Layout.i().render();
         }
         /*
         $this->BEvents->fire(__METHOD__ . ':before', ['content' => &$this->_content]);

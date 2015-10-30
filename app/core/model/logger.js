@@ -1,4 +1,3 @@
-import {Aobject} from 'core/model/aobject';
 /**
 * @todo
 * - implement global configuration for logging per enviroment
@@ -7,7 +6,7 @@ import {Aobject} from 'core/model/aobject';
 let instances = {};
 let singletonEnforcer = {};
 
-class Core_Model_Logger extends Aobject {
+class Core_Model_Logger extends Class {
   constructor(id: string, key: Object) {
     super();
     /*
@@ -70,7 +69,7 @@ USAGE
 
 import Logger from 'core/model/logger';  // IMPORT/USE
 
-this.logger = Aobject.i(Logger, 'Bootstrap');  // INIT
+this.logger = Class.i(Logger, 'Bootstrap');  // INIT
 
 this.logger.setLevel(0-4);  // SET LOGGING LEVEL FOR INSTANCE SCOPE 
 
@@ -78,14 +77,14 @@ this.logger.log('error',this.message); //  LOG
 this.logger.error(this.message);  // OR LOG
 
 Logger.i(false, 'Bootstrap'); // RETREIVE Bootstrap SINGLETON INSTANCE
-Aobject.i(Logger, 'Bootstrap');  // RETREIVE Bootstrap SINGLETON INSTANCE
+Class.i(Logger, 'Bootstrap');  // RETREIVE Bootstrap SINGLETON INSTANCE
 
 Logger.i(true, 'Bootstrap');  //  LAUNCH NEW Bootstrap LOGGER INSTANCE
 
-Aobject.i(Logger, 'Bootstrap1') // LAUNCH NEW Bootstrap1 LOGGER 
+Class.i(Logger, 'Bootstrap1') // LAUNCH NEW Bootstrap1 LOGGER 
 
 
-Aobject.i(Logger);  // INIT Default LOGGER
+Class.i(Logger);  // INIT Default LOGGER
 Logger.i(); // RETREIVE Default LOGGER INSTANCE
 
 

@@ -10,6 +10,12 @@ System.traceurOptions = {
 };
 
 System.trace = true;
+
+//import {Aobject} from 'core/model/aobject';
+var Class = {};
+var ClassRegistry = {};
+//Base.Class = Aobject;
+
 //System.execute = false;
 /*
 var modules = false;

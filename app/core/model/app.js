@@ -1,48 +1,54 @@
-import {Aobject} from 'core/model/aobject';
-/*
-import Module from 'core/model/module';
-import Logger from 'core/model/logger';
-import Router from 'core/model/router';
-import Request from 'core/model/router/request';
-import Response from 'core/model/router/response';
-import Config from 'core/model/config';
-import Layout from 'core/model/layout';
-*/
-
-class Core_Model_App extends Aobject {
+class Core_Model_App extends Class {
 	constructor() {
       super();
-      /*
-      this.logger = Aobject.i(Logger, 'App');
-      this.Core_Model_Router.then(router => {
+      this.logger = Class.i('Core_Model_Logger', 'App'); 
+      this.router = this.Core_Model_Router;
+      this.router.then(router => {
         router.config({ mode: 'history'});
-      });// = Aobject.i(Router);
-      
-      //this.router.config({ mode: 'history'});
-      this.moduleRegistry = Aobject.i(Module);
-      */
+      });
       this.isInitialized = false;
       this.host = null;
     }
 
-	run(area='frontend') {
-    
-    // this.init(area).then(m => {
-    //   // bootstrap modules
-    //   this.moduleRegistry.bootstrap();
-    //   /*
-    //     // run module migration scripts if necessary
-    //     $this->BMigrate->migrateModules(true);
-    //     // dispatch requested controller action
-    //     $this->BRouting->dispatch();
-    //     // If session variables were changed, update session
-    //     $this->BSession->close();
-    //   */
-    //   this.logger.info(this.moduleRegistry.configuration);
-    //   this.logger.info(area);
-    //   this.router.listen();
-    // }, reason => {
-    //   //console.log(reason);
+	run(area='frontend') {    
+    this.init(area).then(values => {
+        let config = values[0];
+        let moduleRegistry = values[1];
+        let router = values[2];
+        let logger = values[3];
+        console.log(values);
+        // bootstrap modules
+        moduleRegistry.bootstrap();
+       /*
+         // run module migration scripts if necessary
+         $this->BMigrate->migrateModules(true);
+         // dispatch requested controller action
+         $this->BRouting->dispatch();
+         // If session variables were changed, update session
+         $this->BSession->close();
+       */
+       logger.info(moduleRegistry.configuration);
+       logger.info(area);
+       router.listen();
+    }, reason => {
+       this.Core_Model_Layout.then(layout => {
+          let l = layout.addView('core/errors', {template: '/app/core/views/core/errors.html'})
+          
+          l.then(l => {
+              //console.log(l);
+              layout.rootView = 'core/errors';
+              layout.view('core/errors').set('errors', reason);
+              this.Core_Model_Router_Response.then(r => {
+                r.output();
+              });
+          });
+          
+          //layout.rootView = 'core/errors';
+          //layout.view('core/errors').set('errors', reason);
+          //console.log(layout);
+       }).catch(err => {
+          console.log(err);
+       });
     //   Layout.i().addView('core/errors', {template: '/app/core/views/core/errors.html'});
     //   Layout.i().rootView = 'core/errors';
     //   Layout.i().view('core/errors').set('errors', reason);
@@ -51,7 +57,7 @@ class Core_Model_App extends Aobject {
     //   /*
     //   $this->BResponse->output();
     //   */
-    // });
+    });
     //this.logger.info(System.loads);
 		
 	}
@@ -59,64 +65,87 @@ class Core_Model_App extends Aobject {
   init(area) {
     return Promise.all([
       this.initConfig(area), 
-      this.initModules(area)
+      this.initModules(area),
+      this.router,
+      this.logger
     ]);
   }
 
   initModules(area) {
-    let config = Config.i(); 
-    if (config.get('install_status') === 'installed') {
+    return Promise.all([
+      this.Core_Model_Config, 
+      this.Core_Model_Router_Request,
+      this.Core_Model_Module,
+      this.logger
+    ]).then(val => {
+      let config =val[0];
+      let req =val[1];
+      let moduleRegistry =val[2];
+      let logger =val[3];
+      if (config.get('install_status') === 'installed') {
         //$runLevels = [area => 'REQUIRED'];
-    } else {
-        config.set('module_run_levels', []);
-        /*
-        $runLevels = [
-            'install' => 'REQUIRED',
-        ];
-        */
-        area = 'install';
-        Request.i().area = area;
-        //console.log(Request.i());
-    }
+      } else {
+          config.set('module_run_levels', []);
+          /*
+          $runLevels = [
+              'install' => 'REQUIRED',
+          ];
+          */
+          area = 'install';
+          req.area = area;
+          //console.log(Request.i());
+      }
+      let modules = moduleRegistry.scan();
+      return Promise.resolve(modules);
+    }).catch(err => {
+      return Promise.reject(err);
+    });
     
-    return this.moduleRegistry.scan();
     /*
     this.moduleRegistry->processRequires();
     */
   }
 
+  /*
+   * return Core_Model_Config instance || errors {}
+   */
   initConfig(area) {
-    return new Promise(function(res, reject) {
-      let req = Request.i();
-      let config = Config.i();
+    return Promise.all([
+      this.Core_Model_Config, 
+      this.Core_Model_Router_Request,
+      this.logger
+    ]).then(val => {
+      let config =val[0];
+      let req =val[1];
+      let logger =val[2];
 
       let localConfig = {};
 
       let rootDir = config.get('fs/root_dir');
       if (!rootDir) {
-        rootDir =  Request.i().scriptDir();
+        rootDir =  req.scriptDir();
       }
       localConfig.fs = { root_dir: rootDir };
-      this.logger.debug('ROOTDIR = ' + rootDir);
+      this.logger.then(debug => { debug.debug('ROOTDIR = ' + rootDir) });
 
       let coreDir = config.get('fs/core_dir');
       if (!coreDir) {
           coreDir = '/app/core';
           config.set('fs/core_dir', coreDir);
       }
-
       config.add(localConfig, true);
 
       let errors = {};
       errors.permissions = ['test'];
       if (Object.keys(errors).length) {
-            reject(errors);
-            return;
+            throw errors;
       }
+     
+      return Promise.resolve(config);
 
-      console.log(Config.i());
-      setTimeout(res, 10);
-    }.bind(this));
+    }).catch(err => {
+      return Promise.reject(err);
+    });
   }
 }
 

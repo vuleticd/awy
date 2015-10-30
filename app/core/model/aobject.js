@@ -106,7 +106,17 @@ export class ObjectRegistry extends Aobject {
             if (singleton && typeof _singletons[key] === 'object') {
                 resolve(_singletons[key]);
             }
-
+            /*
+            // get original or overridden class instance
+            $className = static::className($class);
+            if (!class_exists($className, true)) {
+                BDebug::error(BLocale::i()->_('Invalid class name: %s', $className));
+            }
+            let args = this.processDI(className, rest);
+            if ($className == 'BClassDecorator' && !empty($args)) {
+                $args = [$args];
+            }
+            */
             let path = replaceAll(String(className).toLowerCase(), "_", '/');
             System.import(path).then(file => {
                 let instance = Object.create(file.default.prototype);
@@ -122,6 +132,10 @@ export class ObjectRegistry extends Aobject {
         });
     }
 
+    static processDI(className, ...rest : any[]) {
+
+    }
+
     static overrideClass(className, newClassName, replaceSingleton = false) {
         //console.log('overrideClass');
     }
@@ -132,16 +146,29 @@ export class ObjectRegistry extends Aobject {
 
 USAGE
 
-import {Aobject} from 'core/model/aobject';  // IMPORT/USE
+Class.i('Core_Model_Logger', 'App').then(debug => { 
+    debug.warn('Class.i(Core_Model_Logger) SINGLETON WITH ARGUMENTS'); 
+});
 
-import Router from 'core/model/router';  // INIT OBJECT
+ClassRegistry.getInstance('Core_Model_Logger', true, 'App').then(log => {
+    console.log('ClassRegistry.getInstance(Core_Model_Logger) SINGLETON WITH ARGUMENTS');
+    console.log(log);  
+});
 
-Router extends Aobject // .i() AVAIlABLE TO Router
+ClassRegistry.getInstance('Core_Model_Logger', false, 'App').then(log1 => {
+    console.log('ClassRegistry.getInstance(Core_Model_Logger) NEW INSTANCE WITH ARGUMENTS');
+    console.log(log1);  
+});
 
-Aobject.i(Router, ...rest: any[]);  // SINGLETON INSTANCE OF Router
-Router.i(); //  SINGLETON INSTANCE OF Router extending Aobject
+// this must extend Class 
+this.Core_Model_Logger.then(debug => { 
+    debug.warn('this.Core_Model_Logger SINGLETON WITHOUT ARGUMENTS');
+});
 
-Router.i(true); // NEW INSTANCE OF Router extending Aobject
+// this must extend Class 
+this.Debug.then(debug => { 
+    debug.warn('same as this.Core_Model_Logger with DI config like 'Debug': 'Core_Model_Logger' '); 
+});    
 
 */
 

@@ -1,12 +1,7 @@
-import {Aobject,ObjectRegistry} from 'core/model/aobject';
-import Modules from 'modules';
-import Logger from 'core/model/logger';
-import Util from 'core/model/util';
-
-class Core_Model_Module extends Aobject {
+class Core_Model_Module extends Class {
 	constructor(key: Object) {
 		super();
-        this.logger = Aobject.i(Logger, 'Module');
+        this.logger = Class.i('Core_Model_Logger', 'Module');
         this.config = [];
     }
 
@@ -15,15 +10,38 @@ class Core_Model_Module extends Aobject {
 	}
 
 	scan() {
-		let modulessDefined = Util.i().entries(Modules);
-		return Promise.all(modulessDefined.map(function([key, value]) {
-			if (value.enabled) {
-				return System.import(key + '/etc/config').then(m => {
-			            this.config.push(m.default);
-			            //return m.default;
-			          });
+		return this.getDefined().then(defined => {
+			return Promise.all(
+				defined.map(function([key, value]) {
+					if (value.enabled) {
+						return System.import(key + '/etc/config').then(m => {
+					            this.config.push(m.default);
+					            //return m.default;
+					          });
+					}
+				}, this)).then(configs => { 
+					return Promise.resolve(this);
+				}).catch(err => {
+					throw err;
+				});
+		}).catch(err => {
+			throw err;
+		});
+	}
+
+	/* 
+     * return all defined modules, as promise
+     */
+	getDefined() {
+		return System.import('modules').then(m => { 
+			let result = [];
+			for (let key of Object.keys(m.default)) {
+			  	result.push( [key, m.default[key]] );
 			}
-		}, this));
+		  	return Promise.resolve(result);
+		}).catch(err => {
+			throw err;
+		});
 	}
 
 	get configuration() {
@@ -31,7 +49,7 @@ class Core_Model_Module extends Aobject {
 	}
 
 	processOverrides() {
-		ObjectRegistry.overrideClass('one','two');
+		ClassRegistry.overrideClass('one','two');
 	}
 
 	onBeforeBootstrap() {

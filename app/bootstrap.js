@@ -1,12 +1,12 @@
-import {Aobject} from 'core/model/aobject';
-
+import {Aobject, ObjectRegistry} from 'core/model/aobject';
+Class = Aobject;
+ClassRegistry = ObjectRegistry;
 let app = null;
 
-class Bootstrap extends Aobject {
+class Bootstrap extends Class {
     constructor() {
       super();
-      this.dbg = Aobject.i('Core_Model_Logger', 'Bootstrap');
-      this.dbg.then(debug => { debug.warn('sdsdsdsds'); });
+      this.logger = Class.i('Core_Model_Logger', 'Bootstrap');    
       this.isInitialized = false;
     }
 
@@ -23,21 +23,27 @@ class Bootstrap extends Aobject {
       this.Core_Model_Util.then(util => {
           return util.ready(window);
       }, error => {
-          console.log('Error in On Ready');
-          console.log(error);
+          this.logger.then(debug => { 
+            debug.error('Error in On Ready'); 
+            debug.debug(error);
+          });
       }).then(doc => {
           this.initialize();
           appHost = doc.querySelectorAll('[awy-app]');
           return this.Core_Model_App;
       }, error => {
-          console.log('Error in Application Initialization');
-          console.log(error);
+          this.logger.then(debug => { 
+            debug.error('Error in Application Initialization'); 
+            debug.debug(error);
+          });
       }).then(app => {
           app.host = appHost[0];
           return app.run(area);
       }, error => {
-          console.log('Error in Application Execution');
-          console.log(error);
+          this.logger.then(debug => { 
+            debug.error('Error in Application Execution'); 
+            debug.debug(error);
+          }); 
       });
     }
 };

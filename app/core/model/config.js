@@ -1,7 +1,4 @@
-import {Aobject} from 'core/model/aobject';
-import Util from 'core/model/util';
-
-class Core_Model_Config extends Aobject {
+class Core_Model_Config extends Class {
     constructor() {
       super();
       // Configuration storage
@@ -16,13 +13,12 @@ class Core_Model_Config extends Aobject {
      * Add configuration fragment to global tree
      */
     add(config, toSave = false) {
-        this.config = Util.i().objectMerge(this.config, config);
+        this.config = this.objectMerge(this.config, config);
         if (this.enableSaving && toSave) {
-            this.configToSave = Util.i().objectMerge(this.configToSave, config);
+            this.configToSave = this.objectMerge(this.configToSave, config);
         } 
         return this;
     }
-
     /**
      * Get configuration data using path
      * Config.i().get('test/blah/nah', 'DEFAULT_VALUE');
@@ -48,29 +44,62 @@ class Core_Model_Config extends Aobject {
      * Config.i().set('test/blah/nah', 'VALUE');
      */
     set(path, value, merge = false, toSave = false) {
-        let node = this.config;
-        if (typeof toSave === 'string' && toSave === 'configToSave') {
-            node = this.configToSave;
-        }
-        let pathArray = path.split('/');
-        let last = pathArray.pop();
-        for (let key of pathArray) {
-            node = node[key] || (node[key] = {});
-        }
-        
-        if (merge) {
-            node[last] = Util.i().objectMerge(node[last], value);
-        } else {
-            node[last] = value;
-        }
+      let node = this.config;
+      if (typeof toSave === 'string' && toSave === 'configToSave') {
+          node = this.configToSave;
+      }
+      let pathArray = path.split('/');
+      let last = pathArray.pop();
+      for (let key of pathArray) {
+          node = node[key] || (node[key] = {});
+      }
+      
+      if (merge) {
+          node[last] = this.objectMerge(node[last], value);
+      } else {
+          node[last] = value;
+      }
 
-        
-        if (this.enableSaving && toSave === true) {
-            this.set(path, value, merge, 'configToSave');
-        }
-        
-        return this;
+      
+      if (this.enableSaving && toSave === true) {
+          this.set(path, value, merge, 'configToSave');
+      }
+
+      return this;
     }
+
+  /*
+   * Merges any number of objects / parameters recursively
+   */
+  objectMerge(...rest) {
+      let base = rest.shift();
+      for (let append of rest) {
+        // base is not mergable, replace instead with last argument passed
+        if (typeof base !== 'object') {
+          return append;
+        }
+        // both base and argument are arrays
+        if (Array.isArray(append) && Array.isArray(base)) {
+            for (let val of append) {
+              if (this.contains(base, val)) {
+                  base[base.indexOf(val)] = val;
+                  append.splice(append.indexOf(val), 1);
+              }
+            }
+            base.push(...append);
+        }
+        // both base and argument are objects
+        let key;
+        for (key in append) {
+            if (key in base) {
+              base[key] = this.objectMerge(base[key], append[key]);
+            } else {
+              Object.assign(base,append);
+            }
+        }
+      }
+      return base;
+  }
 }
 
 export default Core_Model_Config

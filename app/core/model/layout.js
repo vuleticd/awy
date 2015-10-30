@@ -1,9 +1,4 @@
-import {Aobject} from 'core/model/aobject';
-import Logger from 'core/model/logger';
-import View from 'core/model/view';
-
-
-class Core_Model_Layout extends Aobject {
+class Core_Model_Layout extends Class {
 	constructor() {
 		super();
 		// Default class name for newly created views
@@ -12,6 +7,7 @@ class Core_Model_Layout extends Aobject {
     	this.views = {};
     	// Main (root) view to be rendered first
     	this._rootViewName = 'root';
+        this.logger = Class.i('Core_Model_Logger', 'Layout');
 	}
 
 	set defaultViewClass(viewClass) {
@@ -41,14 +37,43 @@ class Core_Model_Layout extends Aobject {
     }
 
 	addView(viewName, params = {}, reset = false) {
-        if (typeof params === 'string') {
-            params = {view_class: params};
-        }
+        return Promise.all([
+          this.Core_Model_View, 
+          this.logger
+        ]).then(val => {
+            let view = val[0];
+            let logger = val[1];
+            if (typeof params === 'string') {
+                params = {view_class: params};
+            }
+            /*
+            if (empty($params['module_name']) && ($moduleName = $this->BModuleRegistry->currentModuleName())) {
+                $params['module_name'] = $moduleName;
+            }
+            */
+            let viewAlias = params.view_alias || viewName;
+            let viewFile = params.view_file || viewName;
+            if (!(viewAlias in this.views) || ('view_class' in params)) {
+                if (!('view_class' in params)) {
+                    if (this._defaultViewClass) {
+                        params['view_class'] = this._defaultViewClass;
+                    }
+                }
+                return view.factory(viewFile, params).then(v => {
+                    this.views[viewAlias] = v;
+                    //console.log(this.views[viewAlias]);
+                    return Promise.resolve(this);
+                });
+            } else {
+                this.views[viewAlias].setParam(params);
+                return Promise.resolve(this);
+            }
+            
+        }).catch(err => {
+
+        });
+        
         /*
-        if (empty($params['module_name']) && ($moduleName = $this->BModuleRegistry->currentModuleName())) {
-            $params['module_name'] = $moduleName;
-        }
-        */
         let viewAlias = params.view_alias || viewName;
         let viewFile = params.view_file || viewName;
         if (!(viewAlias in this.views) || ('view_class' in params)) {
@@ -58,14 +83,21 @@ class Core_Model_Layout extends Aobject {
                 }
             }
         
-            this.views[viewAlias] = View.i(true).factory(viewFile, params);
-            //console.log(this.views[viewAlias]);
+            this.Core_Model_View.then(view => {
+                return view.factory(viewFile, params);
+            }).then(v => {
+                this.views[viewAlias] = v;
+                console.log(this.views[viewAlias]);
+            })
+            
+            
 
         } else {
             this.views[viewAlias].setParam(params);
         }
 
         return this;
+        */
     }
 
     render(routeName = null, args = {}) {

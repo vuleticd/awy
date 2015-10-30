@@ -1,6 +1,4 @@
-import {Aobject} from 'core/model/aobject';
-
-class Core_Model_Router_Request extends Aobject {
+class Core_Model_Router_Request extends Class {
 	constructor() {
 		super();
 		this._area = 'frontend';

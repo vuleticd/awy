@@ -1,10 +1,7 @@
-import {Aobject} from 'core/model/aobject';
-import Logger from 'core/model/logger';
-
 let instance = null;
 let singletonEnforcer = {};
 
-class Core_Model_Router extends Aobject {
+class Core_Model_Router extends Class {
     constructor(key: Object) {
         super();
         /*
@@ -12,7 +9,7 @@ class Core_Model_Router extends Aobject {
           throw new Error('You cannot instantiate "Router". Use the "getInstance" API instead.');
         }
         */
-        this.logger = Aobject.i(Logger, 'Router');
+        this.logger = Class.i('Core_Model_Logger', 'Router');
         this.routes = [];
         this.mode = null;
         this.root = '/';
@@ -115,17 +112,16 @@ class Core_Model_Router extends Aobject {
 
 USAGE
 
-import Router from 'core/model/router';  // IMPORT/USE
+this.router = Class.i(Core_Model_Router);  // INIT
+this.router.then(router => {
+    router.config({ mode: 'history'}); // CONFIGURE
 
-this.router = Aobject.i(Router);  // INIT
+    router.add(/about/, function() {...}) // ADD ROUTE AND HANDLER
 
-this.router.config({ mode: 'history'}); // CONFIGURE
+    router.listen(); //  START ROUTER LISTENER 
 
-this.router.add(/about/, function() {...}) // ADD ROUTE AND HANDLER
-
-this.router.listen(); //  START ROUTER LISTENER 
-
-this.router.navigate(path);  // RUN TIME REDIRECTION
+    router.navigate(path);  // RUN TIME REDIRECTION 
+});
 
 */
 

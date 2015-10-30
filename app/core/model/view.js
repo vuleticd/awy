@@ -1,8 +1,4 @@
-import {Aobject, ObjectRegistry} from 'core/model/aobject';
-import Logger from 'core/model/logger';
-
-
-class Core_Model_View extends Aobject {
+class Core_Model_View extends Class {
 
 	constructor(params) {
 		super();
@@ -11,12 +7,12 @@ class Core_Model_View extends Aobject {
 
 	factory(viewName, params = {}) {
         params['view_name'] = viewName;
-        let className = params.view_class || this.constructor;
-        //console.log(this.constructor);
+        let className = params.view_class || this.constructor.name;
+        //console.log(className);
         //console.log(params);
         // !!!!!!!!!!!!!!!!!!!!!!!! import ISSUE HERE
-        let view = ObjectRegistry.getInstance(className, false, params);
-
+        let view = ClassRegistry.getInstance(className, false, params);
+        //console.log(view);
         return view;
     }
 
