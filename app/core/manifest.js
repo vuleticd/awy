@@ -1,5 +1,5 @@
 let config =  {
-	name: 'Awy_Core',
+	module_name: 'Awy_Core',
 	version: '0.0.0.1',
 	description: "Base Awy classes and JS libraries",
 	default_config: {

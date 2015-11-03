@@ -100,6 +100,13 @@ class Core_Model_Config extends Class {
       }
       return base;
   }
+
+  /* 
+   * return true/false if value is found in array
+   */
+  contains(haystack, needle) {
+    return !!~haystack.indexOf(needle);
+  }
 }
 
 export default Core_Model_Config

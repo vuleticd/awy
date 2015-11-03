@@ -1,5 +1,5 @@
 let config =  {
-	name: 'Awy_Install',
+	module_name: 'Awy_Install',
 	version: '0.0.0.2',
 	description: "Install sequence extension",
 	override: [

@@ -32,6 +32,10 @@ class Core_Model_Layout extends Class {
         return this._rootViewName ? this.view(this._rootViewName) : null;
     }
 
+    collectAllViewsFiles() {
+        alert('yey');
+    }
+
     view(viewName) {
         return this.views[viewName] || null/*$this->BViewEmpty->i(true)->setParam('view_name', $viewName)*/;
     }

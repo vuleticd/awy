@@ -16,7 +16,7 @@ class Core_Model_App extends Class {
         let moduleRegistry = values[1];
         let router = values[2];
         let logger = values[3];
-        console.log(values);
+        //console.log(values);
         // bootstrap modules
         moduleRegistry.bootstrap();
        /*
@@ -27,28 +27,24 @@ class Core_Model_App extends Class {
          // If session variables were changed, update session
          $this->BSession->close();
        */
-       logger.info(moduleRegistry.configuration);
+       logger.info(moduleRegistry);
        logger.info(area);
        router.listen();
     }, reason => {
-       this.Core_Model_Layout.then(layout => {
-          let l = layout.addView('core/errors', {template: '/app/core/views/core/errors.html'})
-          
-          l.then(l => {
-              //console.log(l);
+        this.Core_Model_Layout.then(layout => {
+          return layout.addView(
+            'core/errors', 
+            {template: '/app/core/views/core/errors.html'}
+          );
+        }).then(layout => {
               layout.rootView = 'core/errors';
               layout.view('core/errors').set('errors', reason);
-              this.Core_Model_Router_Response.then(r => {
-                r.output();
-              });
-          });
-          
-          //layout.rootView = 'core/errors';
-          //layout.view('core/errors').set('errors', reason);
-          //console.log(layout);
-       }).catch(err => {
-          console.log(err);
-       });
+              return this.Core_Model_Router_Response;
+        }).then(response => {
+              response.output();
+        }).catch(err => {
+            console.log(err);
+        });
     //   Layout.i().addView('core/errors', {template: '/app/core/views/core/errors.html'});
     //   Layout.i().rootView = 'core/errors';
     //   Layout.i().view('core/errors').set('errors', reason);
@@ -75,7 +71,7 @@ class Core_Model_App extends Class {
     return Promise.all([
       this.Core_Model_Config, 
       this.Core_Model_Router_Request,
-      this.Core_Model_Module,
+      this.Core_Model_Module_Registry,
       this.logger
     ]).then(val => {
       let config =val[0];
@@ -93,7 +89,6 @@ class Core_Model_App extends Class {
           */
           area = 'install';
           req.area = area;
-          //console.log(Request.i());
       }
       let modules = moduleRegistry.scan();
       return Promise.resolve(modules);
@@ -102,7 +97,8 @@ class Core_Model_App extends Class {
     });
     
     /*
-    this.moduleRegistry->processRequires();
+    this.moduleRegistry.processRequires();
+    $modReg->processDefaultConfig();
     */
   }
 
@@ -136,7 +132,7 @@ class Core_Model_App extends Class {
       config.add(localConfig, true);
 
       let errors = {};
-      errors.permissions = ['test'];
+      //errors.permissions = ['test'];
       if (Object.keys(errors).length) {
             throw errors;
       }

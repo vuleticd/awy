@@ -3,7 +3,7 @@ let modulesEnabled = {
 		enabled: true,
 	},
 	install: {
-		enabled: false,
+		enabled: true,
 	}
 }
 
