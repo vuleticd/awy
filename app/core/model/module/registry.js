@@ -14,7 +14,7 @@ class Core_Model_Module_Registry extends Class {
     	/**
     	 * modules instances, collected from manifests
     	 */
-    	this._modules = {};
+    	this._modules = new Map();
     }
 
     pushModule(name) {
@@ -35,13 +35,13 @@ class Core_Model_Module_Registry extends Class {
     }
 
 	bootstrap() {
-		for (let mod in this._modules) {
+		for (let mod in this._modules.keys()) {
 			this.pushModule(mod);
             //this._modules.mod.onBeforeBootstrap();
             this.popModule();
 		}
 
-		for (let mod in this._modules) {
+		for (let mod in this._modules.keys()) {
 			this.pushModule(mod);
             //this._modules.mod.bootstrap();
             this.popModule();
@@ -81,10 +81,11 @@ class Core_Model_Module_Registry extends Class {
 				}).then(configs1 => {
 					// loaded Module class instancess
 					for (let index in configs1) { 
-						this._modules[configs1[index].key] = configs1[index];
+						this._modules.set(configs1[index].module_name, configs1[index]);
 					}
 					
 					this.processRequires();
+                    this.processDefaultConfig();
 					return Promise.resolve(this);
 				}).catch(err => {
 					throw err;
@@ -137,8 +138,15 @@ class Core_Model_Module_Registry extends Class {
 
 	processRequires() {
         this.checkRequires();
-        //this.sortRequires();
-        //return this;
+        this.sortRequires();
+        return this;
+    }
+
+    processDefaultConfig() {
+        for (let mod of this._modules.values()) {
+            mod.processDefaultConfig();
+        }
+        return this;
     }
 
     checkRequires() {
@@ -146,8 +154,8 @@ class Core_Model_Module_Registry extends Class {
     	Class.i('Core_Model_Config').then(config => {
     		let requestRunLevels = config.get('module_run_levels/request');
     		for (let modName in requestRunLevels) {		
-    			if (modName in this._modules) {
-	                this._modules[modName]['run_level'] = requestRunLevels[modName]; //run level
+    			if (this._modules.has(modName)) {
+	                this._modules.get(modName).run_level = requestRunLevels[modName]; //run level
 	            } else {
 	            	if (requestRunLevels[modName] === 'REQUIRED') {
 	                	throw 'Module is required but not found: ' + modName;
@@ -157,80 +165,316 @@ class Core_Model_Module_Registry extends Class {
     	}).catch(err => { throw err;});
 
     	// scan for require
-    	for (let modName1 in this._modules) {
-    		let mod = this._modules[modName1];
+    	for (let [modName1, mod] of this._modules) {
             // is currently iterated module required?
             if (mod.run_level === 'REQUIRED') {
                 mod.run_status = 'PENDING'; // only 2 options: PENDING or ERROR
             }
             // iterate over require for modules
-        }
-       
-    	/*
-        // scan for require
-
-        foreach ($this->_modules as $modName => $mod) {
-            // is currently iterated module required?
-            if ($mod->run_level === BModule::REQUIRED) {
-                $mod->run_status = BModule::PENDING; // only 2 options: PENDING or ERROR
-            }
-            // iterate over require for modules
-            if (!empty($mod->require['module'])) {
-                foreach ($mod->require['module'] as &$req) {
-                    /// @var BModule $reqMod 
-                    $reqMod = !empty($this->_modules[$req['name']]) ? $this->_modules[$req['name']] : false;
+            if ('require' in mod && 'module' in mod.require) {
+                for (let req in mod.require.module) {
+                    let reqMod = this._modules.get(req) || false;
                     // is the module missing
-                    if (!$reqMod) {
-                        $mod->errors[] = ['type' => 'missing', 'mod' => $req['name']];
+                    if (!reqMod) {
+                        mod.errors.push({type: 'missing', mod: req});
                         continue;
                     // is the module disabled
-                    } elseif ($reqMod->run_level === BModule::DISABLED) {
-                        $mod->errors[] = ['type' => 'disabled', 'mod' => $req['name']];
+                    } else if (reqMod.run_level === 'DISABLED') {
+                        mod.errors.push({type: 'disabled', mod: req});
                         continue;
-                    // is the module version not valid
-                    } elseif (!empty($req['version'])) {
-                        $reqVer = $req['version'];
-                        if (!empty($reqVer['from']) && version_compare($reqMod->version, $reqVer['from'], '<')
-                            || !empty($reqVer['to']) && version_compare($reqMod->version, $reqVer['to'], '>')
-                            || !empty($reqVer['exclude']) && in_array($reqVer->version, (array)$reqVer['exclude'])
-                        ) {
-                            $mod->errors[] = ['type' => 'version', 'mod' => $req['name']];
-                            continue;
-                        }
+                    // is the module version not equal to required
+                    } else if (!this.version_compare(reqMod.version, mod.require.module[req], '=')) {
+                        mod.errors.push({type: 'version', mod: req});
+                        continue;
                     }
-                    if (!in_array($req['name'], $mod->parents)) {
-                        $mod->parents[] = $req['name'];
+
+                    if (!(req in mod.parents)) {
+                        mod.parents.push(req);
                     }
-                    if (!in_array($modName, $reqMod->children)) {
-                        $reqMod->children[] = $modName;
+                    if ( !(modName1 in reqMod.children)) {
+                        reqMod.children.push(modName1);
                     }
-                    if ($mod->run_status === BModule::PENDING) {
-                        $reqMod->run_status = BModule::PENDING;
+                    if (mod.run_status === 'PENDING') {
+                        reqMod.run_status = 'PENDING';
                     }
                 }
-                unset($req);
             }
 
-            if (!$mod->errors && $mod->run_level === BModule::REQUESTED) {
-                $mod->run_status = BModule::PENDING;
+            if (mod.errors.length == 0 && mod.run_level === 'REQUESTED') {
+                mod.run_status = 'PENDING';
             }
         }
 
-        foreach ($this->_modules as $modName => $mod) {
-            if (!is_object($mod)) {
-                var_dump($mod); exit;
+        for (let [modName2, mod2] of this._modules) {
+            if (typeof mod2 !== 'object') {
+                console.error(mod2); return;
             }
-            if ($mod->errors && !$mod->errors_propagated) {
+            
+            if (mod.errors.length > 0 && !mod.errors_propagated) {
                 // propagate dependency errors into subdependent modules
-                $this->propagateRequireErrors($mod);
-            } elseif ($mod->run_status === BModule::PENDING) {
+                this.propagateRequireErrors(mod);
+            } else if (mod.run_status === 'PENDING') {
                 // propagate pending status into deep dependent modules
-                $this->propagateRequires($mod);
+                this.propagateRequires(mod);
+            }  
+        }
+
+        return this;
+    }
+
+    sortRequires() {
+        let modules = this._modules;
+        let circRefsArr = [];
+        for (let [modName, mod] of modules) {
+            let circRefs = this.detectCircularReferences(mod);
+            if (circRefs.length) {
+                /*
+                foreach ($circRefs as $circ) {
+                    $circRefsArr[join(' -> ', $circ)] = 1;
+
+                    $s = sizeof($circ);
+                    $mod1name = $circ[$s-1];
+                    $mod2name = $circ[$s-2];
+                    $mod1 = $modules[$mod1name];
+                    $mod2 = $modules[$mod2name];
+                    foreach ($mod1->parents as $i => $p) {
+                        if ($p === $mod2name) {
+                            unset($mod1->parents[$i]);
+                        }
+                    }
+                    foreach ($mod2->children as $i => $c) {
+                        if ($c === $mod1name) {
+                            unset($mod2->children[$i]);
+                        }
+                    }
+                }
+                */
             }
         }
-        #var_dump($this->_modules);exit;
-        */
+
+        for(let circRef in circRefsArr) {
+            console.warn('Circular reference detected: ' + circRef);
+        }
+        // take care of 'load_after' option
+        for (let [modName1, mod1] of modules) {
+            mod1.children_copy = mod1.children;
+            if ('load_after' in mod1 && Array.isArray(mod1.load_after)) {
+                for (let n of mod1.load_after) {
+                    if (!modules.has(n)) {
+                        console.debug('Invalid module name specified in load_after: ' + n);
+                        continue;
+                    }
+                    mod1.parents.push(n);
+                    modules.get(n).children.push(modName1);
+                }
+            }
+        }
+        // get modules without dependencies
+        let rootModules = [];
+        for (let [modName2, mod2] of modules) {
+            if (!mod2.parents.length) {
+                rootModules.push(mod2);
+            }
+        }
+
+        let sorted = new Map(); // THIS IS NOT ORDERED, SO IT DOESN't ACTUALLY SORT ANYTHING. MUST FIND SOME BETTER ASSOCC ARRAY ORDERED TYPE TO USE INSTEAD OBJECT
+        
+        //let module_keys = Object.keys(modules);
+        while(modules.size) {
+            if (!rootModules.length) {
+                console.warn('Circular reference detected, aborting module sorting');
+                return false;
+            }
+            // remove this node from root modules and add it to the output
+            let n = rootModules.pop();
+            sorted.set(n.module_name, n);
+            // for each of its children: queue the new node, finally remove the original
+            for (let c in n.children) {
+                // get child module
+                let childModule = modules.get(n.children[c]);
+                // remove child modules from parent
+                n.children.splice(c,1);
+                // remove parent from child module
+                childModule.parents.splice(childModule.parents.indexOf(n.module_name),1);
+                // check if this child has other parents. if not, add it to the root modules list
+                if (!childModule.parents.length) { rootModules.push(childModule); }
+            }
+            // remove processed module from list
+            modules.delete(n.module_name);
+            //module_keys.length--;
+        }
+
+        // move modules that have load_after=='ALL' to the end of list
+        let srt = [];
+        for (let [modName3, mod3] of sorted) {
+            if (mod3.load_after === 'ALL') {
+                sorted.delete(modName3);
+                /*  ES6 Loader complains about delete followed by set on Map
+                    So, srt Array is used instead
+                if (!sorted.has(modName3)) {
+                    sorted.set(modName3,mod3);
+                }
+                */
+                srt.push(mod3);
+            }
+        }
+        srt.forEach(function(obj) {
+            sorted.set(obj.module_name, obj);
+        });
+            
+        this._modules = sorted;
         return this;
+    }
+
+    detectCircularReferences(mod, depPathArr = []) {
+        let circ = [];
+        if (mod.parents.length) {
+            for (let p of mod.parents) {
+                if (p in depPathArr) {
+                    let found = false;
+                    let circPath = [];
+                    for (let k in depPathArr) {
+                        if (p === k) {
+                            found = true;
+                        }
+                        if (found) {
+                            circPath.push(k);
+                        }
+                    }
+                    circPath.push(p);
+                    circ.push(circPath);
+                } else {
+                    let depPathArr1 = depPathArr;
+                    depPathArr1.push(p);
+                    let res = this.detectCircularReferences(this._modules.get(p), depPathArr1);
+                    if (res.length > 0) {
+                        circ.push(res);
+                    }
+                    //circ.push(this.detectCircularReferences(this._modules[p], depPathArr1));
+                }
+                
+            }
+        }
+
+        return circ;
+    }
+
+    propagateRequireErrors(mod) {
+        mod.run_status = 'ERROR';
+        mod.errors_propagated = true;
+        for (let childName in mod.children) {
+            if (!this._modules.has(childName)) {
+                continue;
+            }
+            let child = this._modules.get(childName);
+            if (child.run_level === 'REQUIRED' && child.run_status !== 'ERROR') {
+                this.propagateRequireErrors(child);
+            }
+        }
+        return this;
+    }
+
+    propagateRequires(mod) {
+        for (let parentName in mod.parents) {
+             if (!this._modules.has(parentName)) {
+                continue;
+            }
+            parent = this._modules.get(parentName);
+            if (parent.run_status === 'PENDING') {
+                continue;
+            }
+            parent.run_status = 'PENDING';
+            this.propagateRequires(parent);
+        }
+        return this;
+    }
+
+    version_compare(v1, v2, operator=false) {
+        let compare = 0;
+        v1 = this.prepVersion(v1);
+        v2 = this.prepVersion(v2);
+        let x = Math.max(v1.length, v2.length);
+        for (let i = 0; i < x; i++) {
+            if (v1[i] == v2[i]) {
+              continue;
+            }
+            v1[i] = this.numVersion(v1[i]);
+            v2[i] = this.numVersion(v2[i]);
+            if (v1[i] < v2[i]) {
+              compare = -1;
+              break;
+            } else if (v1[i] > v2[i]) {
+              compare = 1;
+              break;
+            }
+        }
+
+        if (!operator) {
+            return compare;
+        }
+
+        switch (operator) {
+          case '>':
+          case 'gt':
+            return (compare > 0);
+          case '>=':
+          case 'ge':
+            return (compare >= 0);
+          case '<=':
+          case 'le':
+            return (compare <= 0);
+          case '==':
+          case '=':
+          case 'eq':
+            return (compare === 0);
+          case '<>':
+          case '!=':
+          case 'ne':
+            return (compare !== 0);
+          case '':
+          case '<':
+          case 'lt':
+            return (compare < 0);
+          default:
+            return null;
+        }
+    }
+
+    prepVersion(v) {
+      v = ('' + v).replace(/[_\-+]/g, '.');
+      v = v.replace(/([^.\d]+)/g, '.$1.').replace(/\.{2,}/g, '.');
+      return (!v.length ? [-8] : v.split('.'));
+    }
+
+    numVersion(v) {
+        return !v ? 0 : (isNaN(v) ? this.vm(v) || -7 : parseInt(v, 10));
+    }
+
+    vm(v) {
+        switch (v) {
+            case 'dev':
+                return -6;
+                break;
+            case 'alpha':
+            case 'a':
+                return -5;
+                break;
+            case 'beta':
+            case 'b':
+                return -4;
+                break;
+            case 'RC':
+            case 'rc':
+                return -3;
+                break;
+            case '#':
+                return -2;
+                break;
+            case 'p':
+            case 'pl':
+                return 1;
+                break;
+        }
     }
 }
 
