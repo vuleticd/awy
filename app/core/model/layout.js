@@ -5,6 +5,8 @@ class Core_Model_Layout extends Class {
 		this._defaultViewClass = false;
 		// View objects registry
     	this.views = {};
+        // Installed themes registry
+        this._themes = {};
     	// Main (root) view to be rendered first
     	this._rootViewName = 'root';
         this.logger = Class.i('Core_Model_Logger', 'Layout');
@@ -123,6 +125,40 @@ class Core_Model_Layout extends Class {
 
         return result;
     }
+
+    updateTheme(themeName, params, curModName = null){
+        return this.addTheme(themeName, params, curModName);
+    }
+
+    addTheme(themeName, params, curModName = null) {
+        if (!(themeName in this._themes)) {
+            this._themes[themeName] = params;
+        } else {
+            this._themes[themeName] = this.objectMerge(this._themes[themeName], params);
+        }
+
+        return this;
+    }
+
+    objectMerge(...rest) {
+      let base = rest.shift();
+      for (let append of rest) {
+        // base is not mergable, replace instead with last argument passed
+        if (typeof base !== 'object') {
+          return append;
+        }
+        // both base and argument are objects
+        let key;
+        for (key in append) {
+            if (key in base) {
+              base[key] = this.objectMerge(base[key], append[key]);
+            } else {
+              Object.assign(base,append);
+            }
+        }
+      }
+      return base;
+  }
 }
 
 export default Core_Model_Layout

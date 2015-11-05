@@ -16,7 +16,7 @@ class Core_Model_Module extends Class {
 
 	constructor(params: Object) {
 		super();
-		this._defaultRunLevel = 'ONDEMAND';
+		this._defaultRunLevel = 'REQUIRED';//'ONDEMAND';
 		this.run_level = this._defaultRunLevel;
         this.errors = [];
         this.errors_propagated = false;
@@ -52,38 +52,88 @@ class Core_Model_Module extends Class {
     // Promise !!!!!
     processDefaultConfig() {
         if ('default_config' in this) {
-            Class.i('Core_Model_Config').then(cfgHlp => {
+            return Class.i('Core_Model_Config').then(cfgHlp => {
                 for (let path in this.default_config) {
                     if (this.strpos(path, '/') !== false) {
                         let value = this.default_config[path];
-                        console.log(value);
+                        //console.log(value);
                         cfgHlp.set(path, value);
                         delete this.default_config[path];
                     }
                     
                 }
                 cfgHlp.add(this.default_config);
+                
+                return this.processThemes();
             });
         }
-        // Promise !!!!!
-        this.processThemes();
         return this;
     }
-    // Promise !!!!!
+    
     processThemes() {
         //TODO: automatically enable theme module when it is used
         if (this.run_status === 'PENDING' && 'themes' in this) {
-            console.log('processThemes');
             for (let name in this.themes) {
                 let params = this.themes[name];
-                console.log(name);
-                console.log(params);
-                if ('module_name' in params && 'area' in params) {
+                if ('name' in params && 'area' in params) {
                     params['module_name'] = this.module_name;
-                    //$this->BLayout->addTheme($name, $params, $this->name);
+                    return Class.i('Core_Model_Layout').then(lay => {
+                        lay.addTheme(name, params, this.module_name);
+                        return this;
+                    });
                 } else {
-                    //$this->BLayout->updateTheme($name, $params, $this->name);
+                    return Class.i('Core_Model_Layout').then(lay => {
+                        lay.updateTheme(name, params, this.module_name);
+                        return this;
+                    });
                 }
+                
+            }
+        }
+        return this;
+    }
+
+    onBeforeBootstrap() {
+        //this.run_status = 'PENDING';
+        
+        if (this.run_status !== 'PENDING') {
+            return this;
+        }
+        //this._prepareModuleEnvData();
+        
+        this.processOverrides();
+        /*
+        if (empty($this->before_bootstrap)) {
+            return $this;
+        }
+
+        $bb = $this->before_bootstrap;
+        if (!is_array($bb)) {
+            $bb = ['callback' => $bb];
+        }
+        if (!empty($bb['file'])) {
+            $includeFile = $this->BUtil->normalizePath($this->root_dir . '/' . $bb['file']);
+            BDebug::debug('MODULE.BEFORE.BOOTSTRAP ' . $includeFile);
+            require_once ($includeFile);
+        }
+        if (!empty($bb['callback'])) {
+            $start = BDebug::debug($this->BLocale->_('Start BEFORE bootstrap for %s', [$this->name]));
+            $this->BUtil->call($bb['callback']);
+            #$mod->run_status = BModule::LOADED;
+            BDebug::profile($start);
+            BDebug::debug($this->BLocale->_('End BEFORE bootstrap for %s', [$this->name]));
+        }
+        */
+        return this;
+    }
+
+    processOverrides() {
+        if ('override' in this && 'class' in this.override) {
+            for (let o of this.override['class']) {
+                if (o.length !== 2) {
+                    continue;
+                }
+                ClassRegistry.overrideClass(o[0], o[1]);
             }
         }
     }

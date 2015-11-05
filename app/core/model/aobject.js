@@ -89,7 +89,7 @@ export class Aobject extends Proto {
 
 let _instance = null;
 let _singletons = {};
-let _classes = [];
+let _classes = {};
 
 export class ObjectRegistry extends Aobject {
     constructor() {
@@ -106,9 +106,9 @@ export class ObjectRegistry extends Aobject {
             if (singleton && typeof _singletons[key] === 'object') {
                 resolve(_singletons[key]);
             }
-            /*
             // get original or overridden class instance
-            $className = static::className($class);
+            className = className in _classes ? _classes[className]['class_name'] : className;
+            /*
             if (!class_exists($className, true)) {
                 BDebug::error(BLocale::i()->_('Invalid class name: %s', $className));
             }
@@ -136,8 +136,30 @@ export class ObjectRegistry extends Aobject {
 
     }
 
-    static overrideClass(className, newClassName, replaceSingleton = false) {
-        //console.log('overrideClass');
+    static overrideClass(className, newClassName, replaceSingleton = false) {  
+        let curModName = '';
+        this.getInstance('Core_Model_Module_Registry').then(modReg => {
+            curModName = modReg.currentModuleName();
+        });
+        // override
+        if (typeof newClassName === 'string') {
+            _classes[className] = {
+                'class_name': newClassName,
+                'module_name': curModName,
+            };
+        // clear override
+        } else if (null === newClassName) {
+            if (!(className in _classes)) {
+                return;
+            }
+            delete _classes[className];
+        }
+
+        if (replaceSingleton && className in _singletons) {
+            this.getInstance(className).then(inst => {
+                _singletons[className] = inst;
+            });
+        }
     }
 }
 

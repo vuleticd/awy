@@ -35,13 +35,19 @@ class Core_Model_Module_Registry extends Class {
     }
 
 	bootstrap() {
-		for (let mod in this._modules.keys()) {
+		for (let mod of this._modules.keys()) {
 			this.pushModule(mod);
-            //this._modules.mod.onBeforeBootstrap();
+            this._modules.get(mod).onBeforeBootstrap();
             this.popModule();
 		}
 
-		for (let mod in this._modules.keys()) {
+        // TEST OVERRIDE
+        //ClassRegistry.getInstance('Core_Model_Router').then(d => {
+        //    console.log(d);
+        //});
+
+
+		for (let mod of this._modules.keys()) {
 			this.pushModule(mod);
             //this._modules.mod.bootstrap();
             this.popModule();
@@ -59,12 +65,12 @@ class Core_Model_Module_Registry extends Class {
 			return Promise.all(
 				// loaded defined modules in app/modules.js files
 				defined.map(function([key, value]) {
-					if (value.enabled) {
+					//if (value.enabled) {
 						return System.import(key + '/manifest').then(m => {
 							m.default.key = key;
 				            return m.default;
 				          });
-					}
+					//}
 				})).then(configs => { 
 					// loaded manifest files
 					return Promise.all(
@@ -83,11 +89,12 @@ class Core_Model_Module_Registry extends Class {
 					for (let index in configs1) { 
 						this._modules.set(configs1[index].module_name, configs1[index]);
 					}
-					
 					this.processRequires();
-                    this.processDefaultConfig();
-					return Promise.resolve(this);
-				}).catch(err => {
+                    return this.processDefaultConfig();
+				}).then(configs2 => {
+                    //console.log(configs2);
+                    return Promise.resolve(this);
+                }).catch(err => {
 					throw err;
 				});
 		}).catch(err => {
@@ -110,13 +117,15 @@ class Core_Model_Module_Registry extends Class {
 	}
 
 	/* 
-     * return all defined modules, as promise
+     * return all defined and hard enabled modules, as promise
      */
 	getDefined() {
 		return System.import('modules').then(m => { 
 			let result = [];
 			for (let key of Object.keys(m.default)) {
-			  	result.push( [key, m.default[key]] );
+                if (m.default[key].enabled) {
+			  	  result.push( [key, m.default[key]] );
+                }
 			}
 		  	return Promise.resolve(result);
 		}).catch(err => {
@@ -143,10 +152,12 @@ class Core_Model_Module_Registry extends Class {
     }
 
     processDefaultConfig() {
+        let modConf = [];
         for (let mod of this._modules.values()) {
-            mod.processDefaultConfig();
+            modConf.push(mod.processDefaultConfig());
         }
-        return this;
+        //console.log(modConf);
+        return Promise.all(modConf);
     }
 
     checkRequires() {
@@ -163,7 +174,6 @@ class Core_Model_Module_Registry extends Class {
 	            }
 	        }
     	}).catch(err => { throw err;});
-
     	// scan for require
     	for (let [modName1, mod] of this._modules) {
             // is currently iterated module required?
@@ -288,16 +298,22 @@ class Core_Model_Module_Registry extends Class {
             // remove this node from root modules and add it to the output
             let n = rootModules.pop();
             sorted.set(n.module_name, n);
+            let c = n.children.length - 1;
             // for each of its children: queue the new node, finally remove the original
-            for (let c in n.children) {
+            while(c >= 0) {
+            //for (let c in n.children) {
                 // get child module
                 let childModule = modules.get(n.children[c]);
+                //console.log(childModule);
                 // remove child modules from parent
                 n.children.splice(c,1);
+                //console.log(n.children);
                 // remove parent from child module
                 childModule.parents.splice(childModule.parents.indexOf(n.module_name),1);
                 // check if this child has other parents. if not, add it to the root modules list
                 if (!childModule.parents.length) { rootModules.push(childModule); }
+                
+                c--;
             }
             // remove processed module from list
             modules.delete(n.module_name);
@@ -321,7 +337,7 @@ class Core_Model_Module_Registry extends Class {
         srt.forEach(function(obj) {
             sorted.set(obj.module_name, obj);
         });
-            
+        
         this._modules = sorted;
         return this;
     }

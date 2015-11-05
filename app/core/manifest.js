@@ -2,7 +2,6 @@ let config =  {
 	module_name: 'Awy_Core',
 	version: '0.0.0.1',
 	description: "Base Awy classes and JS libraries",
-    //load_after: 'ALL', // force loading as last module
 	default_config: {
             db: {
                 dbname: 'awy',

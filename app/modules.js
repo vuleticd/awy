@@ -4,6 +4,9 @@ let modulesEnabled = {
 	},
 	install: {
 		enabled: true,
+	},
+	admin: {
+		enabled: true,
 	}
 }
 

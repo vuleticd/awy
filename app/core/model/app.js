@@ -95,11 +95,6 @@ class Core_Model_App extends Class {
     }).catch(err => {
       return Promise.reject(err);
     });
-    
-    /*
-    this.moduleRegistry.processRequires();
-    $modReg->processDefaultConfig();
-    */
   }
 
   /*
