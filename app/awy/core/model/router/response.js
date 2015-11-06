@@ -1,5 +1,3 @@
-import Layout from 'core/model/layout';
-
 class Core_Model_Router_Response extends Class {
 	constructor() {
 		super();

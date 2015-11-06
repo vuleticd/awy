@@ -8,7 +8,7 @@ class Core_Model_View extends Class {
 	factory(viewName, params = {}) {
         params['view_name'] = viewName;
 
-        let className = params.view_class || this.constructor.name;
+        let className = params.view_class || ('awy_' + this.constructor.name).toLowerCase();
         //console.log(className);
         //console.log(params);
         // !!!!!!!!!!!!!!!!!!!!!!!! import ISSUE HERE

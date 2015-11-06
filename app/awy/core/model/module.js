@@ -127,7 +127,7 @@ class Core_Model_Module extends Class {
             this.processViews(),
         ]).then(f => {
             this.run_status = 'LOADED';
-            console.log(this);
+            //console.log(this);
         });
         /*
         $this->_processViews(); // before auto_use to initialize custom view classes

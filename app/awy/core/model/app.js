@@ -32,16 +32,16 @@ class Core_Model_App extends Class {
         let router = values[2];
         let logger = values[3];
 
-        logger.info(moduleRegistry);
+        //logger.info(moduleRegistry);
 
         Class.i('awy_core_model_router_request').then(r => {
-          console.log(r.area);
+          //console.log(r.area);
         });
 
         //logger.info(area);
         router.listen();
     }).catch(err => {
-        console.log(err);
+        //console.log(err);
         Class.i('awy_core_model_layout').then(layout => {
           return layout.addView(
             'core/errors', 
@@ -106,7 +106,7 @@ class Core_Model_App extends Class {
       */
       config.add({'module_run_levels': {'request': runLevels}});
 
-      console.log(config);
+      //console.log(config);
       let modules = moduleRegistry.scan();
       return Promise.resolve(modules);
     }).catch(err => {

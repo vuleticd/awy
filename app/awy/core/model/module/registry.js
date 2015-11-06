@@ -105,7 +105,7 @@ class Core_Model_Module_Registry extends Class {
 			throw err;
 		});
 	}
-
+/*
 	addModule(modName, params) {
 		if (modName in this._modules) {
 			this.logger.then(debug => { debug.debug('MODULE UPDATE ' + modName) });
@@ -119,7 +119,7 @@ class Core_Model_Module_Registry extends Class {
         }
         return this;
 	}
-
+*/
 	/* 
      * return all defined and hard enabled modules, as promise
      */
