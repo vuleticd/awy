@@ -1,7 +1,7 @@
 class Core_Model_Module_Registry extends Class {
 	constructor(key: Object) {
 		super();
-        this.logger = Class.i('Core_Model_Logger', 'Module_Registry');
+        this.logger = Class.i('awy_core_model_logger', 'Module_Registry');
         this.config = [];
         /**
 	    * Current module name, not null when:
@@ -35,29 +35,32 @@ class Core_Model_Module_Registry extends Class {
     }
 
 	bootstrap() {
-		for (let mod of this._modules.keys()) {
-			this.pushModule(mod);
-            this._modules.get(mod).onBeforeBootstrap();
-            this.popModule();
-		}
+        return Promise.all(this._modules.keys()).then(mods => {
+            for (let mod of mods) {
+                this.pushModule(mod);
+                //alert('pushModule1 ' + mod);
+                this._modules.get(mod).onBeforeBootstrap().then(g => {
+                    //alert('popModule1 ' + mod);
+                    this.popModule();
+                });
+            }
 
-        // TEST OVERRIDE
-        //ClassRegistry.getInstance('Core_Model_Router').then(d => {
-        //    console.log(d);
-        //});
+            for (let mod of mods) {
+                this.pushModule(mod);
+                //alert('pushModule2 ' + mod);
+                this._modules.get(mod).bootstrap().then(h => {
+                    //alert('popModule2 ' + mod);
+                    this.popModule();
+                });
+            }
 
+            Class.i('awy_core_model_layout').then(layout => {
+                //alert('layout.collectAllViewsFiles ');
+                layout.collectAllViewsFiles();
+            });
 
-		for (let mod of this._modules.keys()) {
-			this.pushModule(mod);
-            //this._modules.mod.bootstrap();
-            this.popModule();
-		}
-
-		this.Core_Model_Layout.then(layout => {
-			layout.collectAllViewsFiles();
-		});
-
-		return this;
+            return Promise.resolve(this);
+        });
 	}
 
 	scan() {
@@ -65,7 +68,7 @@ class Core_Model_Module_Registry extends Class {
 			return Promise.all(
 				// loaded defined modules in app/modules.js files
 				defined.map(function([key, value]) {
-					//if (value.enabled) {
+					key = key.replace(/_/g,'/');
 						return System.import(key + '/manifest').then(m => {
 							m.default.key = key;
 				            return m.default;
@@ -80,19 +83,20 @@ class Core_Model_Module_Registry extends Class {
 			        				}
 			        				manifest.manifest_file = manifest.key + '/manifest.js';
 			        				//this.addModule(manifest.key, manifest);
-			        				return ClassRegistry.getInstance('Core_Model_Module', false, manifest);
+			        				return ClassRegistry.getInstance('awy_core_model_module', false, manifest);
 								}
 						)
 					);
 				}).then(configs1 => {
 					// loaded Module class instancess
-					for (let index in configs1) { 
+                    let index;
+					for (index in configs1) { 
 						this._modules.set(configs1[index].module_name, configs1[index]);
 					}
 					this.processRequires();
                     return this.processDefaultConfig();
 				}).then(configs2 => {
-                    //console.log(configs2);
+                    //console.log(this._modules.get('Awy_Core'));
                     return Promise.resolve(this);
                 }).catch(err => {
 					throw err;
@@ -162,9 +166,10 @@ class Core_Model_Module_Registry extends Class {
 
     checkRequires() {
     	// validate required modules
-    	Class.i('Core_Model_Config').then(config => {
+    	Class.i('awy_core_model_config').then(config => {
     		let requestRunLevels = config.get('module_run_levels/request');
-    		for (let modName in requestRunLevels) {		
+    		let modName;
+            for (modName in requestRunLevels) {		
     			if (this._modules.has(modName)) {
 	                this._modules.get(modName).run_level = requestRunLevels[modName]; //run level
 	            } else {
@@ -182,7 +187,8 @@ class Core_Model_Module_Registry extends Class {
             }
             // iterate over require for modules
             if ('require' in mod && 'module' in mod.require) {
-                for (let req in mod.require.module) {
+                let req;
+                for (req in mod.require.module) {
                     let reqMod = this._modules.get(req) || false;
                     // is the module missing
                     if (!reqMod) {
@@ -261,8 +267,8 @@ class Core_Model_Module_Registry extends Class {
                 */
             }
         }
-
-        for(let circRef in circRefsArr) {
+        let circRef;
+        for(circRef in circRefsArr) {
             console.warn('Circular reference detected: ' + circRef);
         }
         // take care of 'load_after' option
@@ -349,7 +355,8 @@ class Core_Model_Module_Registry extends Class {
                 if (p in depPathArr) {
                     let found = false;
                     let circPath = [];
-                    for (let k in depPathArr) {
+                    let k;
+                    for (k in depPathArr) {
                         if (p === k) {
                             found = true;
                         }
@@ -378,7 +385,8 @@ class Core_Model_Module_Registry extends Class {
     propagateRequireErrors(mod) {
         mod.run_status = 'ERROR';
         mod.errors_propagated = true;
-        for (let childName in mod.children) {
+        let childName;
+        for (childName in mod.children) {
             if (!this._modules.has(childName)) {
                 continue;
             }
@@ -391,7 +399,8 @@ class Core_Model_Module_Registry extends Class {
     }
 
     propagateRequires(mod) {
-        for (let parentName in mod.parents) {
+        let parentName;
+        for (parentName in mod.parents) {
              if (!this._modules.has(parentName)) {
                 continue;
             }

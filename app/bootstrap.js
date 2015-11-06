@@ -1,12 +1,11 @@
-import {Aobject, ObjectRegistry} from 'core/model/aobject';
+import {Aobject, ObjectRegistry} from 'awy/core/model/aobject';
 Class = Aobject;
 ClassRegistry = ObjectRegistry;
 
 class Bootstrap extends Class {
     constructor() {
       super();
-      this.logger = Class.i('Core_Model_Logger', 'Bootstrap');    
-      this.isInitialized = false;
+      this.logger = Class.i('awy_core_model_logger', 'Bootstrap');    
     }
 
     /* 
@@ -29,23 +28,14 @@ class Bootstrap extends Class {
       });
     }
 
-    initialize(): void {
-      if (this.isInitialized) {
-        return;
-      }
-
-      this.isInitialized = true;
-    }
-
     run(area) {
       let appHost = false;
       this.ready(window).then(doc => {
-          this.initialize();
           appHost = doc.querySelectorAll('[awy-app]');
-          return this.Core_Model_App;
+          return Class.i('awy_core_model_app');
       }).then(app => {
           app.host = appHost[0];
-          return app.run(area);
+          app.run(area);
       }).catch(error => {
           this.logger.then(debug => { 
             debug.error('Error in Application Execution'); 

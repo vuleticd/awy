@@ -11,20 +11,17 @@ const LOADED  = 'LOADED'; // The module has been loaded successfully
 const ERROR   = 'ERROR'; // There was an error loading the module due to unmet dependencies
 
 class Core_Model_Module extends Class {
-	
-
-
 	constructor(params: Object) {
 		super();
-		this._defaultRunLevel = 'REQUIRED';//'ONDEMAND';
+		this._defaultRunLevel = 'ONDEMAND';
 		this.run_level = this._defaultRunLevel;
         this.errors = [];
         this.errors_propagated = false;
         this.parents = [];
         this.children = [];
         this.children_copy = [];
-        this.logger = Class.i('Core_Model_Logger', 'Module');
-        Class.i('Core_Model_Router_Request').then(r => {
+        this.logger = Class.i('awy_core_model_logger', 'Module');
+        Class.i('awy_core_model_router_request').then(r => {
         	params['area'] = r.area;
         	this.set(params);
 	        if (!('run_status' in this)) {
@@ -52,7 +49,7 @@ class Core_Model_Module extends Class {
     // Promise !!!!!
     processDefaultConfig() {
         if ('default_config' in this) {
-            return Class.i('Core_Model_Config').then(cfgHlp => {
+            return Class.i('awy_core_model_config').then(cfgHlp => {
                 for (let path in this.default_config) {
                     if (this.strpos(path, '/') !== false) {
                         let value = this.default_config[path];
@@ -77,12 +74,12 @@ class Core_Model_Module extends Class {
                 let params = this.themes[name];
                 if ('name' in params && 'area' in params) {
                     params['module_name'] = this.module_name;
-                    return Class.i('Core_Model_Layout').then(lay => {
+                    return Class.i('awy_core_model_layout').then(lay => {
                         lay.addTheme(name, params, this.module_name);
                         return this;
                     });
                 } else {
-                    return Class.i('Core_Model_Layout').then(lay => {
+                    return Class.i('awy_core_model_layout').then(lay => {
                         lay.updateTheme(name, params, this.module_name);
                         return this;
                     });
@@ -94,37 +91,96 @@ class Core_Model_Module extends Class {
     }
 
     onBeforeBootstrap() {
+        //alert('onBeforeBootstrap ' + this.module_name);
         //this.run_status = 'PENDING';
         
         if (this.run_status !== 'PENDING') {
-            return this;
+            return Promise.resolve(this);
         }
         //this._prepareModuleEnvData();
         
         this.processOverrides();
-        /*
-        if (empty($this->before_bootstrap)) {
-            return $this;
+        
+        if (!('before_bootstrap' in this) || !('callback' in this.before_bootstrap)) {
+            return Promise.resolve(this);
         }
+        
+        let className = this.before_bootstrap.callback.split(".")[0];
+        let method = this.before_bootstrap.callback.split(".")[1];
+        // Promise !!!!!
+        if (className && method) {
+            return Class.i(className).then(clbClass => {
+                //alert('callback then ' + this.module_name);
+                return clbClass[method]();
+            });
+        }
+        
+        return Promise.resolve(this);
+    }
 
-        $bb = $this->before_bootstrap;
-        if (!is_array($bb)) {
-            $bb = ['callback' => $bb];
+    bootstrap() {
+        if (this.run_status !== 'PENDING') {
+            return Promise.resolve(this);
         }
-        if (!empty($bb['file'])) {
-            $includeFile = $this->BUtil->normalizePath($this->root_dir . '/' . $bb['file']);
-            BDebug::debug('MODULE.BEFORE.BOOTSTRAP ' . $includeFile);
-            require_once ($includeFile);
-        }
-        if (!empty($bb['callback'])) {
-            $start = BDebug::debug($this->BLocale->_('Start BEFORE bootstrap for %s', [$this->name]));
-            $this->BUtil->call($bb['callback']);
-            #$mod->run_status = BModule::LOADED;
-            BDebug::profile($start);
-            BDebug::debug($this->BLocale->_('End BEFORE bootstrap for %s', [$this->name]));
+        
+        return Promise.all([
+            this.processViews(),
+        ]).then(f => {
+            this.run_status = 'LOADED';
+            console.log(this);
+        });
+        /*
+        $this->_processViews(); // before auto_use to initialize custom view classes
+        $this->_processAutoUse();
+        $this->_processRouting();
+        $this->_processObserve();
+        $this->_processSecurity();
+
+        $this->BEvents->fire('BModule::bootstrap:before', ['module' => $this]);
+
+        if (!empty($this->bootstrap)) {
+            if (empty($this->bootstrap[0])) {
+                $this->bootstrap = [$this->bootstrap];
+            }
+            foreach ($this->bootstrap as $bootstrap) {
+                if (!empty($bootstrap['file'])) {
+                    $includeFile = $this->BUtil->normalizePath($this->root_dir . '/' . $bootstrap['file']);
+                    BDebug::debug('MODULE.BOOTSTRAP ' . $includeFile);
+                    require_once($includeFile);
+                }
+                if (!empty($bootstrap['callback'])) {
+                    $start = BDebug::debug($this->BLocale->_('Start bootstrap for %s', [$this->name]));
+                    $this->BUtil->call($bootstrap['callback']);
+                    #$mod->run_status = BModule::LOADED;
+                    BDebug::profile($start);
+                    BDebug::debug($this->BLocale->_('End bootstrap for %s', [$this->name]));
+                }
+            }
         }
         */
-        return this;
+        
+
+        return Promise.resolve(this);
+    }
+
+    processViews() {
+        if (!('views' in this)) {
+            return;
+        }
+
+        return Class.i('awy_core_model_layout').then(lay => {
+            for (let v in this.views) {
+                return lay.addView(v, this.views[v]);
+            }
+            //return Promise.resolve(this);
+        });
+        /*
+        for (let v in this.views) {
+            $viewName = strtolower($v[0]);
+            $params = $v[1];
+            $hlp->addView($viewName, $params);
+        }
+        */
     }
 
     processOverrides() {

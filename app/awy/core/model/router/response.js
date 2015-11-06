@@ -27,7 +27,8 @@ class Core_Model_Router_Response extends Class {
                 this._content = this._content;// is_string($this->_content) ? $this->_content : $this->BUtil->toJson($this->_content);
             }
         } else if (null === this._content) {
-            Class.i('Core_Model_Layout').then(l => {
+            Class.i('awy_core_model_layout').then(l => {
+                //console.log(l);
                 this._content = l.render();
                 console.log(this._content);
             });

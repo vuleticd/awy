@@ -1,11 +1,11 @@
 let modulesEnabled = {
-	core: {
+	awy_core: {
 		enabled: true,
 	},
-	install: {
+	awy_install: {
 		enabled: true,
 	},
-	admin: {
+	awy_admin: {
 		enabled: true,
 	}
 }

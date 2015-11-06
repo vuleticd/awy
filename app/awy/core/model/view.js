@@ -7,13 +7,20 @@ class Core_Model_View extends Class {
 
 	factory(viewName, params = {}) {
         params['view_name'] = viewName;
+
         let className = params.view_class || this.constructor.name;
         //console.log(className);
         //console.log(params);
         // !!!!!!!!!!!!!!!!!!!!!!!! import ISSUE HERE
-        let view = ClassRegistry.getInstance(className, false, params);
+       
+        return ClassRegistry.getInstance(className, false, params).then(view => {
+            return view;
+        });
+
+        //let view = ClassRegistry.getInstance(className, false, params);
         //console.log(view);
-        return view;
+        //return view;
+        
     }
 
 	setParam(key, value = null) {

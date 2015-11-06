@@ -9,7 +9,7 @@ class Core_Model_Layout extends Class {
         this._themes = {};
     	// Main (root) view to be rendered first
     	this._rootViewName = 'root';
-        this.logger = Class.i('Core_Model_Logger', 'Layout');
+        this.logger = Class.i('awy_core_model_logger', 'Layout');
 	}
 
 	set defaultViewClass(viewClass) {
@@ -34,8 +34,12 @@ class Core_Model_Layout extends Class {
         return this._rootViewName ? this.view(this._rootViewName) : null;
     }
 
-    collectAllViewsFiles() {
-        alert('yey');
+    collectAllViewsFiles(area = null) {
+        if (null === area) {
+            Class.i('awy_core_model_router_request').then(r => {
+              area = r.area;
+            });
+        }
     }
 
     view(viewName) {
@@ -44,7 +48,7 @@ class Core_Model_Layout extends Class {
 
 	addView(viewName, params = {}, reset = false) {
         return Promise.all([
-          this.Core_Model_View, 
+          Class.i('awy_core_model_view'), 
           this.logger
         ]).then(val => {
             let view = val[0];

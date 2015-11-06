@@ -1,7 +1,7 @@
 class Core_Model_Router_Request extends Class {
 	constructor() {
 		super();
-		this._area = 'frontend';
+		this._area = 'awy_frontend';
 	}
 	/**
     * Entry point relative directory path, leading and trailing slash included 

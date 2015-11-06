@@ -1,9 +1,12 @@
+/*
 var handler = {
+    
     get: function(target, name, receiver){
-        if (name[0] < 'A' || name[0] > 'Z') {
+        if (target[name] !== 'undefined') {return;}
+        //if (name[0] < 'A' || name[0] > 'Z') {
             //console.info("Invalid class name " + name);
-            return;
-        }
+            //return;
+        //}
 
         if (name in receiver._diLocal) {
             return receiver._diLocal[name];
@@ -15,8 +18,9 @@ var handler = {
         }
         return receiver.getGlobalDependencyInstance(name, receiver);
     }
-};
 
+};
+*/
 function escapeRegExp(string) {
     return string.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
 }
@@ -24,15 +28,15 @@ function escapeRegExp(string) {
 function replaceAll(string, find, replace) {
     return string.replace(new RegExp(escapeRegExp(find), 'g'), replace);
 }
-
+/*
 function Proto() { }
 Proto.prototype = new Proxy({}, handler);
-
+*/
 let diGlobal = {};
 
-export class Aobject extends Proto {
+export class Aobject {
     constructor() {
-        super();
+        //super();
         this._origClass = this.constructor.name;
         this._diConfig = {
             '*': 'ALL',
@@ -46,7 +50,7 @@ export class Aobject extends Proto {
      */
     static i(newInst = false, ...rest : any[]) {
         let className = '';
-        if (typeof newInst === "string" && newInst[0] > 'A' && newInst[0] < 'Z') {
+        if (typeof newInst === "string") {
             className = newInst;
             newInst = false;
         } else {
@@ -104,7 +108,7 @@ export class ObjectRegistry extends Aobject {
             //console.info(key);
             //console.info(_singletons);
             if (singleton && typeof _singletons[key] === 'object') {
-                resolve(_singletons[key]);
+                return resolve(_singletons[key]);
             }
             // get original or overridden class instance
             className = className in _classes ? _classes[className]['class_name'] : className;
@@ -117,7 +121,7 @@ export class ObjectRegistry extends Aobject {
                 $args = [$args];
             }
             */
-            let path = replaceAll(String(className).toLowerCase(), "_", '/');
+            let path = replaceAll(String(className), "_", '/');
             System.import(path).then(file => {
                 let instance = Object.create(file.default.prototype);
                 file.default.call(instance, ...rest);
@@ -125,9 +129,9 @@ export class ObjectRegistry extends Aobject {
                 if (singleton) {
                     _singletons[key] = instance;
                 }
-                resolve(instance);
+                return resolve(instance);
             }, error => {
-                reject(error);
+                return reject(error);
             });
         });
     }
@@ -138,8 +142,9 @@ export class ObjectRegistry extends Aobject {
 
     static overrideClass(className, newClassName, replaceSingleton = false) {  
         let curModName = '';
-        this.getInstance('Core_Model_Module_Registry').then(modReg => {
+        this.getInstance('awy_core_model_module_registry').then(modReg => {
             curModName = modReg.currentModuleName();
+            //alert(curModName);
         });
         // override
         if (typeof newClassName === 'string') {

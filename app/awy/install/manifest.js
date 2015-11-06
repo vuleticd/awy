@@ -1,16 +1,16 @@
 let config =  {
-	module_name: 'Awy_Install',
+	module_name: 'awy_install',
 	version: '0.0.0.2',
 	description: "Install sequence extension",
-	require: { module: { Awy_Core: '0.0.0.1' } },
+	require: { module: { awy_core: '0.0.0.1' } },
 	override: { class: [
-			['Core_Model_Router','Install_Model_Router'],
+			//['Core_Model_Router','Install_Model_Router'],
 		],
 	},
 	routing: [
 		['install/index/*','install/controller/index']
 	],
-	themes: { FCom_Install: {
+	themes: { awy_install: {
                 layout_before: 'layout.yml',
                 views_before: 'views' }
             }

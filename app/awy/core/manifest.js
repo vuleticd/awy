@@ -1,7 +1,15 @@
 let config =  {
-	module_name: 'Awy_Core',
+	module_name: 'awy_core',
 	version: '0.0.0.1',
+    run_level: 'REQUIRED',
 	description: "Base Awy classes and JS libraries",
+    before_bootstrap: { callback: "awy_core_model_app.onBeforeBootstrap" },
+    views: {
+        head: { view_class: 'awy_core_view_head' },
+        head_script: { view_class: 'awy_core_view_text' },
+        head_css: { view_class: 'awy_core_view_text' },
+        text: { view_class: 'awy_core_view_text' },
+        },
 	default_config: {
             db: {
                 dbname: 'awy',
@@ -14,7 +22,7 @@ let config =  {
             cookie: {
             },
             modules: {
-                core: {
+                awy_core: {
                     company_name: 'Awy',
                     site_title: 'Awy',
                     copyright_message: 'Awy',

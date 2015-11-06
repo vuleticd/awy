@@ -9,7 +9,7 @@ class Core_Model_Router extends Class {
           throw new Error('You cannot instantiate "Router". Use the "getInstance" API instead.');
         }
         */
-        this.logger = Class.i('Core_Model_Logger', 'Router');
+        this.logger = Class.i('awy_core_model_logger', 'Router');
         this.routes = [];
         this.mode = null;
         this.root = '/';
