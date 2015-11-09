@@ -19,6 +19,30 @@ class Core_Model_Router_Request extends Class {
         return this._area;
     }
 
+    httpHost(includePort = true) {
+        if (includePort) {
+            return window.location.host;
+        }
+        return window.location.hostname;
+    }
+
+    userAgent(pattern = null) {
+        return navigator.userAgent;
+        //if (null === $pattern) {
+        //    return $userAgent;
+        //}
+        //preg_match($pattern, $userAgent, $match);
+        //return $match;
+    }
+
+    currentUrl() {
+        return window.location.href;
+    }
+
+    scheme() {
+        return window.location.protocol.replace(/:/,'');
+    }
+
 }
 
 export default Core_Model_Router_Request

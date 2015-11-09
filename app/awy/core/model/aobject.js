@@ -34,7 +34,7 @@ Proto.prototype = new Proxy({}, handler);
 */
 let diGlobal = {};
 
-export class Aobject {
+export class Aobject{
     constructor() {
         //super();
         this._origClass = this.constructor.name;
@@ -112,15 +112,7 @@ export class ObjectRegistry extends Aobject {
             }
             // get original or overridden class instance
             className = className in _classes ? _classes[className]['class_name'] : className;
-            /*
-            if (!class_exists($className, true)) {
-                BDebug::error(BLocale::i()->_('Invalid class name: %s', $className));
-            }
-            let args = this.processDI(className, rest);
-            if ($className == 'BClassDecorator' && !empty($args)) {
-                $args = [$args];
-            }
-            */
+            
             let path = replaceAll(String(className), "_", '/');
             System.import(path).then(file => {
                 let instance = Object.create(file.default.prototype);

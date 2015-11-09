@@ -73,6 +73,21 @@ class Core_Model_Router_Response extends Class {
         return this;
     }
 
+    redirect(url, status = 302) {
+        /*
+        $this->BSession->close();
+        this.status(status, null, false);
+        if (true === $url) {
+            $referrer = $this->BRequest->referrer();
+            $url = $referrer ? $referrer : $this->BRequest->currentUrl();
+        } elseif (!$this->BUtil->isUrlFull($url)) {
+            $url = $this->BApp->href($url);
+        }
+        $this->header("Location: {$url}", true, $status);
+        $this->shutdown(__METHOD__);
+        */
+    }
+
 }
 
 export default Core_Model_Router_Response

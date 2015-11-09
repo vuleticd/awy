@@ -6,42 +6,24 @@ class Core_Model_App extends Class {
       this.host = null;
     }
 
-	run(area='frontend') {    
-    this.init(area).then(values => {
-        let config = values[0];
-        let moduleRegistry = values[1];
-        let router = values[2];
-        let logger = values[3];
-        //console.log(values);
-        // bootstrap modules
-        moduleRegistry.bootstrap();
-        //alert('bootstrap');
-        return Promise.resolve(values);
-       /*
-         // run module migration scripts if necessary
-         $this->BMigrate->migrateModules(true);
-         // dispatch requested controller action
-         $this->BRouting->dispatch();
-         // If session variables were changed, update session
-         $this->BSession->close();
-       */
-       
-    }).then(values => {
-        //alert('bootstrap after');
-        let moduleRegistry = values[1];
-        let router = values[2];
-        let logger = values[3];
-
-        //logger.info(moduleRegistry);
-
-        Class.i('awy_core_model_router_request').then(r => {
-          //console.log(r.area);
-        });
-
-        //logger.info(area);
-        router.listen();
-    }).catch(err => {
-        //console.log(err);
+	run(area='frontend') {  
+    return Promise.resolve(this.init(area)).then(modReg => {
+        console.log('bootstrap');
+        modReg.bootstrap();
+        //return Class.i('awy_core_model_migrate');
+    }).then(migrate => {
+        console.log('migrate');
+        //migrate.migrateModules(true);
+        return Class.i('awy_core_model_router');
+    }).then(router => {
+        console.log('router dispatch');
+        //return router.dispatch();
+        return router;
+    }).then(router => {
+        console.log('router listen');
+        Class.i('awy_core_model_config').then(config => { console.log(config); })
+        return router.listen();
+    }).catch(e => {
         Class.i('awy_core_model_layout').then(layout => {
           return layout.addView(
             'core/errors', 
@@ -49,28 +31,32 @@ class Core_Model_App extends Class {
           );
         }).then(layout => {
               layout.rootView = 'core/errors';
-              layout.view('core/errors').set('errors', err);
+              layout.view('core/errors').set('errors', e);
               return Class.i('awy_core_model_router_response');
         }).then(response => {
               response.output();
-        }).catch(error => {
-            console.log(error);
+              throw e;
+        }).catch(e => {
+            console.error(e);
         });
-    });
-    //this.logger.info(System.loads);
-		
+    });  		
 	}
 
   init(area) {
-    return Promise.all([
-      this.initConfig(area), 
-      this.initModules(),
-      this.initRouter(),
-      this.logger
-    ]);
+    return Promise.resolve(
+      this.initConfig(area)
+    ).then(config => {
+        return this.initModules();
+    }).then(modReg => {
+        this.initRouter();
+        return modReg;
+    }).catch(e => {
+        throw e;
+    });
   }
 
   initRouter() {
+    console.log('initRouter');
     return Class.i('awy_core_model_router').then(router => {
         router.config({ mode: 'history'});
         return router;
@@ -78,6 +64,7 @@ class Core_Model_App extends Class {
   }
 
   initModules() {
+    console.log('initModules');
     return Promise.all([
       Class.i('awy_core_model_config'), 
       Class.i('awy_core_model_router_request'),
@@ -118,14 +105,21 @@ class Core_Model_App extends Class {
    * return Core_Model_Config instance || errors {}
    */
   initConfig(area) {
+    console.log('initConfig');
     return Promise.all([
       Class.i('awy_core_model_config'), 
       Class.i('awy_core_model_router_request'),
-      this.logger
+      Class.i('awy_core_model_router_response'),
     ]).then(val => {
       let config =val[0];
       let req =val[1];
-      let logger =val[2];
+      let resp =val[2];
+      // Chrome has a bug of not storing cookies for localhost domain
+      if (req.httpHost(false) === 'localhost' && navigator.userAgent.indexOf("Chrome") > -1) {
+          let url = req.currentUrl().replace(/localhost/, '127.0.0.1');
+          resp.redirect(url);
+          return;
+      }
 
       let localConfig = {};
 

@@ -38,8 +38,7 @@ class Bootstrap extends Class {
           app.run(area);
       }).catch(error => {
           this.logger.then(debug => { 
-            debug.error('Error in Application Execution'); 
-            debug.debug(error);
+            debug.error(error); 
           });
       });
     }
