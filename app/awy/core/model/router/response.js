@@ -73,6 +73,7 @@ class Core_Model_Router_Response extends Class {
         return this;
     }
 
+    
     redirect(url, status = 302) {
         /*
         $this->BSession->close();
@@ -83,7 +84,9 @@ class Core_Model_Router_Response extends Class {
         } elseif (!$this->BUtil->isUrlFull($url)) {
             $url = $this->BApp->href($url);
         }
-        $this->header("Location: {$url}", true, $status);
+        */
+        window.location = url;
+        /*
         $this->shutdown(__METHOD__);
         */
     }

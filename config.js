@@ -17,14 +17,39 @@ var ClassRegistry = {};
 //Base.Class = Aobject;
 
 //System.execute = false;
+
+//var modules = false;
+//System.import('modules').then(m => { modules = m.default; });
 /*
-var modules = false;
-System.import('modules').then(m => { modules = m.default; });
 var systemNormalize = System.normalize;
 // override the normalization function
 System.normalize = function(name, parentName, parentAddress) {
 	//console.log(modules); 
-	//console.log(name + "++" + parentName + "++" + parentAddress);
+	console.log(name + "++" + parentName + "++" + parentAddress);
 	return systemNormalize.call(this, name, parentName, parentAddress);
+}
+
+function fileExists(url) {
+    if(url){
+        var req = new XMLHttpRequest();
+        req.open('GET', url, false);
+        req.send();
+        return req.status==200;
+    } else {
+        return false;
+    }
+}
+
+var systemLocate = System.locate;
+System.locate = function(load) {
+	var loc = load.name.replace(/app/,'local');
+	var dlc = load.name.replace(/app/,'dlc');
+	if (fileExists(loc)) {
+		load.name = loc;
+	} else if (fileExists(dlc)) {
+		load.name = dlc;
+	}
+	console.log(load.name); 
+  	return load.name;
 }
 */

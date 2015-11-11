@@ -39,7 +39,7 @@ class Core_Model_App extends Class {
         }).catch(e => {
             console.error(e);
         });
-    });  		
+    });	
 	}
 
   init(area) {
@@ -109,17 +109,11 @@ class Core_Model_App extends Class {
     return Promise.all([
       Class.i('awy_core_model_config'), 
       Class.i('awy_core_model_router_request'),
-      Class.i('awy_core_model_router_response'),
     ]).then(val => {
+
+
       let config =val[0];
       let req =val[1];
-      let resp =val[2];
-      // Chrome has a bug of not storing cookies for localhost domain
-      if (req.httpHost(false) === 'localhost' && navigator.userAgent.indexOf("Chrome") > -1) {
-          let url = req.currentUrl().replace(/localhost/, '127.0.0.1');
-          resp.redirect(url);
-          return;
-      }
 
       let localConfig = {};
 
@@ -132,17 +126,22 @@ class Core_Model_App extends Class {
 
       let coreDir = config.get('fs/core_dir');
       if (!coreDir) {
-          coreDir = '/app/core';
+          coreDir = '/app/awy/core';
           config.set('fs/core_dir', coreDir);
       }
       config.add(localConfig, true);
 
-      let errors = {};
-      //errors.permissions = ['test'];
-      if (Object.keys(errors).length) {
-            throw errors;
+      // try to add from localStorage, 
+      // if there's nothing there generate initial local storage config for core
+      // later change it with
+      //    config.set('install_status', 'installedYEP', false, true);
+      //    config.writeLocalStorage('core');
+      if (config.addFile('core', true) == null) {
+        config.writeLocalStorage('core');
       }
      
+      req.area = area;
+
       return Promise.resolve(config);
 
     }).catch(err => {

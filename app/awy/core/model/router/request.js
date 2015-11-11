@@ -18,31 +18,25 @@ class Core_Model_Router_Request extends Class {
     get area(){
         return this._area;
     }
-
+    
     httpHost(includePort = true) {
         if (includePort) {
             return window.location.host;
         }
         return window.location.hostname;
     }
-
-    userAgent(pattern = null) {
-        return navigator.userAgent;
-        //if (null === $pattern) {
-        //    return $userAgent;
-        //}
-        //preg_match($pattern, $userAgent, $match);
-        //return $match;
+    // test user agent
+    isAgent(search) {
+        return (navigator.userAgent.indexOf(search) > -1);
     }
-
+    // full current URL
     currentUrl() {
         return window.location.href;
     }
-
+    // HTTP or HTTPS
     scheme() {
         return window.location.protocol.replace(/:/,'');
     }
-
 }
 
 export default Core_Model_Router_Request

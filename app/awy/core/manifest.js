@@ -12,9 +12,7 @@ let config =  {
         },
 	default_config: {
             db: {
-                dbname: 'awy',
-                username: 'root',
-                logging: true,
+                db: 'awy',
                 implicit_migration: true,
             },
             web: {
