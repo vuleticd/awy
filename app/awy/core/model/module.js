@@ -1,21 +1,22 @@
 // run_level
-const DISABLED  = 'DISABLED'; // Do not allow the module to be loaded
-const ONDEMAND  = 'ONDEMAND'; // Load this module only when required by another module
-const REQUESTED = 'REQUESTED'; // Attempt to load the module, and silently ignore, if dependencies are not met.
-const REQUIRED  = 'REQUIRED'; // Attempt to load the module, and fail, if dependencies are not met.
+export const DISABLED  = 'DISABLED'; // Do not allow the module to be loaded
+export const ONDEMAND  = 'ONDEMAND'; // Load this module only when required by another module
+export const REQUESTED = 'REQUESTED'; // Attempt to load the module, and silently ignore, if dependencies are not met.
+export const REQUIRED  = 'REQUIRED'; // Attempt to load the module, and fail, if dependencies are not met.
 
 // run_status
-const IDLE    = 'IDLE'; // The module was found, but not loaded
-const PENDING = 'PENDING'; // The module is marked to be loaded, but not loaded yet. This status is currently used during internal bootstrap only.
-const LOADED  = 'LOADED'; // The module has been loaded successfully
-const ERROR   = 'ERROR'; // There was an error loading the module due to unmet dependencies
+export const IDLE    = 'IDLE'; // The module was found, but not loaded
+export const PENDING = 'PENDING'; // The module is marked to be loaded, but not loaded yet. This status is currently used during internal bootstrap only.
+export const LOADED  = 'LOADED'; // The module has been loaded successfully
+export const ERROR   = 'ERROR'; // There was an error loading the module due to unmet dependencies
 
 class Core_Model_Module extends Class {
 	constructor(params: Object) {
 		super();
-		this._defaultRunLevel = 'ONDEMAND';
-		this.run_level = this._defaultRunLevel;
+		this._defaultRunLevel = ONDEMAND;
+        this.root_dir = params.key;
         this.errors = [];
+        this.areas = {};
         this.errors_propagated = false;
         this.parents = [];
         this.children = [];
@@ -24,6 +25,8 @@ class Core_Model_Module extends Class {
         Class.i('awy_core_model_router_request').then(r => {
         	params['area'] = r.area;
         	this.set(params);
+            this.processAreas(params);
+            this.run_level = this._defaultRunLevel; // disallow declaring run_level in manifest
 	        if (!('run_status' in this)) {
 	            this.run_status = IDLE;
 	        }
@@ -32,6 +35,15 @@ class Core_Model_Module extends Class {
 	            this.channel = 'alpha';
 	        }
         });
+    }
+    // Adding area specific module configurations
+    processAreas() {
+        if (this.area in this.areas) {
+            let areaParams = this.areas[this.area];
+            areaParams['update'] = true;
+            this.update(areaParams);
+        }
+        return;
     }
 
     set(key, value = null) {
@@ -43,6 +55,23 @@ class Core_Model_Module extends Class {
         }
         this[key] = value;
         
+        return this;
+    }
+
+    update(params) {
+        if (!('update' in params)) {
+            console.log('Module is already registered: ' + this.module_name + ' with this manifest file ' + this.manifest_file );
+            return this;
+        }
+        delete params['update'];
+        let k;
+        for (k in params) {
+            if (k in this) {
+                this[k] = this.objectMerge(this[k], params[k]);
+            } else {
+                this[k] =  params[k];
+            }
+        }
         return this;
     }
 
@@ -198,6 +227,43 @@ class Core_Model_Module extends Class {
       var i = (haystack + '')
         .indexOf(needle, (offset || 0));
       return i === -1 ? false : i;
+    }
+
+    /*
+    * Merges any number of objects / parameters recursively
+    */
+    objectMerge(...rest) {
+      let base = rest.shift();
+      for (let append of rest) {
+        // base is not mergable, replace instead with last argument passed
+        if (typeof base !== 'object') {
+          return append;
+        }
+        // both base and argument are arrays
+        if (Array.isArray(append) && Array.isArray(base)) {
+            for (let val of append) {
+              if (this.contains(base, val)) {
+                  base[base.indexOf(val)] = val;
+                  append.splice(append.indexOf(val), 1);
+              }
+            }
+            base.push(...append);
+        }
+        // both base and argument are objects
+        let key;
+        for (key in append) {
+            if (key in base) {
+              base[key] = this.objectMerge(base[key], append[key]);
+            } else {
+              Object.assign(base,append);
+            }
+        }
+      }
+      return base;
+    }
+
+    contains(haystack, needle) {
+        return !!~haystack.indexOf(needle);
     }
 }
 

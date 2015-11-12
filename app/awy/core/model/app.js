@@ -42,6 +42,9 @@ class Core_Model_App extends Class {
     });	
 	}
 
+  /*
+   * return Core_Model_Module_Registry instance
+   */
   init(area) {
     return Promise.resolve(
       this.initConfig(area)
@@ -50,8 +53,6 @@ class Core_Model_App extends Class {
     }).then(modReg => {
         this.initRouter();
         return modReg;
-    }).catch(e => {
-        throw e;
     });
   }
 
@@ -63,18 +64,20 @@ class Core_Model_App extends Class {
       });
   }
 
+  /*
+   * return Core_Model_Module_Registry instance
+   */
   initModules() {
     console.log('initModules');
     return Promise.all([
       Class.i('awy_core_model_config'), 
       Class.i('awy_core_model_router_request'),
       Class.i('awy_core_model_module_registry'),
-      this.logger
-    ]).then(val => {
-      let config =val[0];
-      let req =val[1];
-      let moduleRegistry =val[2];
-      let logger =val[3];
+    ]).then(deps => {
+      let config = deps[0];
+      let req = deps[1];
+      let moduleRegistry = deps[2];
+
       let runLevels = {};
 
       let area = req.area;
@@ -83,6 +86,7 @@ class Core_Model_App extends Class {
       } else {
           config.set('module_run_levels', []);
           runLevels['awy_install'] = 'REQUIRED';
+          runLevels['awy_core'] = 'REQUIRED';
           area = 'awy_install';
           req.area = area;
       }
@@ -92,31 +96,26 @@ class Core_Model_App extends Class {
                 (array)$config->get('module_run_levels/FCom_Core');
       */
       config.add({'module_run_levels': {'request': runLevels}});
-
+      
       //console.log(config);
       let modules = moduleRegistry.scan();
       return Promise.resolve(modules);
-    }).catch(err => {
-      return Promise.reject(err);
     });
   }
 
   /*
-   * return Core_Model_Config instance || errors {}
+   * return Core_Model_Config instance
    */
   initConfig(area) {
     console.log('initConfig');
     return Promise.all([
       Class.i('awy_core_model_config'), 
       Class.i('awy_core_model_router_request'),
-    ]).then(val => {
-
-
-      let config =val[0];
-      let req =val[1];
+    ]).then(deps => {
+      let config =deps[0];
+      let req =deps[1];
 
       let localConfig = {};
-
       let rootDir = config.get('fs/root_dir');
       if (!rootDir) {
         rootDir =  req.scriptDir();
@@ -139,13 +138,9 @@ class Core_Model_App extends Class {
       if (config.addFile('core', true) == null) {
         config.writeLocalStorage('core');
       }
-     
       req.area = area;
 
       return Promise.resolve(config);
-
-    }).catch(err => {
-      return Promise.reject(err);
     });
   }
 

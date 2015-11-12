@@ -3,6 +3,8 @@ let config =  {
 	version: '0.0.0.2',
 	description: "Install sequence extension",
 	require: { module: { awy_core: '0.0.0.1' } },
+    /*load_after: ['awy_admin'],
+    load_after: 'ALL',*/
 	override: { class: [
 			//['Core_Model_Router','Install_Model_Router'],
 		],
@@ -10,10 +12,10 @@ let config =  {
 	routing: [
 		['install/index/*','install/controller/index']
 	],
-	themes: { awy_install: {
-                layout_before: 'layout.yml',
-                views_before: 'views' }
-            }
-
+	themes: { 
+		awy_install: {
+        layout_before: 'layout.yml',
+        views_before: 'views' }
+    },
 }
 export default config;
