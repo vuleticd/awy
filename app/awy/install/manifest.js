@@ -12,6 +12,9 @@ let config =  {
 	routing: [
 		['install/index/*','install/controller/index']
 	],
+	/*default_config: {
+            'modules/awy_install/something/else': 3,
+    },*/
 	themes: { 
 		awy_install: {
         layout_before: 'layout.yml',

@@ -82,7 +82,7 @@ class Core_Model_Module_Registry extends Class {
 			return this.processRequires();
 		}).then(() => {
             return this.processDefaultConfig();
-        }).then(() => {
+        }).then(modules => {
             console.log('Finished scan');
             return Promise.resolve(this);
         });
@@ -173,15 +173,18 @@ class Core_Model_Module_Registry extends Class {
             return this.sortRequires();
         });
     }
-
+    /*
+     * Creating global configuration from peaces contained in each module
+     */
     processDefaultConfig() {
         console.log('Processing default configuration for all modules');
-        let modConf = [];
-        for (let mod of this._modules.values()) {
-            modConf.push(mod.processDefaultConfig());
-        }
-        //console.log(modConf);
-        return Promise.all(modConf);
+        return Promise.all(
+            Array.from(this._modules.values(), function(module) {
+                return module.processDefaultConfig();
+            })
+        ).then(modules => {
+            return Promise.resolve(modules);
+        });
     }
     // check modules and switch either to PENDING or ERROR run_status
     checkRequires() {

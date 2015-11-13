@@ -89,9 +89,10 @@ class Core_Model_Config extends Class {
      * Add configuration fragment to global tree
      */
     add(config, toSave = false) {
-        this.config = this.objectMerge(this.config, config);
+        let configCopy = JSON.parse(JSON.stringify(config));
+        this.config = this.objectMerge(this.config, configCopy);
         if (this.enableSaving && toSave) {
-            this.configToSave = this.objectMerge(this.configToSave, config);
+            this.configToSave = this.objectMerge(this.configToSave, configCopy);
         } 
         return this;
     }

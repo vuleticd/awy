@@ -81,12 +81,12 @@ class Core_Model_App extends Class {
       let runLevels = {};
 
       let area = req.area;
+      //runLevels['awy_core'] = 'REQUIRED';
       if (config.get('install_status') === 'installed') {
         runLevels[area] = 'REQUIRED';
       } else {
           config.set('module_run_levels', []);
           runLevels['awy_install'] = 'REQUIRED';
-          runLevels['awy_core'] = 'REQUIRED';
           area = 'awy_install';
           req.area = area;
       }
@@ -97,8 +97,20 @@ class Core_Model_App extends Class {
       */
       config.add({'module_run_levels': {'request': runLevels}});
       
-      //console.log(config);
-      let modules = moduleRegistry.scan();
+      return moduleRegistry.scan();
+      //return Promise.resolve(modules);
+    }).then(modules => {
+      console.log("dbConfigFile localConfigFile");
+      /*
+      if (file_exists($dbConfigFile)) {
+          $config->addFile($dbConfigFile, true);
+      }
+
+      $localConfigFile = $config->get('fs/config_file_local', $configDir . '/' . 'local.php');
+      if (file_exists($localConfigFile)) {
+          $config->addFile($localConfigFile, true);
+      }
+      */
       return Promise.resolve(modules);
     });
   }

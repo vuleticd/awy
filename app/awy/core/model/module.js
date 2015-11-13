@@ -75,48 +75,57 @@ class Core_Model_Module extends Class {
         return this;
     }
 
-    // Promise !!!!!
+    /*
+     * Fill global configuration from peaces contained in this module
+     */
     processDefaultConfig() {
-        if ('default_config' in this) {
-            return Class.i('awy_core_model_config').then(cfgHlp => {
+        return Promise.all([
+            Class.i('awy_core_model_config'), 
+            Class.i('awy_core_model_layout'),
+        ]).then(deps => {
+            let config = deps[0];
+            let layout = deps[1];
+            if ('default_config' in this) {
+                console.log('Processing default_config for ' + this.module_name);
                 for (let path in this.default_config) {
                     if (this.strpos(path, '/') !== false) {
                         let value = this.default_config[path];
                         //console.log(value);
-                        cfgHlp.set(path, value);
+                        config.set(path, value);
                         delete this.default_config[path];
                     }
                     
                 }
-                cfgHlp.add(this.default_config);
-                
-                return this.processThemes();
-            });
-        }
-        return this;
-    }
-    
-    processThemes() {
-        //TODO: automatically enable theme module when it is used
-        if (this.run_status === 'PENDING' && 'themes' in this) {
-            for (let name in this.themes) {
-                let params = this.themes[name];
-                if ('name' in params && 'area' in params) {
-                    params['module_name'] = this.module_name;
-                    return Class.i('awy_core_model_layout').then(lay => {
-                        lay.addTheme(name, params, this.module_name);
-                        return this;
-                    });
-                } else {
-                    return Class.i('awy_core_model_layout').then(lay => {
-                        lay.updateTheme(name, params, this.module_name);
-                        return this;
-                    });
-                }
-                
+                config.add(this.default_config);
             }
+            
+            return layout;
+        }).then(layout => {
+            return this.processThemes(layout);
+        }).then(() => {
+            return Promise.resolve(this);
+        });
+    }
+    /*
+     * loading theme configuration into layout
+     */
+    processThemes(layout) {
+        let themes = JSON.parse(JSON.stringify(this.themes || {}));
+        if (this.run_status !== PENDING || !('themes' in this)) {
+            themes = {};
+        } else {
+            console.log('Processing theme configuration from ' + this.module_name);
         }
-        return this;
+
+        return Promise.all(Object.keys(themes).map(themeName => {
+            let params = themes[themeName];
+            if ('name' in params && 'area' in params) {
+                    params['module_name'] = this.module_name;
+            }
+            return layout.addTheme(themeName, params, this.module_name);
+        })).then(l => {
+            return Promise.resolve(this);
+        });
     }
 
     onBeforeBootstrap() {

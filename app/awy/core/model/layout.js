@@ -135,13 +135,39 @@ class Core_Model_Layout extends Class {
     }
 
     addTheme(themeName, params, curModName = null) {
-        if (!(themeName in this._themes)) {
-            this._themes[themeName] = params;
-        } else {
-            this._themes[themeName] = this.objectMerge(this._themes[themeName], params);
-        }
+        return Class.i('awy_core_model_module_registry').then(modReg => {
+            if (!curModName) {
+                return modReg.currentModuleName();
+            }
+            return curModName;
+        }).then(curModName => {
+            console.log('Adding theme ' + themeName + ' from module ' + curModName);
+            let paramsCopy = JSON.parse(JSON.stringify(params));
+            //console.log(paramsCopy);
+            ['area', 'parent', 'layout_before', 'layout_after', 'views_before', 'views_after'].forEach(t =>{
+                if (t in paramsCopy && t !== 'area' && t !== 'parent') {
+                    if (typeof paramsCopy[t] === 'string') {
+                        paramsCopy[t] = [paramsCopy[t]];
+                    } else {
+                        paramsCopy[t] = paramsCopy[t];
+                    }
 
-        return this;
+                    paramsCopy[t].forEach( (v,i) => {
+                        if (v[0] !== '@') {
+                            paramsCopy[t][i] = '@' + curModName + '/' + v;
+                        }
+                    });
+
+                }
+            });
+            //console.log(paramsCopy);
+            if (!(themeName in this._themes)) {
+                this._themes[themeName] = paramsCopy;
+            } else {
+                this._themes[themeName] = this.objectMerge(this._themes[themeName], paramsCopy);
+            }
+            return this._themes[themeName];
+        });
     }
 
     objectMerge(...rest) {
