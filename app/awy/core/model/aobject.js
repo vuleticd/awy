@@ -102,7 +102,16 @@ export class ObjectRegistry extends Aobject {
 
     static getInstance(className, singleton = false, ...rest : any[]) {
         return new Promise(function(resolve, reject) {
-            //console.info(className);
+            // Make sure module is available when calling it's file
+            let moduleName = className.split('_').slice(0,2).join("_");
+            //console.log(moduleName);
+            if ('awy_core_model_module_registry' in _singletons && moduleName !== 'awy_core') {
+                let modReg = _singletons['awy_core_model_module_registry'];
+                if (!modReg._modules.has(moduleName)){
+                    throw new Error(moduleName + ' module is disabled!!!');
+                }
+            }
+            
             //console.info(singleton);
             let key = [...rest, className].join('-');
             //console.info(key);

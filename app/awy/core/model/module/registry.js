@@ -187,7 +187,7 @@ class Core_Model_Module_Registry extends Class {
     checkRequires() {
         console.log('Checking for required modules and modules with errors');
     	// validate required modules
-        Class.i('awy_core_model_config').then(config => {
+        return Class.i('awy_core_model_config').then(config => {
     		let requestRunLevels = config.get('module_run_levels/request');
     		let modName;
             for (modName in requestRunLevels) {		
@@ -195,7 +195,7 @@ class Core_Model_Module_Registry extends Class {
 	                this._modules.get(modName).run_level = requestRunLevels[modName]; //run level
 	            } else {
 	            	if (requestRunLevels[modName] === moduleConstants.REQUIRED) {
-	                	throw 'Module is required but not found: ' + modName;
+	                	throw new Error('Module is required but not found: ' + modName);
 	            	}
 	            }
 	        }
@@ -254,8 +254,6 @@ class Core_Model_Module_Registry extends Class {
                     this.propagateRequires(mod2);
                 }  
             }
-
-            return this;
     	});
     }
 
@@ -291,7 +289,8 @@ class Core_Model_Module_Registry extends Class {
         }
         return this;
     }
-
+    // checking circular dependencies
+    // ordering modules loading sequence based on configuration
     sortRequires() {
         console.log('Perform topological sorting for module dependencies');
         //clone this._modules for temp use
