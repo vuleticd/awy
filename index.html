@@ -2,14 +2,21 @@
 <html> 
   <head>
     <title>Hello Awy!</title>
-    <script src="/lib/es6-loader.js"></script>  
+    <!-- Runtime configuration 
+    <script src="/lib/traceur-runtime.js"></script>
+    <script src="/lib/system-register-only.src.js"></script>  
+    <script src="/config-prod.js"></script>
+    -->
+    <!-- Development configuration -->
+    <script src="/lib/es6-loader.js"></script> 
     <script src="/config.js"></script>
+    <!-- Global configuration -->
     <script src="/lib/firebase.js"></script>
   </head> 
   <body class="container" awy-app config="config/module/test">
-    <script type="module">
+    <script>
         System.import('bootstrap').then(m => {
-          let boot = new m.default();
+          var boot = new m.default();
           boot.run('awy_frontend');
         });
     </script>

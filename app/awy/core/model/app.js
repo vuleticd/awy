@@ -98,7 +98,7 @@ class Core_Model_App extends Class {
       config.add({'module_run_levels': {'request': runLevels}});
       
       return moduleRegistry.scan();
-      //return Promise.resolve(modules);
+      //return moduleRegistry;
     }).then(modules => {
       console.log("dbConfigFile localConfigFile");
       /*
