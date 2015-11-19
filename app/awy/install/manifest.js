@@ -6,7 +6,7 @@ let config =  {
     /*load_after: ['awy_admin'],
     load_after: 'ALL',*/
 	override: { class: [
-			//['Core_Model_Router','Install_Model_Router'],
+			['awy_core_model_router','awy_install_model_router'],
 		],
 	},
 	routing: [

@@ -20,12 +20,14 @@ class Core_Model_Module_Registry extends Class {
     }
 
     pushModule(name) {
+        //console.log('pushing module ' + name);
     	this._currentModuleStack.push(name);
         return this;
     }
 
     popModule() {
     	let name = this._currentModuleStack.pop();
+        //console.log('poping module ' + name);
         return this;
     }
 
@@ -35,35 +37,53 @@ class Core_Model_Module_Registry extends Class {
         }
         return null;
     }
-
+    /**
+     * Run modules bootstrap callbacks
+     */
 	bootstrap() {
-        return Promise.all(this._modules.keys()).then(mods => {
-            for (let mod of mods) {
-                this.pushModule(mod);
-                //alert('pushModule1 ' + mod);
-                this._modules.get(mod).onBeforeBootstrap().then(g => {
-                    //alert('popModule1 ' + mod);
-                    this.popModule();
-                });
-            }
-
-            for (let mod of mods) {
-                this.pushModule(mod);
-                //alert('pushModule2 ' + mod);
-                this._modules.get(mod).bootstrap().then(h => {
-                    //alert('popModule2 ' + mod);
-                    this.popModule();
-                });
-            }
-
+        return Promise.resolve(
+            this.onBeforeBootstrap()
+        ).then(() => {
+            this.popModule();
+            console.log('after onBeforeBootstrap');
+            return this.onBootstrap();
+        }).then(() => {
+            this.popModule();
+            console.log('after Bootstrap');
+            /*
             Class.i('awy_core_model_layout').then(layout => {
                 //alert('layout.collectAllViewsFiles ');
                 layout.collectAllViewsFiles();
             });
-
+            */
+            return Promise.resolve(this);
+        }).then(() => {
+            console.log('after collectAllViewsFiles');
             return Promise.resolve(this);
         });
 	}
+
+    onBootstrap() {
+        let fncs = Array.from(this._modules.values());
+        let first = fncs.shift();
+        this.pushModule(first.module_name);
+        fncs.reduce((cur, next, index) => {
+            this.popModule();
+            this.pushModule(fncs[index].module_name);
+            return cur.then(next.bootstrap());
+        }, first.bootstrap());
+    }
+
+    onBeforeBootstrap() {
+        let fncs = Array.from(this._modules.values());
+        let first = fncs.shift();
+        this.pushModule(first.module_name);
+        fncs.reduce((cur, next, index) => {
+            this.popModule();
+            this.pushModule(fncs[index].module_name);
+            return cur.then(next.onBeforeBootstrap());
+        }, first.onBeforeBootstrap());
+    }
     // Scan for all enabled module manifest files
 	scan() {
         console.log('Module Registry scan');
@@ -156,14 +176,6 @@ class Core_Model_Module_Registry extends Class {
 
 	get configuration() {
 		return this.config;
-	}
-
-	processOverrides() {
-		ClassRegistry.overrideClass('one','two');
-	}
-
-	onBeforeBootstrap() {
-		this.processOverrides();
 	}
 
 	processRequires() {

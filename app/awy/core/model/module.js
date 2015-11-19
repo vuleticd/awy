@@ -127,16 +127,49 @@ class Core_Model_Module extends Class {
             return Promise.resolve(this);
         });
     }
-
+    // must return thenable
     onBeforeBootstrap() {
-        //alert('onBeforeBootstrap ' + this.module_name);
-        //this.run_status = 'PENDING';
-        
         if (this.run_status !== 'PENDING') {
-            return Promise.resolve(this);
+            return Promise.resolve(false);//Promise.resolve(true).then(() => this);
         }
-        //this._prepareModuleEnvData();
-        
+        console.log('BeforeBootstrap module: ' + this.module_name);
+        this.prepareModuleEnvData();
+        if (!('override' in this) || !('class' in this.override)) {
+            if (!('before_bootstrap' in this) || !('callback' in this.before_bootstrap)) {
+                return Promise.resolve(false);
+            }
+            // do the callback
+            let className = this.before_bootstrap.callback.split(".")[0];
+            let method = this.before_bootstrap.callback.split(".")[1];
+            // Promise !!!!!
+            //if (className && method) {
+                return Promise.resolve(Class.i(className)).then(clbClass => {
+                    console.log('Executing BeforeBootstrap callback from ' + this.module_name);
+                    return Promise.resolve(clbClass[method]());
+                });
+            //}
+
+            //return Class.i(className);
+        } else {
+            console.log(this.override['class']);
+            return Promise.resolve(this);
+            // do the override and then callback
+        }
+
+        /*
+        console.log('BeforeBootstrap module: ' + this.module_name);
+        Promise.resolve(
+            this.prepareModuleEnvData()
+        ).then(() => {
+            return this.processOverrides();
+        }).then(c => {
+            console.log(c);
+            return Promise.resolve(c);
+        });
+*/
+        /*
+        console.log('BeforeBootstrap module: ' + this.module_name);
+        this.prepareModuleEnvData();
         this.processOverrides();
         
         if (!('before_bootstrap' in this) || !('callback' in this.before_bootstrap)) {
@@ -148,25 +181,41 @@ class Core_Model_Module extends Class {
         // Promise !!!!!
         if (className && method) {
             return Class.i(className).then(clbClass => {
-                //alert('callback then ' + this.module_name);
+                console.log('Executing BeforeBootstrap callback from ' + this.module_name);
                 return clbClass[method]();
             });
         }
         
         return Promise.resolve(this);
+        */
     }
 
+    prepareModuleEnvData() {
+        console.log('prepareModuleEnvData');
+        if (!('url_prefix' in this)) {
+            this['url_prefix'] = '';
+        }
+        if (!('view_root_dir' in this)) {
+            this['view_root_dir'] = this.root_dir;
+        }
+        return this;
+    }
+    // must return thenable
     bootstrap() {
+        console.log('Bootstrap module: ' + this.module_name);
+        return Promise.resolve(7);
+        /*
         if (this.run_status !== 'PENDING') {
             return Promise.resolve(this);
         }
-        
+        console.log('Bootstrap module: ' + this.module_name);
         return Promise.all([
             this.processViews(),
         ]).then(f => {
             this.run_status = 'LOADED';
             //console.log(this);
         });
+        */
         /*
         $this->_processViews(); // before auto_use to initialize custom view classes
         $this->_processAutoUse();
@@ -220,16 +269,21 @@ class Core_Model_Module extends Class {
         }
         */
     }
-
+    // unknown number of promisses or simple executions
     processOverrides() {
+         console.log('processOverrides: '  + this.module_name );
+        /*
         if ('override' in this && 'class' in this.override) {
             for (let o of this.override['class']) {
                 if (o.length !== 2) {
                     continue;
                 }
-                ClassRegistry.overrideClass(o[0], o[1]);
+                console.log('OVERRIDE CLASS: ' + o[0] + ' -> ' + o[1] + ' @ ' + this.module_name);
+                return ClassRegistry.overrideClass(o[0], o[1]);
             }
         }
+        */
+        return Promise.resolve(this);
     }
     
     strpos(haystack, needle, offset) {

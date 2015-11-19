@@ -2,7 +2,6 @@ let config =  {
 	module_name: 'awy_core',
 	version: '0.0.0.1',
     /*require: { module: { awy_admin: '0.0.0.1' } },*/
-    //run_level: 'REQUIRED',
 	description: "Base Awy classes and JS libraries",
     before_bootstrap: { callback: "awy_core_model_app.onBeforeBootstrap" },
     views: {

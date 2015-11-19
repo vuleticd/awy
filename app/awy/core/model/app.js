@@ -8,11 +8,11 @@ class Core_Model_App extends Class {
 
 	run(area='frontend') {  
     return Promise.resolve(this.init(area)).then(modReg => {
-        console.log('bootstrap');
-        modReg.bootstrap();
+        return modReg.bootstrap();
         //return Class.i('awy_core_model_migrate');
     }).then(migrate => {
-        console.log('migrate');
+        console.log('migrate'); 
+        console.log(migrate);  
         //migrate.migrateModules(true);
         return Class.i('awy_core_model_router');
     }).then(router => {
@@ -51,16 +51,15 @@ class Core_Model_App extends Class {
     ).then(config => {
         return this.initModules();
     }).then(modReg => {
-        this.initRouter();
-        return modReg;
+        return this.initRouter(modReg);
     });
   }
 
-  initRouter() {
-    console.log('initRouter');
+  initRouter(modReg) {
     return Class.i('awy_core_model_router').then(router => {
+        console.log('initRouter');
         router.config({ mode: 'history'});
-        return router;
+        return modReg;
       });
   }
 
@@ -157,11 +156,14 @@ class Core_Model_App extends Class {
   }
 
   onBeforeBootstrap() {
-    //alert('Core_Model_App.onBeforeBootstrap ');
+    console.log('Core_Model_App.onBeforeBootstrap ');
+    return Promise.resolve(4);
+    /*
     return Class.i('awy_core_model_layout').then(layout => {
         //alert('layout  Core_View_Base');
         layout.defaultViewClass = 'awy_core_view_base';
     });
+*/
 
 /*
         $area = $this->BRequest->area();

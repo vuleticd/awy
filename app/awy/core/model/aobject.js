@@ -115,19 +115,22 @@ export class ObjectRegistry extends Aobject {
             //console.info(singleton);
             let key = [...rest, className].join('-');
             //console.info(key);
+            //console.info(_classes);
             //console.info(_singletons);
             if (singleton && typeof _singletons[key] === 'object') {
+                //console.log('resolving class ' + key + ' from singletons registry');
                 return resolve(_singletons[key]);
             }
             // get original or overridden class instance
             className = className in _classes ? _classes[className]['class_name'] : className;
-            
+    
             let path = replaceAll(String(className), "_", '/');
             System.import(path).then(file => {
                 let instance = Object.create(file.default.prototype);
                 file.default.call(instance, ...rest);
                 //console.log(instance);
                 if (singleton) {
+                    //console.log('writting class ' + key  + ' into singletons registry');
                     _singletons[key] = instance;
                 }
                 return resolve(instance);
@@ -143,10 +146,10 @@ export class ObjectRegistry extends Aobject {
 
     static overrideClass(className, newClassName, replaceSingleton = false) {  
         let curModName = '';
-        this.getInstance('awy_core_model_module_registry').then(modReg => {
+        if ('awy_core_model_module_registry' in _singletons) {
+            let modReg = _singletons['awy_core_model_module_registry'];
             curModName = modReg.currentModuleName();
-            //alert(curModName);
-        });
+        }
         // override
         if (typeof newClassName === 'string') {
             _classes[className] = {
@@ -160,12 +163,13 @@ export class ObjectRegistry extends Aobject {
             }
             delete _classes[className];
         }
-
+        
         if (replaceSingleton && className in _singletons) {
-            this.getInstance(className).then(inst => {
+            return this.getInstance(newClassName).then(inst => {
                 _singletons[className] = inst;
             });
         }
+        //console.log(_singletons);
     }
 }
 

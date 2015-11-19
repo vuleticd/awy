@@ -1,7 +1,7 @@
 let instance = null;
 let singletonEnforcer = {};
 
-class Core_Model_Router extends Class {
+class Awy_Core_Model_Router extends Class {
     constructor(key: Object) {
         super();
         /*
@@ -16,11 +16,11 @@ class Core_Model_Router extends Class {
         this.current = null;
     }
 
-    static getInstance(): Core_Model_Router {
-        return instance || (instance = new Core_Model_Router(singletonEnforcer));
+    static getInstance(): Awy_Core_Model_Router {
+        return instance || (instance = new Awy_Core_Model_Router(singletonEnforcer));
     }
 
-    config(options): Core_Model_Router {
+    config(options): Awy_Core_Model_Router {
         this.mode = options && options.mode && options.mode == 'history' 
                     && !!(history.pushState) ? 'history' : 'hash';
         this.root = options && options.root ? '/' + this.clearSlashes(options.root) + '/' : '/';
@@ -44,7 +44,7 @@ class Core_Model_Router extends Class {
         return path.toString().replace(/\/$/, '').replace(/^\//, '');
     }
 
-    add(re, handler): Core_Model_Router {
+    add(re, handler): Awy_Core_Model_Router {
         if(typeof re == 'function') {
             handler = re;
             re = '';
@@ -53,7 +53,7 @@ class Core_Model_Router extends Class {
         return this;
     }
 
-    remove(param): Core_Model_Router {
+    remove(param): Awy_Core_Model_Router {
         for(var i=0, r; i<this.routes.length, r = this.routes[i]; i++) {
             if(r.handler === param || r.re.toString() === param.toString()) {
                 this.routes.splice(i, 1); 
@@ -63,14 +63,14 @@ class Core_Model_Router extends Class {
         return this;
     }
 
-    flush(): Core_Model_Router {
+    flush(): Awy_Core_Model_Router {
         this.routes = [];
         this.mode = null;
         this.root = '/';
         return this;
     }
 
-    check(f): Core_Model_Router {
+    check(f): Awy_Core_Model_Router {
         var fragment = f || this.getFragment();
         for(var i=0; i<this.routes.length; i++) {
             var match = fragment.match(this.routes[i].re);
@@ -83,7 +83,7 @@ class Core_Model_Router extends Class {
         return this;
     }
 
-    listen(): Core_Model_Router {
+    listen(): Awy_Core_Model_Router {
         //this.current = this.getFragment();
         clearInterval(this.interval);
         this.interval = setInterval(this.loop.bind(this), 50);
@@ -97,7 +97,7 @@ class Core_Model_Router extends Class {
         } 
     }
 
-    navigate(path): Core_Model_Router {
+    navigate(path): Awy_Core_Model_Router {
         path = path ? path : '';
         if(this.mode === 'history') {
             history.pushState(null, null, this.root + this.clearSlashes(path));
@@ -112,7 +112,7 @@ class Core_Model_Router extends Class {
 
 USAGE
 
-this.router = Class.i(Core_Model_Router);  // INIT
+this.router = Class.i(Awy_Core_Model_Router);  // INIT
 this.router.then(router => {
     router.config({ mode: 'history'}); // CONFIGURE
 
@@ -125,4 +125,4 @@ this.router.then(router => {
 
 */
 
-export default Core_Model_Router
+export default Awy_Core_Model_Router
