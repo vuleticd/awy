@@ -125,7 +125,7 @@ export class ObjectRegistry extends Aobject {
             className = className in _classes ? _classes[className]['class_name'] : className;
     
             let path = replaceAll(String(className), "_", '/');
-            System.import(path).then(file => {
+            return System.import(path).then(file => {
                 let instance = Object.create(file.default.prototype);
                 file.default.call(instance, ...rest);
                 //console.log(instance);
@@ -134,8 +134,6 @@ export class ObjectRegistry extends Aobject {
                     _singletons[key] = instance;
                 }
                 return resolve(instance);
-            }, error => {
-                return reject(error);
             });
         });
     }
@@ -144,12 +142,13 @@ export class ObjectRegistry extends Aobject {
 
     }
 
-    static overrideClass(className, newClassName, replaceSingleton = false) {  
+    static overrideClass(className, newClassName, replaceSingleton = false) {
         let curModName = '';
         if ('awy_core_model_module_registry' in _singletons) {
             let modReg = _singletons['awy_core_model_module_registry'];
             curModName = modReg.currentModuleName();
         }
+        console.log('OVERRIDE CLASS: ' + className+ ' -> ' + newClassName + ' @ ' + curModName); 
         // override
         if (typeof newClassName === 'string') {
             _classes[className] = {
@@ -159,16 +158,19 @@ export class ObjectRegistry extends Aobject {
         // clear override
         } else if (null === newClassName) {
             if (!(className in _classes)) {
-                return;
+                return Promise.resolve(false);
             }
             delete _classes[className];
         }
-        
+
         if (replaceSingleton && className in _singletons) {
+            // configuration overrides don't replace singletons, so this is only accessed from code
+            // so it's left to figure out what to return later
             return this.getInstance(newClassName).then(inst => {
                 _singletons[className] = inst;
             });
         }
+        return Promise.resolve(true);
         //console.log(_singletons);
     }
 }

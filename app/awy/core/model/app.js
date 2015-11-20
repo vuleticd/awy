@@ -6,164 +6,124 @@ class Core_Model_App extends Class {
       this.host = null;
     }
 
-	run(area='frontend') {  
-    return Promise.resolve(this.init(area)).then(modReg => {
-        return modReg.bootstrap();
-        //return Class.i('awy_core_model_migrate');
-    }).then(migrate => {
+	async run(area='frontend') {  
+    try {
+        let modReg = await this.init(area);
+        let migrate = await modReg.bootstrap();
         console.log('migrate'); 
-        console.log(migrate);  
-        //migrate.migrateModules(true);
-        return Class.i('awy_core_model_router');
-    }).then(router => {
+        let router = await Class.i('awy_core_model_router');
         console.log('router dispatch');
-        //return router.dispatch();
-        return router;
-    }).then(router => {
         console.log('router listen');
-        Class.i('awy_core_model_config').then(config => { console.log(config); })
-        return router.listen();
-    }).catch(e => {
-        Class.i('awy_core_model_layout').then(layout => {
-          return layout.addView(
-            'core/errors', 
-            {template: '/app/awy/core/views/core/errors.html'}
-          );
-        }).then(layout => {
-              layout.rootView = 'core/errors';
-              layout.view('core/errors').set('errors', e);
-              return Class.i('awy_core_model_router_response');
-        }).then(response => {
-              response.output();
-              throw e;
-        }).catch(e => {
-            console.error(e);
-        });
-    });	
+        let config = await Class.i('awy_core_model_config');
+        console.log(config);
+        router.listen();
+    } catch(e) {
+        try {
+            let layout = await Class.i('awy_core_model_layout');
+            let l = await layout.addView(
+                'core/errors', 
+                {template: '/app/awy/core/views/core/errors.html'}
+              );
+            l.rootView = 'core/errors';
+            l.view('core/errors').set('errors', e);
+            let response = await Class.i('awy_core_model_router_response');
+            response.output();
+            throw e;
+        } catch(er) {
+            (await this.logger).error(er);
+        }
+    }
 	}
 
   /*
    * return Core_Model_Module_Registry instance
    */
-  init(area) {
-    return Promise.resolve(
-      this.initConfig(area)
-    ).then(config => {
-        return this.initModules();
-    }).then(modReg => {
-        return this.initRouter(modReg);
-    });
-  }
-
-  initRouter(modReg) {
-    return Class.i('awy_core_model_router').then(router => {
-        console.log('initRouter');
-        router.config({ mode: 'history'});
-        return modReg;
-      });
+  async init(area) {
+    let config = await this.initConfig(area);
+    let modReg = await this.initModules();
+    let router = await Class.i('awy_core_model_router');
+    (await this.logger).debug('initRouter');
+    router.config({ mode: 'history'});
+    return modReg;
   }
 
   /*
    * return Core_Model_Module_Registry instance
    */
-  initModules() {
-    console.log('initModules');
-    return Promise.all([
-      Class.i('awy_core_model_config'), 
-      Class.i('awy_core_model_router_request'),
-      Class.i('awy_core_model_module_registry'),
-    ]).then(deps => {
-      let config = deps[0];
-      let req = deps[1];
-      let moduleRegistry = deps[2];
+  async initModules() {
+    (await this.logger).debug('initModules');
+    let config = await Class.i('awy_core_model_config');
+    let req = await Class.i('awy_core_model_router_request');
+    let moduleRegistry = await Class.i('awy_core_model_module_registry');
+    let runLevels = {};
 
-      let runLevels = {};
-
-      let area = req.area;
-      //runLevels['awy_core'] = 'REQUIRED';
-      if (config.get('install_status') === 'installed') {
+    let area = req.area;
+    //runLevels['awy_core'] = 'REQUIRED';
+    if (config.get('install_status') === 'installed') {
         runLevels[area] = 'REQUIRED';
-      } else {
-          config.set('module_run_levels', []);
-          runLevels['awy_install'] = 'REQUIRED';
-          area = 'awy_install';
-          req.area = area;
-      }
-      /*
-      runLevels += (array)$config->get('module_run_levels/request') +
-                (array)$config->get('module_run_levels/' . $area) +
-                (array)$config->get('module_run_levels/FCom_Core');
-      */
-      config.add({'module_run_levels': {'request': runLevels}});
-      
-      return moduleRegistry.scan();
-      //return moduleRegistry;
-    }).then(modules => {
-      console.log("dbConfigFile localConfigFile");
-      /*
-      if (file_exists($dbConfigFile)) {
-          $config->addFile($dbConfigFile, true);
-      }
+    } else {
+        config.set('module_run_levels', []);
+        runLevels['awy_install'] = 'REQUIRED';
+        area = 'awy_install';
+        req.area = area;
+    }
 
-      $localConfigFile = $config->get('fs/config_file_local', $configDir . '/' . 'local.php');
-      if (file_exists($localConfigFile)) {
-          $config->addFile($localConfigFile, true);
-      }
-      */
-      return Promise.resolve(modules);
-    });
+    //runLevels += (array)$config->get('module_run_levels/request') +
+    //          (array)$config->get('module_run_levels/' . $area) +
+    //          (array)$config->get('module_run_levels/FCom_Core');
+    config.add({'module_run_levels': {'request': runLevels}});
+    let modules = await moduleRegistry.scan();
+    (await this.logger).debug('dbConfigFile localConfigFile');
+    
+    return modules;
   }
 
   /*
    * return Core_Model_Config instance
    */
-  initConfig(area) {
-    console.log('initConfig');
-    return Promise.all([
-      Class.i('awy_core_model_config'), 
-      Class.i('awy_core_model_router_request'),
-    ]).then(deps => {
-      let config =deps[0];
-      let req =deps[1];
+  async initConfig(area) {
+    (await this.logger).debug('initConfig');
+    let config = await Class.i('awy_core_model_config');
+    let req = await Class.i('awy_core_model_router_request');
+    let localConfig = {};
 
-      let localConfig = {};
-      let rootDir = config.get('fs/root_dir');
-      if (!rootDir) {
-        rootDir =  req.scriptDir();
-      }
-      localConfig.fs = { root_dir: rootDir };
-      this.logger.then(debug => { debug.debug('ROOTDIR = ' + rootDir) });
+    let rootDir = config.get('fs/root_dir');
+    if (!rootDir) {
+      rootDir =  req.scriptDir();
+    }
+    localConfig.fs = { root_dir: rootDir };
+    (await this.logger).debug('ROOTDIR = ' + rootDir);
 
-      let coreDir = config.get('fs/core_dir');
-      if (!coreDir) {
-          coreDir = '/app/awy/core';
-          config.set('fs/core_dir', coreDir);
-      }
-      config.add(localConfig, true);
+    let coreDir = config.get('fs/core_dir');
+    if (!coreDir) {
+        coreDir = '/app/awy/core';
+        config.set('fs/core_dir', coreDir);
+    }
+    config.add(localConfig, true);
+    // try to add from localStorage, 
+    // if there's nothing there generate initial local storage config for core
+    // later change it with
+    //    config.set('install_status', 'installedYEP', false, true);
+    //    config.writeLocalStorage('core');
+    if (config.addFile('core', true) == null) {
+      config.writeLocalStorage('core');
+    }
+    req.area = area;
 
-      // try to add from localStorage, 
-      // if there's nothing there generate initial local storage config for core
-      // later change it with
-      //    config.set('install_status', 'installedYEP', false, true);
-      //    config.writeLocalStorage('core');
-      if (config.addFile('core', true) == null) {
-        config.writeLocalStorage('core');
-      }
-      req.area = area;
-
-      return Promise.resolve(config);
-    });
+    return config;
   }
 
   onBeforeBootstrap() {
     console.log('Core_Model_App.onBeforeBootstrap ');
-    return Promise.resolve(4);
-    /*
-    return Class.i('awy_core_model_layout').then(layout => {
+    setTimeout(100);
+    //return Promise.resolve(4);
+   
+    return Promise.resolve(Class.i('awy_core_model_layout')).then(layout => {
+        console.log('layout  Core_View_Base ');
         //alert('layout  Core_View_Base');
         layout.defaultViewClass = 'awy_core_view_base';
+        return Promise.resolve(layout);
     });
-*/
 
 /*
         $area = $this->BRequest->area();

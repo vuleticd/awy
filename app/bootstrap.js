@@ -28,19 +28,17 @@ class Bootstrap extends Class {
       });
     }
 
-    run(area) {
-      let appHost = false;
-      this.ready(window).then(doc => {
+    async run(area) {
+      try {
+          let appHost = false;
+          let doc = await this.ready(window);
           appHost = doc.querySelectorAll('[awy-app]');
-          return Class.i('awy_core_model_app');
-      }).then(app => {
+          let app = await Class.i('awy_core_model_app');
           app.host = appHost[0];
           app.run(area);
-      }).catch(error => {
-          this.logger.then(debug => { 
-            debug.error(error); 
-          });
-      });
+      } catch (error) {
+          (await this.logger).error(error); 
+      }
     }
 };
 

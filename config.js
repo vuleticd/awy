@@ -6,7 +6,9 @@ System.paths['*'] = '/app/*.js';
 System.traceurOptions = {
     //annotations: true,
     types: true,
-    memberVariables: true
+    memberVariables: true,
+    sourceMaps: true,
+    asyncFunctions: true
 };
 
 System.trace = true;

@@ -42,10 +42,14 @@ class Core_Model_Module_Registry extends Class {
      */
 	bootstrap() {
         return Promise.resolve(
-            this.onBeforeBootstrap()
+            this.processOverrides()
         ).then(() => {
             this.popModule();
-            console.log('after onBeforeBootstrap');
+            console.log('after processOverrides');
+            return this.processBeforeBootstrapCallback();
+        }).then(() => {
+            this.popModule();
+            console.log('after processBeforeBootstrapCallback');
             return this.onBootstrap();
         }).then(() => {
             this.popModule();
@@ -74,38 +78,46 @@ class Core_Model_Module_Registry extends Class {
         }, first.bootstrap());
     }
 
-    onBeforeBootstrap() {
+    processOverrides() {
         let fncs = Array.from(this._modules.values());
         let first = fncs.shift();
         this.pushModule(first.module_name);
         fncs.reduce((cur, next, index) => {
             this.popModule();
             this.pushModule(fncs[index].module_name);
-            return cur.then(next.onBeforeBootstrap());
-        }, first.onBeforeBootstrap());
+            return cur.then(next.processOverrides());
+        }, Promise.resolve(first.processOverrides()));
+    }
+
+    processBeforeBootstrapCallback() {
+        let fncs = Array.from(this._modules.values());
+        let first = fncs.shift();
+        this.pushModule(first.module_name);
+        fncs.reduce((cur, next, index) => {
+            this.popModule();
+            this.pushModule(fncs[index].module_name);
+            return cur.then(next.onBeforeBootstrapCallback());
+        }, Promise.resolve(first.onBeforeBootstrapCallback()));
     }
     // Scan for all enabled module manifest files
-	scan() {
-        console.log('Module Registry scan');
-        return Promise.resolve(
-            this.getEnabled()
-        ).then(defined => {
-            return this.fetchManifests(defined);
-        }).then(manifests => { 
-            return this.initModules(manifests);
-		}).then(modules => {
-			// load modules into this._modules Map
-            let index;
-			for (index in modules) { 
-				this._modules.set(modules[index].module_name, modules[index]);
-			}
-			return this.processRequires();
-		}).then(() => {
-            return this.processDefaultConfig();
-        }).then(modules => {
-            console.log('Finished scan');
-            return Promise.resolve(this);
-        });
+	async scan() {
+        (await this.logger).debug('Module Registry scan');
+        let defined = await this.getEnabled();
+        (await this.logger).debug('Fetching manifest.js files of all enabled modules.');
+        let manifests = await this.fetchManifests(defined);
+        (await this.logger).debug(manifests);
+        (await this.logger).debug('Initilizing module objects for all manifests');
+        let modules = await this.initModules(manifests);
+        //(await this.logger).debug(modules);
+        let index;
+        for (index in modules) { 
+            this._modules.set(modules[index].module_name, modules[index]);
+        }
+        await this.processRequires();
+        (await this.logger).debug('Processing default configuration for all modules');
+        await this.processDefaultConfig();
+        (await this.logger).debug('Finished scan');
+        return this;
 	}
 /*
 	addModule(modName, params) {
@@ -125,24 +137,23 @@ class Core_Model_Module_Registry extends Class {
 	/* 
      * return all defined and hard enabled modules, as promise
      */
-	getEnabled() {
-        console.log('Fetching enabled modules from /app/modules.js');
-		return System.import('modules').then(m => { 
-			let result = [];
-			for (let key of Object.keys(m.default)) {
-                if (m.default[key].enabled) {
-			  	  result.push( [key, m.default[key]] );
-                }
-			}
-		  	return Promise.resolve(result);
-		});
+	async getEnabled() {
+        (await this.logger).debug('Fetching enabled modules from /app/modules.js');
+        let m = await System.import('modules');
+        let result = [];
+        for (let key of Object.keys(m.default)) {
+            if (m.default[key].enabled) {
+              result.push( [key, m.default[key]] );
+            }
+        }
+        (await this.logger).debug(result);
+        return result;
 	}
 
     /* 
      * return all manifest.js files of all enabled modules
      */
     fetchManifests(defined) {
-        console.log('Fetching manifest.js files of all enabled modules.');
         return Promise.all(
             defined.map(function([key, value]) {
                 key = key.replace(/_/g,'/');
@@ -159,7 +170,6 @@ class Core_Model_Module_Registry extends Class {
      * return initilized modules for all passed manifests, as promise
      */
     initModules(manifests){
-        console.log('Initilizing module objects for all manifests');
         return Promise.all(
             manifests.map(function(manifest) {
                 if (!('module_name' in manifest)) {
@@ -178,18 +188,15 @@ class Core_Model_Module_Registry extends Class {
 		return this.config;
 	}
 
-	processRequires() {
-        return Promise.resolve(
-            this.checkRequires()
-        ).then(() => {
-            return this.sortRequires();
-        });
+	async processRequires() {
+        await this.checkRequires();
+        (await this.logger).debug('Perform topological sorting for module dependencies');
+        return this.sortRequires();
     }
     /*
      * Creating global configuration from peaces contained in each module
      */
     processDefaultConfig() {
-        console.log('Processing default configuration for all modules');
         return Promise.all(
             Array.from(this._modules.values(), function(module) {
                 return module.processDefaultConfig();
@@ -199,8 +206,77 @@ class Core_Model_Module_Registry extends Class {
         });
     }
     // check modules and switch either to PENDING or ERROR run_status
-    checkRequires() {
-        console.log('Checking for required modules and modules with errors');
+    async checkRequires() {
+        // validate required modules
+        (await this.logger).debug('Checking for required modules and modules with errors');
+        let config = await Class.i('awy_core_model_config');
+        let requestRunLevels = config.get('module_run_levels/request');
+        let modName;
+        for (modName in requestRunLevels) {     
+            if (this._modules.has(modName)) {
+                this._modules.get(modName).run_level = requestRunLevels[modName]; //run level
+            } else {
+                if (requestRunLevels[modName] === moduleConstants.REQUIRED) {
+                    throw new Error('Module is required but not found: ' + modName);
+                }
+            }
+        }
+
+        for (let [modName1, mod] of this._modules) {
+            // switch into pending state if required
+            if (mod.run_level === moduleConstants.REQUIRED) {
+                mod.run_status = moduleConstants.PENDING;
+            }
+            // iterate over require for modules
+            if ('require' in mod && 'module' in mod.require) {
+                let req;
+                for (req in mod.require.module) {
+                    let reqMod = this._modules.get(req) || false;
+                    // is the module missing
+                    if (!reqMod) {
+                        mod.errors.push({type: 'missing', mod: req});
+                        continue;
+                    // is the module disabled
+                    } else if (reqMod.run_level === moduleConstants.DISABLED) {
+                        mod.errors.push({type: 'disabled', mod: req});
+                        continue;
+                    // is the module version not equal to required
+                    } else if (!this.version_compare(reqMod.version, mod.require.module[req], '=')) {
+                        mod.errors.push({type: 'version', mod: req});
+                        continue;
+                    }
+                    // set parents
+                    if (!(req in mod.parents)) {
+                        mod.parents.push(req);
+                    }
+                    // set children
+                    if ( !(modName1 in reqMod.children)) {
+                        reqMod.children.push(modName1);
+                    }
+                    // if module is ok to run, set it's parents/dependencies as ok to run as well
+                    if (mod.run_status === moduleConstants.PENDING) {
+                        reqMod.run_status = moduleConstants.PENDING;
+                    }
+                }
+                delete mod.require.module[req];
+            }
+            // switch into pending state if no errors 
+            if (mod.errors.length == 0 && mod.run_level === moduleConstants.REQUESTED) {
+                mod.run_status = moduleConstants.PENDING;
+            }
+        }
+
+        for (let [modName2, mod2] of this._modules) {
+            if (typeof mod2 !== 'object') {
+                console.error(mod2); return;
+            }
+            if (mod2.errors.length > 0 && !mod2.errors_propagated) {
+                this.propagateErrors(mod2);
+            } else if (mod2.run_status === moduleConstants.PENDING) {
+                this.propagateRequires(mod2);
+            }  
+        }
+        /*
     	// validate required modules
         return Class.i('awy_core_model_config').then(config => {
     		let requestRunLevels = config.get('module_run_levels/request');
@@ -270,6 +346,7 @@ class Core_Model_Module_Registry extends Class {
                 }  
             }
     	});
+        */
     }
 
     // If module has errors, flag the run status to ERROR and do the same to all of it's required children
@@ -307,7 +384,6 @@ class Core_Model_Module_Registry extends Class {
     // checking circular dependencies
     // ordering modules loading sequence based on configuration
     sortRequires() {
-        console.log('Perform topological sorting for module dependencies');
         //clone this._modules for temp use
         let modules = this._modules;//new Map(JSON.parse(JSON.stringify(Array.from(this._modules))));        
         let circRefsArr = [];
