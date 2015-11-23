@@ -27,7 +27,9 @@ class Bootstrap extends Class {
         }
       });
     }
-
+    /*
+     * when ready, init the app in 1st found selector with awy-app attribute 
+     */
     async run(area) {
       try {
           let appHost = false;

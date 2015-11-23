@@ -9,6 +9,12 @@ let config =  {
 			['awy_core_model_router','awy_install_model_router'],
 		],
 	},
+	/* Should make possible to call Class.i('test_class') and get instance of class from
+	app/awy/install/lib/class.js file
+	autoload: [
+		['test','lib']
+	],*/
+	/*translations: {'en':'en.js'}, */
 	routing: [
 		['install/index/*','install/controller/index']
 	],
@@ -17,8 +23,9 @@ let config =  {
     },*/
 	themes: { 
 		awy_install: {
-        layout_before: 'layout.yml',
-        views_before: 'views' }
+        	layout_before: 'layout.yml',
+        	views_before: 'views' 
+        }
     },
 }
 export default config;

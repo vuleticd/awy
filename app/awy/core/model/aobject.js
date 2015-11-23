@@ -148,7 +148,7 @@ export class ObjectRegistry extends Aobject {
             let modReg = _singletons['awy_core_model_module_registry'];
             curModName = modReg.currentModuleName();
         }
-        console.log('OVERRIDE CLASS: ' + className+ ' -> ' + newClassName + ' @ ' + curModName); 
+        //console.log('OVERRIDE CLASS: ' + className+ ' -> ' + newClassName + ' @ ' + curModName); 
         // override
         if (typeof newClassName === 'string') {
             _classes[className] = {

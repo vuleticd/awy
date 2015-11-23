@@ -113,31 +113,20 @@ class Core_Model_App extends Class {
     return config;
   }
 
-  onBeforeBootstrap() {
-    console.log('Core_Model_App.onBeforeBootstrap ');
-    setTimeout(100);
-    //return Promise.resolve(4);
-   
-    return Promise.resolve(Class.i('awy_core_model_layout')).then(layout => {
-        console.log('layout  Core_View_Base ');
-        //alert('layout  Core_View_Base');
-        layout.defaultViewClass = 'awy_core_view_base';
-        return Promise.resolve(layout);
-    });
-
-/*
-        $area = $this->BRequest->area();
-        $conf = $this->BConfig;
-        foreach (['cookie', 'web'] as $section) {
-            $areaConfig = $conf->get("modules/{$area}/{$section}");
-            if ($areaConfig) {
-                $areaConfig = $this->BUtil->arrayCleanEmpty($areaConfig);
-                if ($areaConfig) {
-                    $conf->set($section, $areaConfig, true);
-                }
-            }
+  async onBeforeBootstrap() {
+    //console.log('Core_Model_App.onBeforeBootstrap ');
+    let layout = await Class.i('awy_core_model_layout');
+    layout.defaultViewClass = 'awy_core_view_base';
+    let req = await Class.i('awy_core_model_router_request');
+    let area = req.area;
+    let config = await Class.i('awy_core_model_config');
+    ['cookie', 'web'].forEach(section => {
+        let areaConfig = config.get(area +"/" + section);
+        if (areaConfig) {
+            config.set(section, areaConfig, true);
         }
-        */
+    });
+    //console.log(layout);
   }
 }
 

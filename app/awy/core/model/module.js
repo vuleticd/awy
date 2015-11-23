@@ -75,13 +75,17 @@ class Core_Model_Module extends Class {
         return this;
     }
 
-    doConf(config) {
+    /*
+     * Fill global configuration from peaces contained in this module
+     */
+    async processDefaultConfig() {
+        let config = await Class.i('awy_core_model_config');
+        let layout = await Class.i('awy_core_model_layout');
         if ('default_config' in this) {
-            console.log('Processing default_config for ' + this.module_name);
+            (await this.logger).debug('Processing default_config for ' + this.module_name);
             for (let path in this.default_config) {
                 if (this.strpos(path, '/') !== false) {
                     let value = this.default_config[path];
-                    //console.log(value);
                     config.set(path, value);
                     delete this.default_config[path];
                 }
@@ -89,87 +93,52 @@ class Core_Model_Module extends Class {
             }
             config.add(this.default_config);
         }
-    }
-    /*
-     * Fill global configuration from peaces contained in this module
-     */
-    async processDefaultConfig() {
-        let config = await Class.i('awy_core_model_config');
-        let layout = await Class.i('awy_core_model_layout');
-        await this.doConf(config);
         await this.processThemes(layout);
         return this;
-      
-/*
-        return Promise.all([
-            Class.i('awy_core_model_config'), 
-            Class.i('awy_core_model_layout'),
-        ]).then(deps => {
-            let config = deps[0];
-            let layout = deps[1];
-            if ('default_config' in this) {
-                console.log('Processing default_config for ' + this.module_name);
-                for (let path in this.default_config) {
-                    if (this.strpos(path, '/') !== false) {
-                        let value = this.default_config[path];
-                        //console.log(value);
-                        config.set(path, value);
-                        delete this.default_config[path];
-                    }
-                    
-                }
-                config.add(this.default_config);
-            }
-            
-            return layout;
-        }).then(layout => {
-            return this.processThemes(layout);
-        }).then(() => {
-            return Promise.resolve(this);
-        });
-*/
     }
     /*
      * loading theme configuration into layout
      */
-    processThemes(layout) {
+    async processThemes(layout) {
         let themes = JSON.parse(JSON.stringify(this.themes || {}));
-        if (this.run_status !== PENDING || !('themes' in this)) {
-            themes = {};
-        } else {
-            console.log('Processing theme configuration from ' + this.module_name);
+        if (this.run_status !== PENDING || !Object.keys(themes).length) {
+            return false;
         }
-
-        return Promise.all(Object.keys(themes).map(themeName => {
+        (await this.logger).debug('Processing theme configuration from ' + this.module_name);
+        // async without concurncy
+        let themeKeys = Object.keys(themes);
+        let promises = themeKeys.map(themeName => {
             let params = themes[themeName];
             if ('name' in params && 'area' in params) {
                     params['module_name'] = this.module_name;
             }
             return layout.addTheme(themeName, params, this.module_name);
-        })).then(l => {
-            return Promise.resolve(this);
         });
-    }
 
-    // must return thenable
-    onBeforeBootstrapCallback() {
-        //console.log(this.module_name);
-        if (this.run_status !== 'PENDING' || !('before_bootstrap' in this) || !('callback' in this.before_bootstrap)) {
-            console.log('NO BeforeBootstrap Callback: ' + this.module_name);
-            return Promise.resolve(false);
+        let loadedThemes = await Promise.all(promises);
+        return loadedThemes;
+    }
+    
+    async onBeforeBootstrap(){
+        if (this.run_status !== PENDING) {
+            // skip BeforeBootstrap for this module
+            return;
+        }
+        this.prepareModuleEnvData();
+        await this.processOverrides();
+
+        if (!('before_bootstrap' in this) || !('callback' in this.before_bootstrap)) {
+            //(await this.logger).debug('NO BeforeBootstrap Callback: ' + this.module_name);
+            return;
         }
 
         let className = this.before_bootstrap.callback.split(".")[0];
         let method = this.before_bootstrap.callback.split(".")[1];
-    
-        // CALLBACKS are all exeuted before this.bootstrap() but they don't follo wthe order of modules loading
-        return Class.i(className).then(clbClass => {
-            console.log('Executing BeforeBootstrap callback from ' + this.module_name);
-            return Promise.resolve(clbClass[method]()).then(() => {
-                return Promise.resolve(this);
-            });
-        });
-        
+        (await this.logger).debug('Start BEFORE bootstrap callback for ' + this.module_name);
+        let clbClass = await Class.i(className);
+        await clbClass[method]();
+        (await this.logger).debug('End BEFORE bootstrap callback for ' + this.module_name);
+        return;
     }
 
     prepareModuleEnvData() {
@@ -181,116 +150,85 @@ class Core_Model_Module extends Class {
         }
         return this;
     }
-    // must return thenable
-    bootstrap() {
-        console.log('Bootstrap module: ' + this.module_name);
-        return Promise.resolve(7);
-        /*
-        if (this.run_status !== 'PENDING') {
-            return Promise.resolve(this);
+
+    async processOverrides() {
+        if ('override' in this && 'class' in this.override) {
+            let override;
+            for (override of this.override['class']) {
+                (await this.logger).debug('OVERRIDE CLASS: ' + override[0] + ' -> ' + override[1] + ' @ ' + this.module_name );
+                await ClassRegistry.overrideClass(override[0], override[1]);
+            }
+        }
+
+        return this;
+    }
+
+    async bootstrap() {
+        if (this.run_status !== PENDING) {
+            //console.log('skip Bootstrap for: ' + this.module_name);
+            // skip Bootstrap for this module
+            return;
         }
         console.log('Bootstrap module: ' + this.module_name);
-        return Promise.all([
-            this.processViews(),
-        ]).then(f => {
-            this.run_status = 'LOADED';
-            //console.log(this);
-        });
-        */
+        
+        this.processAutoload();
+        this.processTranslations();
+        await this.processViews(); // before auto_use to initialize custom view classes
         /*
-        $this->_processViews(); // before auto_use to initialize custom view classes
         $this->_processAutoUse();
         $this->_processRouting();
         $this->_processObserve();
         $this->_processSecurity();
+        */
 
-        $this->BEvents->fire('BModule::bootstrap:before', ['module' => $this]);
-
-        if (!empty($this->bootstrap)) {
-            if (empty($this->bootstrap[0])) {
-                $this->bootstrap = [$this->bootstrap];
-            }
-            foreach ($this->bootstrap as $bootstrap) {
-                if (!empty($bootstrap['file'])) {
-                    $includeFile = $this->BUtil->normalizePath($this->root_dir . '/' . $bootstrap['file']);
-                    BDebug::debug('MODULE.BOOTSTRAP ' . $includeFile);
-                    require_once($includeFile);
-                }
-                if (!empty($bootstrap['callback'])) {
-                    $start = BDebug::debug($this->BLocale->_('Start bootstrap for %s', [$this->name]));
-                    $this->BUtil->call($bootstrap['callback']);
-                    #$mod->run_status = BModule::LOADED;
-                    BDebug::profile($start);
-                    BDebug::debug($this->BLocale->_('End bootstrap for %s', [$this->name]));
-                }
+        if ('bootstrap' in this && 'callback' in this.bootstrap) {
+            let className = this.bootstrap.callback.split(".")[0];
+            let method = this.bootstrap.callback.split(".")[1];
+            (await this.logger).debug('Start bootstrap callback for ' + this.module_name);
+            let clbClass = await Class.i(className);
+            await clbClass[method]();
+            (await this.logger).debug('End bootstrap callback for ' + this.module_name);
+        }
+        //console.log(this);
+        this.run_status = LOADED;
+        return this;
+    }
+    /*
+     * ToDo, Not working yet
+     */
+    processAutoload() {
+        if ('autoload' in this) {
+            let al;
+            for (al of this.autoload) {
+                //System.paths[al[0]] = '/app/' + this.root_dir + "/" + al[1] + '/*.js';
+                //System.import('test/trtrttr');
             }
         }
-        */
-        
-
-        return Promise.resolve(this);
+    }
+    /*
+     * ToDo, Not working yet
+     */
+    processTranslations() {
+        //let language = $this->BSession->get('current_language');
+        if (/*language && */'translations' in this) {
+            let tr = this.translations[/*language*/'en'];
+            let file = '/app/' + this.root_dir + "/i18n/" + tr;
+            //let locale = await Class.i('awy_code_model_locale');
+            //await locale.addTranslationsFile(file);
+            //console.log(file);
+        }
     }
 
-    processViews() {
+    // sync but probably should be async and not concurent
+    async processViews() {
         if (!('views' in this)) {
             return;
         }
-
-        return Class.i('awy_core_model_layout').then(lay => {
-            for (let v in this.views) {
-                return lay.addView(v, this.views[v]);
-            }
-            //return Promise.resolve(this);
-        });
-        /*
+        let layout = await Class.i('awy_core_model_layout');
         for (let v in this.views) {
-            $viewName = strtolower($v[0]);
-            $params = $v[1];
-            $hlp->addView($viewName, $params);
+            await layout.addView(v, this.views[v]);
+            (await this.logger).debug('ADD VIEW: ' + v + ' -> ' + this.views[v]['view_class'] + ' @ ' + this.module_name );
         }
-        */
-    }
-    // unknown number of promisses or simple executions
-    processOverrides() {
-        if (this.run_status !== 'PENDING') {
-            console.log('NO processOverrides needed: ' + this.module_name);
-            return Promise.resolve(false);
-        }
-
-        if ('override' in this && 'class' in this.override) {
-            console.log('processOverrides: '  + this.module_name );
-
-            let fncs = this.override['class'];
-            let f = fncs.shift();
-            fncs.reduce((cur, next, index) => {
-                return cur.then(ClassRegistry.overrideClass(next[0], next[1]));
-            }, Promise.resolve(ClassRegistry.overrideClass(f[0], f[1])));
-            //console.log('sdsd');
-        } else { 
-            console.log('NO Overrides: '  + this.module_name );
-            //return Promise.resolve(this);
-        }
-
-        return Promise.resolve(this);
-/*
-        if (!('before_bootstrap' in this) || !('callback' in this.before_bootstrap)) {
-            return Promise.resolve(this);
-        } else {
-            let className = this.before_bootstrap.callback.split(".")[0];
-            let method = this.before_bootstrap.callback.split(".")[1];
-            console.log('sdsd');
-            // Promise !!!!!
-            //if (className && method) {
-                return Promise.resolve(ClassRegistry.getInstance(className)).then(clbClass => {
-                    console.log('Executing BeforeBootstrap callback from ' + this.module_name);
-                    return Promise.resolve(43);
-                });
-            //}
-            console.log('sdsd');
-        }
-
-        console.log('sdsd');
-        */
     }
     
     strpos(haystack, needle, offset) {

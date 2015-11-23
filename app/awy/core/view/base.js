@@ -1,6 +1,6 @@
 import Core_Model_View from 'awy/core/model/view';
 
-class Core_View_Base extends Core_Model_View {
+class Awy_Core_View_Base extends Core_Model_View {
 	constructor(params) {
 		super();
 		this._params = params;
@@ -13,4 +13,4 @@ class Core_View_Base extends Core_Model_View {
     */
 }
 
-export default Core_View_Base
+export default Awy_Core_View_Base

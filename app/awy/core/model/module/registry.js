@@ -40,7 +40,26 @@ class Core_Model_Module_Registry extends Class {
     /**
      * Run modules bootstrap callbacks
      */
-	bootstrap() {
+	async bootstrap() {
+        let module;
+        for (module of Array.from(this._modules.values())) {
+            this.pushModule(module.module_name);
+            await module.onBeforeBootstrap();
+            this.popModule();
+        }
+        //console.log('after BeforeBootstrap');
+        for (module of Array.from(this._modules.values())) {
+            this.pushModule(module.module_name);
+            await module.bootstrap();
+            this.popModule();
+        }
+        console.log('after Bootstrap');
+        // let layout = await Class.i('awy_core_model_layout');
+        //layout.collectAllViewsFiles();
+        //console.log('after collectAllViewsFiles');
+
+        return this;
+        /*
         return Promise.resolve(
             this.processOverrides()
         ).then(() => {
@@ -54,20 +73,22 @@ class Core_Model_Module_Registry extends Class {
         }).then(() => {
             this.popModule();
             console.log('after Bootstrap');
-            /*
-            Class.i('awy_core_model_layout').then(layout => {
-                //alert('layout.collectAllViewsFiles ');
-                layout.collectAllViewsFiles();
-            });
-            */
+            
+            //Class.i('awy_core_model_layout').then(layout => {
+            //    //alert('layout.collectAllViewsFiles ');
+            //    layout.collectAllViewsFiles();
+            //});
+            
             return Promise.resolve(this);
         }).then(() => {
             console.log('after collectAllViewsFiles');
             return Promise.resolve(this);
         });
+*/
 	}
 
     onBootstrap() {
+        /*
         let fncs = Array.from(this._modules.values());
         let first = fncs.shift();
         this.pushModule(first.module_name);
@@ -76,19 +97,10 @@ class Core_Model_Module_Registry extends Class {
             this.pushModule(fncs[index].module_name);
             return cur.then(next.bootstrap());
         }, first.bootstrap());
+*/
     }
-
-    processOverrides() {
-        let fncs = Array.from(this._modules.values());
-        let first = fncs.shift();
-        this.pushModule(first.module_name);
-        fncs.reduce((cur, next, index) => {
-            this.popModule();
-            this.pushModule(fncs[index].module_name);
-            return cur.then(next.processOverrides());
-        }, Promise.resolve(first.processOverrides()));
-    }
-
+    
+    /*
     processBeforeBootstrapCallback() {
         let fncs = Array.from(this._modules.values());
         let first = fncs.shift();
@@ -99,14 +111,13 @@ class Core_Model_Module_Registry extends Class {
             return cur.then(next.onBeforeBootstrapCallback());
         }, Promise.resolve(first.onBeforeBootstrapCallback()));
     }
+    */
     // Scan for all enabled module manifest files
 	async scan() {
         (await this.logger).debug('Module Registry scan');
         let defined = await this.getEnabled();
-        (await this.logger).debug('Fetching manifest.js files of all enabled modules.');
         let manifests = await this.fetchManifests(defined);
         (await this.logger).debug(manifests);
-        (await this.logger).debug('Initilizing module objects for all manifests');
         let modules = await this.initModules(manifests);
         //(await this.logger).debug(modules);
         let index;
@@ -114,26 +125,10 @@ class Core_Model_Module_Registry extends Class {
             this._modules.set(modules[index].module_name, modules[index]);
         }
         await this.processRequires();
-        (await this.logger).debug('Processing default configuration for all modules');
         await this.processDefaultConfig();
         (await this.logger).debug('Finished scan');
         return this;
 	}
-/*
-	addModule(modName, params) {
-		if (modName in this._modules) {
-			this.logger.then(debug => { debug.debug('MODULE UPDATE ' + modName) });
-            //$this->_modules[$modName]->update($params);
-        } else {
-        	this.logger.then(debug => { debug.debug('MODULE ADD ' + modName) });
-            ClassRegistry.getInstance('Core_Model_Module', false, params).then(m => {
-            	this._modules[modName] = m;
-            	console.log('after add module');
-            });
-        }
-        return this;
-	}
-*/
 	/* 
      * return all defined and hard enabled modules, as promise
      */
@@ -153,35 +148,31 @@ class Core_Model_Module_Registry extends Class {
     /* 
      * return all manifest.js files of all enabled modules
      */
-    fetchManifests(defined) {
-        return Promise.all(
-            defined.map(function([key, value]) {
-                key = key.replace(/_/g,'/');
-                return System.import(key + '/manifest').then(m => {
-                            m.default.key = key;
-                            return m.default;
-                      });
-            })
-        ).then(manifests => { 
-            return Promise.resolve(manifests); 
+    async fetchManifests(defined) {
+        (await this.logger).debug('Fetching manifest.js files of all enabled modules.');
+        let promises = defined.map(async function([key, value]) {
+            key = key.replace(/_/g,'/');
+            let m = await System.import(key + '/manifest');
+            m.default.key = key;
+            return m.default;
         });
+        let manifests = await Promise.all(promises);
+        return manifests;
     }
     /* 
      * return initilized modules for all passed manifests, as promise
      */
-    initModules(manifests){
-        return Promise.all(
-            manifests.map(function(manifest) {
-                if (!('module_name' in manifest)) {
-                    throw "Invalid or empty manifest file: " + manifest.key + '/manifest.js';
-                }
-                manifest.manifest_file = manifest.key + '/manifest.js';
-                //this.addModule() should be called instead, to either add or update module instance
-                return ClassRegistry.getInstance('awy_core_model_module', false, manifest);
-            })
-        ).then(modules => { 
-            return Promise.resolve(modules); 
+    async initModules(manifests){
+        (await this.logger).debug('Initilizing module objects for all manifests');
+        let promises = manifests.map(manifest => {
+            if (!('module_name' in manifest)) {
+                throw "Invalid or empty manifest file: " + manifest.key + '/manifest.js';
+            }
+            manifest.manifest_file = manifest.key + '/manifest.js';
+            return ClassRegistry.getInstance('awy_core_model_module', false, manifest);
         });
+        let loadedModules = await Promise.all(promises);
+        return loadedModules;
     }
 
 	get configuration() {
@@ -195,15 +186,15 @@ class Core_Model_Module_Registry extends Class {
     }
     /*
      * Creating global configuration from peaces contained in each module
+     * asynch with concurency
      */
-    processDefaultConfig() {
-        return Promise.all(
-            Array.from(this._modules.values(), function(module) {
-                return module.processDefaultConfig();
-            })
-        ).then(modules => {
-            return Promise.resolve(modules);
-        });
+    async processDefaultConfig() {
+        (await this.logger).debug('Processing default configuration for all modules');
+        let module;
+        for (module of Array.from(this._modules.values())) {
+            await module.processDefaultConfig();
+        }
+        return this;
     }
     // check modules and switch either to PENDING or ERROR run_status
     async checkRequires() {
@@ -276,77 +267,6 @@ class Core_Model_Module_Registry extends Class {
                 this.propagateRequires(mod2);
             }  
         }
-        /*
-    	// validate required modules
-        return Class.i('awy_core_model_config').then(config => {
-    		let requestRunLevels = config.get('module_run_levels/request');
-    		let modName;
-            for (modName in requestRunLevels) {		
-    			if (this._modules.has(modName)) {
-	                this._modules.get(modName).run_level = requestRunLevels[modName]; //run level
-	            } else {
-	            	if (requestRunLevels[modName] === moduleConstants.REQUIRED) {
-	                	throw new Error('Module is required but not found: ' + modName);
-	            	}
-	            }
-	        }
-
-            for (let [modName1, mod] of this._modules) {
-                // switch into pending state if required
-                if (mod.run_level === moduleConstants.REQUIRED) {
-                    mod.run_status = moduleConstants.PENDING;
-                }
-                // iterate over require for modules
-                if ('require' in mod && 'module' in mod.require) {
-                    let req;
-                    for (req in mod.require.module) {
-                        let reqMod = this._modules.get(req) || false;
-                        // is the module missing
-                        if (!reqMod) {
-                            mod.errors.push({type: 'missing', mod: req});
-                            continue;
-                        // is the module disabled
-                        } else if (reqMod.run_level === moduleConstants.DISABLED) {
-                            mod.errors.push({type: 'disabled', mod: req});
-                            continue;
-                        // is the module version not equal to required
-                        } else if (!this.version_compare(reqMod.version, mod.require.module[req], '=')) {
-                            mod.errors.push({type: 'version', mod: req});
-                            continue;
-                        }
-                        // set parents
-                        if (!(req in mod.parents)) {
-                            mod.parents.push(req);
-                        }
-                        // set children
-                        if ( !(modName1 in reqMod.children)) {
-                            reqMod.children.push(modName1);
-                        }
-                        // if module is ok to run, set it's parents/dependencies as ok to run as well
-                        if (mod.run_status === moduleConstants.PENDING) {
-                            reqMod.run_status = moduleConstants.PENDING;
-                        }
-                    }
-                    delete mod.require.module[req];
-                }
-                // switch into pending state if no errors 
-                if (mod.errors.length == 0 && mod.run_level === moduleConstants.REQUESTED) {
-                    mod.run_status = moduleConstants.PENDING;
-                }
-            }
-
-            for (let [modName2, mod2] of this._modules) {
-                if (typeof mod2 !== 'object') {
-                    console.error(mod2); return;
-                }
-                if (mod2.errors.length > 0 && !mod2.errors_propagated) {
-                    this.propagateErrors(mod2);
-                } else if (mod2.run_status === moduleConstants.PENDING) {
-                    this.propagateRequires(mod2);
-                }  
-            }
-    	});
-        */
     }
 
     // If module has errors, flag the run status to ERROR and do the same to all of it's required children
