@@ -1,26 +1,18 @@
-class Core_Model_View extends Class {
+class Awy_Core_Model_View extends Class {
 
 	constructor(params) {
 		super();
 		this._params = params;
 	}
 
-	factory(viewName, params = {}) {
+    /**
+     * Factory to generate view instances
+     */
+	async factory(viewName, params = {}) {
         params['view_name'] = viewName;
-
-        let className = params.view_class || ('awy_' + this.constructor.name).toLowerCase();
-        //console.log(className);
-        //console.log(params);
-        // !!!!!!!!!!!!!!!!!!!!!!!! import ISSUE HERE
-       
-        return ClassRegistry.getInstance(className, false, params).then(view => {
-            return view;
-        });
-
-        //let view = ClassRegistry.getInstance(className, false, params);
-        //console.log(view);
-        //return view;
-        
+        let className = params.view_class || this._origClass.toLowerCase();
+        let view = await ClassRegistry.getInstance(className, false, params);
+        return view; 
     }
 
 	setParam(key, value = null) {
@@ -143,4 +135,4 @@ class Core_Model_View extends Class {
     }
 }
 
-export default Core_Model_View
+export default Awy_Core_Model_View

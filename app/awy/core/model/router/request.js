@@ -11,6 +11,10 @@ class Core_Model_Router_Request extends Class {
         return dir;
     }
 
+    scriptName() {
+        return window.location.pathname;
+    }
+
     set area(area) {
         this._area = area;
     }

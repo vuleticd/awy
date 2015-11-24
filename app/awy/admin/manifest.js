@@ -9,7 +9,7 @@ let config =  {
                     root: { view_class: 'awy_core_view_root' },
                 },
                 auto_use: [ 'bootstrap', 'views' ],
-                before_bootstrap: { callback: "awy_admin_model_admin.onBeforeBootstrap" },
+                before_bootstrap: { callback: "awy_admin_admin.onBeforeBootstrap" },
             },
         },
 	themes: { awy_admin_defaultTheme: {

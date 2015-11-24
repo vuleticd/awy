@@ -36,7 +36,6 @@ let diGlobal = {};
 
 export class Aobject{
     constructor() {
-        //super();
         this._origClass = this.constructor.name;
         this._diConfig = {
             '*': 'ALL',
@@ -108,7 +107,7 @@ export class ObjectRegistry extends Aobject {
             if ('awy_core_model_module_registry' in _singletons && moduleName !== 'awy_core') {
                 let modReg = _singletons['awy_core_model_module_registry'];
                 if (!modReg._modules.has(moduleName)){
-                    throw new Error(moduleName + ' module is disabled!!!');
+                    throw new Error(moduleName + ' module is disabled!!! ' + className);
                 }
             }
             
@@ -134,7 +133,7 @@ export class ObjectRegistry extends Aobject {
                     _singletons[key] = instance;
                 }
                 return resolve(instance);
-            });
+            }).catch(e => { return reject(e); });
         });
     }
 

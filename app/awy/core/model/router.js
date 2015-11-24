@@ -106,6 +106,43 @@ class Awy_Core_Model_Router extends Class {
         }
         return this;
     }
+    // Declare route
+    async route(route, callback = null, args = null, name = null, multiple = true) {
+        if (Array.isArray(route)) {
+            let a;
+            for (r of route) {
+                if (null === callback) {
+                    this.route(a[0], a[1], (a[2] || null), (a[3] || null));
+                } else {
+                    this.route(a, callback, args, name, multiple);
+                }
+            }
+            return this;
+        }
+        
+        if (!('module_name' in args)) {
+            let modReg = await Class.i('awy_core_model_module_registry');
+            args['module_name'] = modReg.currentModuleName();
+        }
+        (await this.logger).debug('ROUTE ' + route);
+
+        if (!this.contains(this.routes,route)) {
+            this.routes.push({ re: route, handler: callback});
+            //this.routes[$route] = new BRouteNode(['route_name' => $route]);
+        }
+        /*
+        $this->_routes[$route]->observe($callback, $args, $multiple);
+
+        if (null !== $name) {
+            $this->_urlTemplates[$name] = $route;
+        }
+        */
+        return this;
+    }
+
+    contains(haystack, needle) {
+        return !!~haystack.indexOf(needle);
+    }
 }
 
 /*

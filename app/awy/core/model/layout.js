@@ -3,12 +3,18 @@ class Core_Model_Layout extends Class {
 		super();
 		// Default class name for newly created views
 		this._defaultViewClass = false;
+        // Default theme name (current area / main module)
+        this._defaultTheme = false;
 		// View objects registry
     	this.views = {};
         // Installed themes registry
         this._themes = {};
     	// Main (root) view to be rendered first
     	this._rootViewName = 'root';
+        // Add view templates from these dirs after theme
+        this._addViewsDirs = [];
+        // Load these layout files after theme
+        this._loadLayoutFiles = [];
         this.logger = Class.i('awy_core_model_logger', 'Layout');
 	}
 
@@ -19,6 +25,15 @@ class Core_Model_Layout extends Class {
 
     get defaultViewClass(){
         return this._defaultViewClass;
+    }
+
+    set defaultTheme(theme) {
+        this._defaultTheme = theme;
+        return this;
+    }
+
+    get defaultTheme(){
+        return this._defaultTheme;
     }
 
     set rootView(viewName) {
@@ -101,7 +116,7 @@ class Core_Model_Layout extends Class {
     }
 
     async addTheme(themeName, params, curModName = null) {
-        let modReg = Class.i('awy_core_model_module_registry');
+        let modReg = await Class.i('awy_core_model_module_registry');
         if (!curModName) {
             curModName = modReg.currentModuleName();
         }
@@ -131,6 +146,44 @@ class Core_Model_Layout extends Class {
         return this._themes[themeName];
     }
 
+    /**
+     * Add all view dirs and layouts declared in module manifest
+     */
+    async addModuleViewsDirsAndLayouts(module, area){
+        let areaDir = area.replace('awy_', '');
+        let moduleRootDir = module.root_dir;
+        if (this.contains(module.auto_use,'all') || this.contains(module.auto_use,'views')) {
+            await this.addAllViewsDir('/' + moduleRootDir + '/views');
+            await this.addAllViewsDir('/' + moduleRootDir + '/' + areaDir + '/views');
+        }
+        if (this.contains(module.auto_use,'all') || this.contains(module.auto_use,'layout')) {
+            this.loadLayoutAfterTheme('/' + moduleRootDir + '/layout.js');
+            this.loadLayoutAfterTheme('/' + moduleRootDir + '/' + areaDir + '/layout.js');
+        }
+        return this;
+    }  
+
+    async addAllViewsDir(rootDir = null, prefix = '', curModule = null) {
+        if (!curModule) {
+            let modReg = await Class.i('awy_core_model_module_registry');
+            curModule = modReg.currentModuleName();
+        }
+        this._addViewsDirs.push([rootDir, prefix, curModule]);
+        return this;
+    } 
+
+    /**
+     * Load layout update after theme has been initialized
+     */
+    loadLayoutAfterTheme(layoutFilename, first = false) {
+        if (first) {
+            this._loadLayoutFiles.unshift(layoutFilename);
+        } else {
+            this._loadLayoutFiles.push(layoutFilename);
+        }
+        return this;
+    }
+
     objectMerge(...rest) {
       let base = rest.shift();
       for (let append of rest) {
@@ -149,7 +202,11 @@ class Core_Model_Layout extends Class {
         }
       }
       return base;
-  }
+    }
+
+    contains(haystack, needle) {
+        return !!~haystack.indexOf(needle);
+    }
 }
 
 export default Core_Model_Layout

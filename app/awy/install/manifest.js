@@ -16,7 +16,9 @@ let config =  {
 	],*/
 	/*translations: {'en':'en.js'}, */
 	routing: [
-		['install/index/*','install/controller/index']
+		['/','awy_install_controller.index'],
+		['/install','awy_install_controller.index'],
+		['/install/.action','awy_install_controller']
 	],
 	/*default_config: {
             'modules/awy_install/something/else': 3,

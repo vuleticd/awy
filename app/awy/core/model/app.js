@@ -17,6 +17,7 @@ class Core_Model_App extends Class {
         let config = await Class.i('awy_core_model_config');
         console.log(config);
         router.listen();
+        //router.navigate('/install');
     } catch(e) {
         try {
             let layout = await Class.i('awy_core_model_layout');

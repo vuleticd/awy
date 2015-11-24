@@ -163,32 +163,38 @@ class Core_Model_Module extends Class {
         return this;
     }
 
-    async bootstrap() {
+    async onBootstrap() {
         if (this.run_status !== PENDING) {
             //console.log('skip Bootstrap for: ' + this.module_name);
             // skip Bootstrap for this module
             return;
         }
-        console.log('Bootstrap module: ' + this.module_name);
+        //(await this.logger).debug('Bootstrap module: ' + this.module_name);
         
         this.processAutoload();
         this.processTranslations();
         await this.processViews(); // before auto_use to initialize custom view classes
+        await this.processAutoUse();
+        await this.processRouting();
         /*
-        $this->_processAutoUse();
-        $this->_processRouting();
         $this->_processObserve();
         $this->_processSecurity();
         */
-
-        if ('bootstrap' in this && 'callback' in this.bootstrap) {
-            let className = this.bootstrap.callback.split(".")[0];
-            let method = this.bootstrap.callback.split(".")[1];
+        
+        if ('bootstrap' in this) {
             (await this.logger).debug('Start bootstrap callback for ' + this.module_name);
-            let clbClass = await Class.i(className);
-            await clbClass[method]();
+            let b;
+            for (b of this.bootstrap) {
+                if ('callback' in b) {
+                    let className = b.callback.split(".")[0];
+                    let method = b.callback.split(".")[1];
+                    let clbClass = await Class.i(className);
+                    await clbClass[method]();
+                }
+            }
             (await this.logger).debug('End bootstrap callback for ' + this.module_name);
         }
+        
         //console.log(this);
         this.run_status = LOADED;
         return this;
@@ -230,6 +236,84 @@ class Core_Model_Module extends Class {
             (await this.logger).debug('ADD VIEW: ' + v + ' -> ' + this.views[v]['view_class'] + ' @ ' + this.module_name );
         }
     }
+
+    async processAutoUse() {
+        if (!('auto_use' in this)) {
+            return;
+        }
+        // array_flip -> Map
+        let req = await Class.i('awy_core_model_router_request');
+        let area = req.area;
+        let areaDir = area.replace('awy_', '');
+        if (this.contains(this.auto_use,'all') || this.contains(this.auto_use,'bootstrap')) {
+            if (!('bootstrap' in this)) {
+                this['bootstrap'] = [];
+            }
+            let mainExist = await this.methodExists(this.module_name + '_main', 'bootstrap');
+            if (mainExist) {
+                this.bootstrap.push({ callback: this.module_name + '_main.bootstrap'});
+            }
+            let areaExist = await this.methodExists(this.module_name + '_' + areaDir, 'bootstrap');
+            if (areaExist) {
+                this.bootstrap.push({ callback: this.module_name + '_' + areaDir + '.bootstrap'});
+            }
+        }
+
+        let layout = await Class.i('awy_core_model_layout');
+        layout.addModuleViewsDirsAndLayouts(this, area);
+        //console.log(layout);
+    }
+
+    async processRouting(){
+        if (!('routing' in this)) {
+            return;
+        }
+        
+        let hlp = await Class.i('awy_core_model_router');
+        let r;
+        let method; 
+        let route; 
+        let callback; 
+        let args; 
+        let name; 
+        let multiple;
+        
+        for(r of this.routing){
+            if (r[0][0] === '/' || r[0][0] === '^') {
+                method = 'route';
+                route = r[0];
+                callback = r[1];
+                args = r[2] || {};
+                name = r[3] || null;
+                multiple = r[4] || true;
+            } else {
+                 method = r[0].toLowerCase();
+                 /*
+                 if (!isset($r[1])) {
+                    BDebug::error('Invalid routing directive: ' . print_r($r));
+                    continue;
+                }*/
+                route = r[1];
+                callback = r[2] || null;
+                args = r[3] || {};
+                name = r[4] || null;
+                multiple = r[5] || true;
+
+            }
+            await hlp[method](route, callback, args, name, multiple);
+        }
+        console.log(hlp);
+    }
+
+    async methodExists(obj, method) {
+        try {
+            let clbClass = await Class.i(obj);
+            return typeof clbClass[method] === 'function';
+        } catch(e) {
+            return false;
+        }
+    }
+
     
     strpos(haystack, needle, offset) {
       var i = (haystack + '')

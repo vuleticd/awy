@@ -50,7 +50,7 @@ class Core_Model_Module_Registry extends Class {
         //console.log('after BeforeBootstrap');
         for (module of Array.from(this._modules.values())) {
             this.pushModule(module.module_name);
-            await module.bootstrap();
+            await module.onBootstrap();
             this.popModule();
         }
         console.log('after Bootstrap');
