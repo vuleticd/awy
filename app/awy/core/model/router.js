@@ -70,13 +70,26 @@ class Awy_Core_Model_Router extends Class {
         return this;
     }
 
-    check(f): Awy_Core_Model_Router {
-        var fragment = f || this.getFragment();
+    async check(f): Awy_Core_Model_Router {
+        //throw new Error('dsdsd');
+        let fragment = f || this.getFragment();
         for(var i=0; i<this.routes.length; i++) {
-            var match = fragment.match(this.routes[i].re);
+            let match = ("/"+fragment).match(this.routes[i].re);
             if(match) {
                 match.shift();
-                this.routes[i].handler.apply({}, match);
+                let className = this.routes[i].handler.split(".")[0];
+                let method = this.routes[i].handler.split(".")[1];
+                let clbClass = await Class.i(className);
+                console.log(method);
+                let forward = await clbClass.dispatch(method, match);
+                if (Array.isArray(forward)) {
+                    let actionName = forward[0];
+                    let controllerName = forward[1] || className;
+                    let params = forward[2]
+                    this.route('_ /forward', controllerName + '.' + actionName, {'params': params}, null, false);
+                }
+
+                //this.routes[i].handler.apply({}, match);
                 return this;
             }           
         }
@@ -84,17 +97,27 @@ class Awy_Core_Model_Router extends Class {
     }
 
     listen(): Awy_Core_Model_Router {
-        //this.current = this.getFragment();
-        clearInterval(this.interval);
-        this.interval = setInterval(this.loop.bind(this), 50);
-        return this;
+        try{
+            //this.current = this.getFragment();
+            clearInterval(this.interval);
+            this.interval = setInterval(this.loop.bind(this), 50);
+            return this;
+        } catch(e){
+            //clearInterval(this.interval);
+            throw e;
+        }
     }
 
     loop(): void {
-       if(this.current !== this.getFragment()) {
-            this.current = this.getFragment();
-            this.check(this.current);
-        } 
+        //throw new Error('dsdsd');
+        try{
+            if(this.current !== this.getFragment()) {
+                this.current = this.getFragment();
+                this.check(this.current);
+            } 
+        } catch(e){
+            throw e;
+        }
     }
 
     navigate(path): Awy_Core_Model_Router {

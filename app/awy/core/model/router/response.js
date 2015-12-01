@@ -6,7 +6,11 @@ class Core_Model_Router_Response extends Class {
         this._content = null;
 	}
 
-    output(type = null) {
+    render(){
+
+    }
+
+    async output(type = null) {
         if (null !== type) {
             this.setContentType(type);
         }
@@ -25,13 +29,24 @@ class Core_Model_Router_Response extends Class {
                 this._content = this._content;// is_string($this->_content) ? $this->_content : $this->BUtil->toJson($this->_content);
             }
         } else if (null === this._content) {
-            Class.i('awy_core_model_layout').then(l => {
+            let l = await Class.i('awy_core_model_layout');
+            //Class.i('awy_core_model_layout').then(l => {
                 //console.log(l);
-                this._content = l.render();
-                console.log(this._content);
-            });
+                this._content = await l.render();
+            //});
             //this._content = Layout.i().render();
         }
+        let parser = new DOMParser();
+        //this._content = parser.parseFromString(this._content, "text/xml");
+        let app = await Class.i('awy_core_model_app');
+        console.log(typeof app.host);
+        app.host.insertAdjacentHTML('beforeend', this._content);
+        //app.host.appendChild(this._content.firstChild);
+        //console.log(this._content.firstChild);
+        //document.body.insertBefore(this._content.firstChild, app.host); 
+        //app.host.insertBefore(this._content);
+        
+
         /*
         $this->BEvents->fire(__METHOD__ . ':before', ['content' => &$this->_content]);
 

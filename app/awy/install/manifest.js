@@ -6,7 +6,7 @@ let config =  {
     /*load_after: ['awy_admin'],
     load_after: 'ALL',*/
 	override: { class: [
-			['awy_core_model_router','awy_install_model_router'],
+			//['awy_core_model_router','awy_install_model_router'],
 		],
 	},
 	/* Should make possible to call Class.i('test_class') and get instance of class from

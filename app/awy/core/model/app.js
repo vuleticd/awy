@@ -8,30 +8,34 @@ class Core_Model_App extends Class {
 
 	async run(area='frontend') {  
     try {
+      //throw new Error('dsdsdsd');
         let modReg = await this.init(area);
         let migrate = await modReg.bootstrap();
         console.log('migrate'); 
         let router = await Class.i('awy_core_model_router');
-        console.log('router dispatch');
         console.log('router listen');
-        let config = await Class.i('awy_core_model_config');
-        console.log(config);
         router.listen();
+
+        let config = await Class.i('awy_core_model_config');
+        let layout = await Class.i('awy_core_model_layout');
+        console.log(config);
+        console.log(router);
+        console.log(layout);
         //router.navigate('/install');
     } catch(e) {
         try {
             let layout = await Class.i('awy_core_model_layout');
             let l = await layout.addView(
                 'core/errors', 
-                {template: '/app/awy/core/views/core/errors.html'}
+                {template: 'awy/core/views/core/errors'}
               );
             l.rootView = 'core/errors';
             l.view('core/errors').set('errors', e);
             let response = await Class.i('awy_core_model_router_response');
-            response.output();
-            throw e;
+            await response.output();
+            //throw e;
         } catch(er) {
-            (await this.logger).error(er);
+            //(await this.logger).error(er);
         }
     }
 	}
