@@ -4,7 +4,8 @@ class Awy_Core_View_Root extends Awy_Core_Model_View {
 	constructor(params) {
 		super();
 		this._params = params;
-		this.body_class = [];
+		this.body_class = ['root','somethig'];
+		this.set("main", 434343);
 		this.addBodyClassFromRequest(); // async , not waiting
 	}
 

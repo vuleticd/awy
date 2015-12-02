@@ -36,11 +36,15 @@ class Core_Model_Router_Response extends Class {
             //});
             //this._content = Layout.i().render();
         }
-        let parser = new DOMParser();
+        //let parser = new DOMParser();
         //this._content = parser.parseFromString(this._content, "text/xml");
         let app = await Class.i('awy_core_model_app');
-        console.log(typeof app.host);
-        app.host.insertAdjacentHTML('beforeend', this._content);
+        console.log(typeof this._content);
+        HTML.ify(app.host);
+        app.host.add("" + this._content);
+        //app.host.insertAdjacentHTML('beforeend', this._content);
+
+
         //app.host.appendChild(this._content.firstChild);
         //console.log(this._content.firstChild);
         //document.body.insertBefore(this._content.firstChild, app.host); 

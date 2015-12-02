@@ -45,6 +45,9 @@ class Awy_Core_Model_View extends Class {
     }
 
     get(name) {
+        if (!('args' in this._params)) {
+            return null;
+        }
         return this._params['args'][name] || null;
     }
     /*
@@ -82,9 +85,44 @@ class Awy_Core_Model_View extends Class {
     async _render(params){
         let t = await this.getTemplateFileName();
         //let m = t.match(/\$(\S*)/g).map(s => `${this.get(s.replace("$",''))}`);
-        let m = t.replace(/\$(\S*)/g, s => `${this.get(s.replace("$",''))}`);
-        console.log(m);
-        return m;
+        //console.log(t.match(/\{\$([^}]*)\}/g));
+
+        //console.log(t.match(/\$([^} ]*)/g));
+        let matches = t.match(/\$([^} ]*)/g);
+        console.log(matches);
+        let m;
+        for (m of matches) {
+            let a = m.replace("$",'').replace('")','').split('("');
+            let r = null;
+            switch(a.length){
+                case 2:
+                    // calling function and wait for it
+                    r =  await this[a[0]](a[1]);
+                    break;
+                case 1:
+                    // calling property
+                    r = this[a[0]];
+                    break;
+            }
+            //t.replace(/m/,r);
+            t = t.replace(m,r);
+        }
+        console.log(t);
+        return t;
+    }
+
+    async hook(hookName, args = []) {
+        let result = hookName + ' HOOK';
+        (await this.logger).debug("START HOOK: " + hookName);
+        /*
+        $result .= join('', $this->BEvents->fire('BView::hook:before', ['view' => $this, 'name' => $hookName]));
+
+        $result .= join('', $this->BEvents->fire('BLayout::hook:' . $hookName, $args));
+
+        $result .= join('', $this->BEvents->fire('BView::hook:after', ['view' => $this, 'name' => $hookName]));
+        */
+        (await this.logger).debug("END HOOK: " + hookName);
+        return result;
     }
 
     async getTemplateFileName(fileExt = null, quiet = false) {
@@ -93,9 +131,14 @@ class Awy_Core_Model_View extends Class {
         }
         let template = this.param('template');
         let viewName = this.param('view_name');
+        let modName = this.param('module_name');
+
+        // if template is not set get the template from modules view dir
         if (!template && viewName) {
-            template = viewName + fileExt;
+            let modReg = await Class.i('awy_core_model_module_registry');
+            template = modReg._modules.get(modName).view_root_dir + '/views/' + viewName;
         }
+
         template = await System.import(template);
         template = template.default;
         /*
