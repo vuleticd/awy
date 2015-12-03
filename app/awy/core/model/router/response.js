@@ -1,6 +1,7 @@
 class Core_Model_Router_Response extends Class {
 	constructor() {
 		super();
+        this.logger = Class.i('awy_core_model_logger', 'Response');
         this._contentType = 'text/html';
         this._charset = 'UTF-8';
         this._content = null;
@@ -39,7 +40,7 @@ class Core_Model_Router_Response extends Class {
         //let parser = new DOMParser();
         //this._content = parser.parseFromString(this._content, "text/xml");
         let app = await Class.i('awy_core_model_app');
-        console.log(typeof this._content);
+        (await this.logger).debug(this._content);
         HTML.ify(app.host);
         app.host.add("" + this._content);
         //app.host.insertAdjacentHTML('beforeend', this._content);

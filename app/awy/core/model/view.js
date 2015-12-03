@@ -2,7 +2,7 @@ class Awy_Core_Model_View extends Class {
 
 	constructor(params) {
 		super();
-		this._params = params;
+		this._params = params || {};
         this.logger = Class.i('awy_core_model_logger', 'View');
 	}
 
@@ -29,19 +29,37 @@ class Awy_Core_Model_View extends Class {
     }
 
     set(name, value = null) {
+        if (!('args' in this._params)) {
+            this._params['args'] = {};
+        }
+
         if (typeof name === 'object') {
+            let k;
             for (k in name) {
                 this._params['args'][k] = name[k];
             }
 
             return this;
         }
-        if (!('args' in this._params)) {
-        	this._params['args'] = {};
-        }
+
         this._params['args'][name] = value;
 
         return this;
+    }
+
+    /**
+     * Render as string=
+     * If there's exception during render, output as string as well
+     */
+    async __toString() {
+        let result = '';
+        try {
+            result = await this.render();
+        } catch (e) {
+            result = e;
+        }
+
+        return result;
     }
 
     get(name) {
@@ -89,39 +107,45 @@ class Awy_Core_Model_View extends Class {
 
         //console.log(t.match(/\$([^} ]*)/g));
         let matches = t.match(/\$([^} ]*)/g);
-        console.log(matches);
-        let m;
-        for (m of matches) {
-            let a = m.replace("$",'').replace('")','').split('("');
-            let r = null;
-            switch(a.length){
-                case 2:
-                    // calling function and wait for it
-                    r =  await this[a[0]](a[1]);
-                    break;
-                case 1:
-                    // calling property
-                    r = this[a[0]];
-                    break;
+        if (Array.isArray(matches)) {
+            let m;
+            for (m of matches) {
+                let a = m.replace("$",'').replace('")','').split('("');
+                let r = null;
+                switch(a.length){
+                    case 2:
+                        // calling function and wait for it
+                        r =  await this[a[0]](a[1]);
+                        break;
+                    case 1:
+                        // calling property
+                        r = this[a[0]];
+                        break;
+                }
+                //t.replace(/m/,r);
+                t = t.replace(m,r);
             }
-            //t.replace(/m/,r);
-            t = t.replace(m,r);
         }
-        console.log(t);
+        //console.log(t);
+        //let ex = HTML.add.expand(t);
+        //console.log(HTML.add.expand(t));
         return t;
     }
 
-    async hook(hookName, args = []) {
-        let result = hookName + ' HOOK';
+    async hook(hookName, args = {}) {
+        let result = '';//hookName + ' HOOK';
         (await this.logger).debug("START HOOK: " + hookName);
+        let eventsInstance = await Class.i('awy_core_model_events'); 
         /*
-        $result .= join('', $this->BEvents->fire('BView::hook:before', ['view' => $this, 'name' => $hookName]));
-
-        $result .= join('', $this->BEvents->fire('BLayout::hook:' . $hookName, $args));
-
+        $result .= join('', $this->BEvents->fire('BView::hook:before', {'view': this, 'name': hookName}));
+        */
+        let hookRes = await eventsInstance.fire('Layout::hook:' + hookName, args);
+        result +=  hookRes.join('');
+        //result += eventsInstance.fire('Layout::hook:' + hookName, args).join('');
+        /*
         $result .= join('', $this->BEvents->fire('BView::hook:after', ['view' => $this, 'name' => $hookName]));
         */
-        (await this.logger).debug("END HOOK: " + hookName);
+        (await this.logger).debug("END HOOK: " + hookName + " WITH RESULT: " + result);
         return result;
     }
 
