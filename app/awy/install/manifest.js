@@ -38,5 +38,8 @@ let config =  {
         	views_before: 'views' 
         }
     },
+    observe: [
+        //[ "Layout::hook:main", "awy_core_view_root.mainHook" ]
+    ],
 }
 export default config;

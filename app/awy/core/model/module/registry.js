@@ -57,34 +57,9 @@ class Core_Model_Module_Registry extends Class {
         // let layout = await Class.i('awy_core_model_layout');
         //layout.collectAllViewsFiles();
         //console.log('after collectAllViewsFiles');
-
+        let layout = await Class.i('awy_core_model_events');
+        await layout.fire('ModuleRegistry::bootstrap:after');
         return this;
-        /*
-        return Promise.resolve(
-            this.processOverrides()
-        ).then(() => {
-            this.popModule();
-            console.log('after processOverrides');
-            return this.processBeforeBootstrapCallback();
-        }).then(() => {
-            this.popModule();
-            console.log('after processBeforeBootstrapCallback');
-            return this.onBootstrap();
-        }).then(() => {
-            this.popModule();
-            console.log('after Bootstrap');
-            
-            //Class.i('awy_core_model_layout').then(layout => {
-            //    //alert('layout.collectAllViewsFiles ');
-            //    layout.collectAllViewsFiles();
-            //});
-            
-            return Promise.resolve(this);
-        }).then(() => {
-            console.log('after collectAllViewsFiles');
-            return Promise.resolve(this);
-        });
-*/
 	}
 
     onBootstrap() {

@@ -176,8 +176,8 @@ class Core_Model_Module extends Class {
         await this.processViews(); // before auto_use to initialize custom view classes
         await this.processAutoUse();
         await this.processRouting();
+        await this.processObserve();
         /*
-        $this->_processObserve();
         $this->_processSecurity();
         */
         
@@ -303,6 +303,20 @@ class Core_Model_Module extends Class {
             await hlp[method](route, callback, args, name, multiple);
         }
         console.log(hlp);
+    }
+
+    async processObserve() {
+        if (!('observe' in this)) {
+            return;
+        }
+        let hlp = await Class.i('awy_core_model_events');
+        let o;
+        for (o of this.observe) {
+            let evnt = o[0];
+            let callback = o[1];
+            let args = o[2] || {};
+            await hlp.on(evnt, callback, args);
+        }
     }
 
     async methodExists(obj, method) {

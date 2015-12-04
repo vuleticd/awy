@@ -29,7 +29,7 @@ class Awy_Core_Model_Events extends Class {
      * observe|watch|on|sub|subscribe ?
      * @param string || {} $params - alias, insert (function, 0=skip, -1=before, 1=after)
      */
-    async on(eventName, callback = null, args = {}, params = null) {
+    async on(eventName, callback = null, args = {}, params = {}) {
         if (Array.isArray(eventName)) {
             let obs;
             for (obs of eventName) {
@@ -37,6 +37,7 @@ class Awy_Core_Model_Events extends Class {
             }
             return this;
         }
+
         if (typeof params === 'string') {
             params = {'alias': params};
         }
@@ -68,7 +69,6 @@ class Awy_Core_Model_Events extends Class {
             }
             */
         }
-
         if (!inserted) {
             if (!this._events.has(eventName)) {
                 this._events.set(eventName, {'observers': []});
@@ -79,7 +79,7 @@ class Awy_Core_Model_Events extends Class {
             }
             e.observers.push(observer);
         }
-        (await this.logger)('SUBSCRIBE ' + eventName);
+        (await this.logger).debug('SUBSCRIBE ' + eventName);
         return this;
     }
     /*
@@ -128,12 +128,12 @@ class Awy_Core_Model_Events extends Class {
         eventName = eventName.toLowerCase();
         (await this.logger).debug('FIRE ' + eventName);
         let result = [];
-        let v = await ClassRegistry.getInstance('awy_core_model_view', false, {'module_name': 'awy_install','view_class': 'awy_core_model_view', 'view_name': 'index'});
+        //let v = await ClassRegistry.getInstance('awy_core_model_view', false, {'module_name': 'awy_install','view_class': 'awy_core_model_view', 'view_name': 'index'});
         //let s1 = await ClassRegistry.getInstance('awy_core_view_root', false, {'module_name': 'awy_install','view_class': 'awy_core_model_view', 'view_name': 'step1'});
-        this._events.set(eventName, {'observers': [
-             {'callback': v, 'args': {}, 'alias': 'sdsdsd'},
+        //this._events.set(eventName, {'observers': [
+        //     {'callback': v, 'args': {}, 'alias': 'sdsdsd'},
              //{'callback': s1, 'args': {}, 'alias': 'sdsdsd'}
-        ]});
+        //]});
 
         if (!this._events.has(eventName)) {
             return result;
@@ -157,8 +157,9 @@ class Awy_Core_Model_Events extends Class {
             }
             
             let cb = observer['callback'];
-            console.log(cb);
-            console.log(args);
+            //console.log(cb);
+            //console.log(args);
+            // View classes
             if (typeof cb === "object") {
                 let exists = await this.methodExists(cb, 'set');
                 if (exists) {
@@ -170,40 +171,28 @@ class Awy_Core_Model_Events extends Class {
                 continue;
             }
 
-            /*
+            
             // Special singleton syntax
-            if (is_string($cb)) {
-                foreach (['.', '->'] as $sep) {
-                    $r = explode($sep, $cb);
-                    if (sizeof($r) == 2) {
-                        if (!class_exists($r[0]) && $this->BDebug->is('DEBUG')) {
-                            echo "<pre>";
-                            BDebug::cleanBacktrace();
-                            echo "</pre>";
-                        }
-                        $cb                   = [$r[0]::i(), $r[1]];
-                        $observer['callback'] = $cb;
-                        // remember for next call, don't want to use &$observer
-                        $observers[$i]['callback'] = $cb;
-                        break;
+            if (typeof cb === "string") {
+                let r = cb.split('.');
+                if (r.length == 2) {
+                    let clbClass = await Class.i(r[0]);
+                    let exists = await this.methodExists(clbClass, r[1]);
+                    if (!exists) {
+                        (await this.logger).warn('Invalid callback: ' + cb);
                     }
+                    observer['callback'] = cb = clbClass[r[1]];
                 }
             }
 
-            // Invoke observer
-            if (is_callable($cb)) {
-                BDebug::debug('ON ' . $eventName, 1);
-                $result[] = $this->BUtil->call($cb, $args);
-            } else {
-                BDebug::warning('Invalid callback: ' . var_export($cb, 1), 1);
-            }
-            */
+            let s = await cb();
+            result.push(s);
 
             if ('module_name' in observer) {
                 modReg.popModule();
             }
         }
-        console.log(result);
+        //console.log(result);
         return result;
     }
 

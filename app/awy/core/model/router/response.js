@@ -40,9 +40,14 @@ class Core_Model_Router_Response extends Class {
         //let parser = new DOMParser();
         //this._content = parser.parseFromString(this._content, "text/xml");
         let app = await Class.i('awy_core_model_app');
-        (await this.logger).debug(this._content);
-        HTML.ify(app.host);
-        app.host.add("" + this._content);
+        //(await this.logger).debug(this._content);
+        // templates as template strings
+        app.host.innerHTML = this._content;
+        // templates as array of emmet commands joined and exported
+        //HTML.ify(app.host);
+        //app.host.add("" + this._content); 
+
+
         //app.host.insertAdjacentHTML('beforeend', this._content);
 
 

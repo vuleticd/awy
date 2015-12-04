@@ -8,6 +8,9 @@ let config =  {
                 views: {
                     root: { view_class: 'awy_core_view_root'},
                 },
+                routing: [
+                    ['/','awy_admin_controller.index']
+                ],
                 auto_use: [ 'bootstrap', 'views' ],
                 before_bootstrap: { callback: "awy_admin_admin.onBeforeBootstrap" },
             },

@@ -6,6 +6,11 @@ class Awy_Core_Model_View extends Class {
         this.logger = Class.i('awy_core_model_logger', 'View');
 	}
 
+    async href(url = '') {
+        let app = await Class.i('awy_core_model_app');
+        return app.href(url);
+    }
+
     /**
      * Factory to generate view instances
      */
@@ -102,15 +107,16 @@ class Awy_Core_Model_View extends Class {
 
     async _render(params){
         let t = await this.getTemplateFileName();
-        //let m = t.match(/\$(\S*)/g).map(s => `${this.get(s.replace("$",''))}`);
-        //console.log(t.match(/\{\$([^}]*)\}/g));
-
-        //console.log(t.match(/\$([^} ]*)/g));
-        let matches = t.match(/\$([^} ]*)/g);
+        // templates as template strings
+        let matches = t.match(/VIEW\{([^}\n]*)\}/g);
+        //console.log(matches);
+        // templates as array of emmet commands joined and exported
+        //let matches = t.match(/this.([^}\n ]*)/g);
         if (Array.isArray(matches)) {
             let m;
             for (m of matches) {
-                let a = m.replace("$",'').replace('")','').split('("');
+                let a = m.substring(5,m.length -1).replace('")','').split('("');
+                //console.log(a);
                 let r = null;
                 switch(a.length){
                     case 2:
@@ -126,9 +132,8 @@ class Awy_Core_Model_View extends Class {
                 t = t.replace(m,r);
             }
         }
-        //console.log(t);
-        //let ex = HTML.add.expand(t);
-        //console.log(HTML.add.expand(t));
+        //console.log(matches);
+        //let ex = HTML.add.expand(t); // Creates unattached document fragment from emmet template
         return t;
     }
 
@@ -145,7 +150,7 @@ class Awy_Core_Model_View extends Class {
         /*
         $result .= join('', $this->BEvents->fire('BView::hook:after', ['view' => $this, 'name' => $hookName]));
         */
-        (await this.logger).debug("END HOOK: " + hookName + " WITH RESULT: " + result);
+        (await this.logger).debug("END HOOK: " + hookName /*+ " WITH RESULT: " + result*/);
         return result;
     }
 
@@ -162,7 +167,7 @@ class Awy_Core_Model_View extends Class {
             let modReg = await Class.i('awy_core_model_module_registry');
             template = modReg._modules.get(modName).view_root_dir + '/views/' + viewName;
         }
-
+        (await this.logger).debug('TEMPLATE ' + template + '.js');
         template = await System.import(template);
         template = template.default;
         /*
@@ -177,7 +182,7 @@ class Awy_Core_Model_View extends Class {
             }
         }
         */
-        (await this.logger).debug('TEMPLATE ' + template);
+        //(await this.logger).debug('TEMPLATE ' + template);
         return template;
     }
 

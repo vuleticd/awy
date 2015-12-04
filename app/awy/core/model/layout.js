@@ -348,6 +348,37 @@ class Core_Model_Layout extends Class {
         */
         return this;
     }
+    /**
+     * Register a view as call back to a hook
+     * $viewName should either be a string with a name of view,
+     * or an array in which first field is view name and the rest are view parameters.
+     */
+    async hookView(hookName, viewName, args = {}, params = {}) {
+        if (Array.isArray(viewName)) {
+            let viewParams = viewName;
+            viewName = viewParams.shift();
+            await this.addView(viewName, viewParams);
+        }
+        let view = this.view(viewName);
+        if (!view) {
+            (await this.logger).warn('Invalid view name: ' + viewName);
+            return this;
+        }
+        if (!('alias' in params)) {
+            params['alias'] = viewName;
+        }
+        await this.hook(hookName, view, args, params);
+        return this;
+    }
+    /**
+     * Register a call back to a hook
+     */
+    async hook(hookName, callback, args = {}, params = {}) {
+        let evt = await Class.i('awy_core_model_events');
+        evt.on('Layout::hook:' . hookName, callback, args, params);
+
+        return this;
+    }
 
     objectMerge(...rest) {
       let base = rest.shift();

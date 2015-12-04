@@ -4,6 +4,7 @@ class Core_Model_App extends Class {
       this.logger = Class.i('awy_core_model_logger', 'App'); 
       this.isInitialized = false;
       this.host = null;
+      this._baseUrl = null;
     }
 
 	async run(area='frontend') {  
@@ -18,9 +19,14 @@ class Core_Model_App extends Class {
 
         let config = await Class.i('awy_core_model_config');
         let layout = await Class.i('awy_core_model_layout');
+        let enevts = await Class.i('awy_core_model_events');
         console.log(config);
         console.log(router);
         console.log(layout);
+        for (var [key, value] of enevts._events) {
+            console.log("EVENT: " + key);
+            console.log(value.observers || null);
+        }
         //router.navigate('/install');
     } catch(e) {
         try {
@@ -132,6 +138,17 @@ class Core_Model_App extends Class {
         }
     });
     //console.log(layout);
+  }
+
+  baseUrl() {
+      if (!this._baseUrl){
+        this._baseUrl = window.location.protocol + "//" + window.location.hostname + "/";
+      }
+      return this._baseUrl;
+  }
+
+  href(url = '') {
+      return this.baseUrl() + url;
   }
 }
 
