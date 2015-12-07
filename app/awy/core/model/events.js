@@ -127,6 +127,7 @@ class Awy_Core_Model_Events extends Class {
     async fire(eventName, args = {}) {
         eventName = eventName.toLowerCase();
         (await this.logger).debug('FIRE ' + eventName);
+        //(await this.logger).debug(args);
         let result = [];
         //let v = await ClassRegistry.getInstance('awy_core_model_view', false, {'module_name': 'awy_install','view_class': 'awy_core_model_view', 'view_name': 'index'});
         //let s1 = await ClassRegistry.getInstance('awy_core_view_root', false, {'module_name': 'awy_install','view_class': 'awy_core_model_view', 'view_name': 'step1'});

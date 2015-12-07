@@ -1,4 +1,4 @@
-class Core_Model_Layout extends Class {
+class Awy_Core_Model_Layout extends Class {
 	constructor() {
 		super();
 		// Default class name for newly created views
@@ -8,7 +8,7 @@ class Core_Model_Layout extends Class {
 		// View objects registry
     	this.views = {};
         // Layouts declarations registry
-        this._layouts = {};
+        this._layouts = new Map();
         // Installed themes registry
         this._themes = {};
     	// Main (root) view to be rendered first
@@ -17,6 +17,14 @@ class Core_Model_Layout extends Class {
         this._addViewsDirs = [];
         // Load these layout files after theme
         this._loadLayoutFiles = [];
+        this._metaDirectives = {
+            'remove': 'metaDirectiveRemoveCallback',
+            'callback': 'metaDirectiveCallback',
+            'include': 'metaDirectiveIncludeCallback',
+            'root': 'metaDirectiveRootCallback',
+            'hook': 'metaDirectiveHookCallback',
+            'view': 'metaDirectiveViewCallback',
+        };
         this.logger = Class.i('awy_core_model_logger', 'Layout');
 	}
 
@@ -101,7 +109,7 @@ class Core_Model_Layout extends Class {
         let rootView = this.rootView;
         //console.log(rootView);
         (await this.logger).debug('LAYOUT.RENDER ');
-        (await this.logger).debug(rootView);
+        //(await this.logger).debug(rootView);
         if (!rootView) {
             (await this.logger).error('Main view not found: ' + this._rootViewName);
         }
@@ -129,12 +137,11 @@ class Core_Model_Layout extends Class {
         let paramsCopy = JSON.parse(JSON.stringify(params));
         ['area', 'parent', 'layout_before', 'layout_after', 'views_before', 'views_after'].forEach(t =>{
             if (t in paramsCopy && t !== 'area' && t !== 'parent') {
-                if (typeof paramsCopy[t] === 'string') {
+                if (!Array.isArray(paramsCopy[t])) {
                     paramsCopy[t] = [paramsCopy[t]];
                 } else {
                     paramsCopy[t] = paramsCopy[t];
                 }
-
                 paramsCopy[t].forEach( (v,i) => {
                     if (v[0] !== '@') {
                         paramsCopy[t][i] = '@' + curModName + '/' + v;
@@ -171,9 +178,10 @@ class Core_Model_Layout extends Class {
             return this;
         }
         (await this.logger).debug('THEME.APPLY ' + themeName);
-        //$this->BEvents->fire('BLayout::applyTheme:before', ['theme_name' => $themeName]);
+        let evnt = await Class.i('awy_core_model_events');
+        evnt.fire('Layout::applyTheme:before', {'theme_name': themeName});
 
-        this.loadTheme(themeName);
+        await this.loadTheme(themeName);
         /*
         $this->loadLayoutFilesFromAllModules();
 
@@ -199,51 +207,65 @@ class Core_Model_Layout extends Class {
         return this;
     }
 
-    loadTheme(themeName){
+    async loadTheme(themeName){
         if (!(themeName in this._themes)) {
             throw new Error('Invalid theme name: ' + themeName);
             return false;
         }   
 
         let theme = this._themes[themeName];
-        /*
-        $area = $this->BRequest->area();
-        if (!empty($theme['area']) && !in_array($area, (array)$theme['area'])) {
-            BDebug::debug('Theme ' . $themeName . ' can not be used in ' . $area);
+        let req = await Class.i('awy_core_model_router_request');
+        let area = req.area;
+        // arrayize if present
+        if ('area' in theme && !Array.isArray(theme.area)) {
+            theme.area = [theme.area];
+        }
+        if ('area' in theme && !this.contains(theme.area, area)) {
+            (await this.logger).debug('Theme ' + themeName + ' can not be used in ' + area);
             return false;
         }
-
-        if (!empty($theme['parent'])) {
-            foreach ((array)$theme['parent'] as $parentThemeName) {
-                if ($this->loadTheme($parentThemeName)) {
+        
+        if ('parent' in theme) {
+            let parentThemeName;
+            if (!Array.isArray(theme.parent)) {
+                theme.parent = [theme.parent];
+            }
+            for (parentThemeName of theme.parent) {
+                let p = await this.loadTheme(parentThemeName);
+                if (p) {
                     break; // load the first available parent theme
                 }
             }
         }
 
-        $this->BEvents->fire('BLayout::loadTheme:before', ['theme_name' => $themeName, 'theme' => $theme]);
-
-        $modReg = $this->BModuleRegistry;
-
-        if (!empty($theme['views_before'])) {
-            foreach ($theme['views_before'] as $viewsBefore) {
+        let evnt = await Class.i('awy_core_model_events');
+        evnt.fire('Layout::loadTheme:before', {'theme_name': themeName, 'theme': theme});
+        let modReg = await Class.i('awy_core_model_module_registry');
+        /* not needed in JS
+        if ('views_before' in theme) {
+            let viewsBefore;
+            for (viewsBefore of theme.views_before) {
+                console.log(viewsBefore);
                 $a = explode('/', $viewsBefore, 2);
                 $viewsMod = $modReg->module(substr($a[0], 1));
                 $viewsDir = $viewsMod->root_dir . '/' . $a[1];
                 $this->addAllViews($viewsDir, '', $viewsMod);
             }
         }
-        if (!empty($theme['layout_before'])) {
-            foreach ($theme['layout_before'] as $layoutBefore) {
-                $this->loadLayout($modReg->expandPath($layoutBefore));
+        */
+        
+        if ('layout_before' in theme) {
+            let layoutBefore;
+            for (layoutBefore of theme.layout_before) {
+                await this.loadLayout(modReg.expandPath(layoutBefore));
             }
         }
+        /*
         if (!empty($theme['callback'])) {
             $this->BUtil->call($theme['callback']);
         }
-
-        $this->BEvents->fire('BLayout::loadTheme:after', ['theme_name' => $themeName, 'theme' => $theme]);
         */
+        evnt.fire('Layout::loadTheme:after', {'theme_name': themeName, 'theme': theme});
         return true;
     }
 
@@ -272,6 +294,16 @@ class Core_Model_Layout extends Class {
         this._addViewsDirs.push([rootDir, prefix, curModule]);
         return this;
     } 
+    /**
+     * Load layout update from file
+     */
+    async loadLayout(layoutFilename) {
+        (await this.logger).debug('LAYOUT.LOAD: ' + layoutFilename);
+        let layoutData = await System.import(layoutFilename);
+        layoutData = layoutData.default;
+        await this.addLayout(layoutData);
+        return this;
+    }
 
     /**
      * Load layout update after theme has been initialized
@@ -285,67 +317,86 @@ class Core_Model_Layout extends Class {
         return this;
     }
 
+    async addLayout(layoutName, layout = null) {
+        if (typeof layoutName === "object") {
+            let l;
+            for (l in layoutName) {
+                let def = layoutName[l];
+                //console.log([l,def]);
+                await this.addLayout(l, def);
+            }
+
+            return this;
+        }
+        
+        if (!Array.isArray(layout)) {
+            (await this.logger).debug('LAYOUT.ADD ' + layoutName + ': Invalid or empty layout');
+        } else {
+            if (!this._layouts.has(layoutName)) {
+                (await this.logger).debug('LAYOUT.ADD ' + layoutName);
+                this._layouts.set(layoutName, layout);
+            } else {
+                (await this.logger).debug('LAYOUT.UPDATE ' + layoutName);
+                this.arrayMerge(this._layouts.get(layoutName), layout);
+            }
+        }
+        return this;
+    }
+
     async applyLayout(layoutName) {
-        if (!(layoutName in this._layouts)) {
+        if (!this._layouts.has(layoutName)) {
             (await this.logger).debug('LAYOUT.EMPTY ' + layoutName);
 
             return this;
         }
         (await this.logger).debug('LAYOUT.APPLY ' + layoutName);
-        /*
+        //console.log(this._layouts.get(layoutName));
         // collect callbacks
-        $callbacks = [];
-        foreach ($this->_layouts[$layoutName] as $d) {
-            $d['layout_name'] = $layoutName;
-            if (!empty($d['if'])) {
-                if (!$this->BUtil->call($d['if'], $d)) {
+        let callbacks = [];
+        let d;
+        for (d of this._layouts.get(layoutName)) {
+            d['layout_name'] = layoutName;
+            //console.log(d);
+            if ('if' in d) {
+                let r = d['if'].split('.');
+                let clbClass = await Class.i(r[0]);
+                let exists = await this.methodExists(clbClass, r[1]);
+                if (!exists || !clbClass[r[1]]()) {
                     continue;
                 }
             }
-            if (empty($d['type'])) {
-                if (!empty($d[0])) {
-                    $d['type'] = $d[0];
-                } else {
-                    reset($d);
-                    $d['type'] = key($d);
-                    $d['name'] = current($d);
-                    if (empty(static::$_metaDirectives[$d['type']])) {
-                        BDebug::error('Unknown directive: ' . print_r($d, 1));
-                        continue;
-                    }
-                }
-                if (empty($d['type'])) {
-                    BDebug::error('Unknown directive: ' . print_r($d, 1));
+            
+            if (!('type' in d)) {
+                //console.log(Object.keys(this._metaDirectives));
+                //console.log(Object.keys(d));
+                let key = Object.keys(this._metaDirectives).find((element, index, array) => { 
+                    return this.contains(Object.keys(d), element); 
+                }, this);
+                if (!(key in this._metaDirectives)){
+                    throw new Error('Unknown layout directive: ');
                     continue;
                 }
+                d['type'] = key.trim();
+                d['name'] = d[key].trim();
             }
-            $d['type'] = trim($d['type']);
-            if (empty($d['type']) || empty(static::$_metaDirectives[$d['type']])) {
-                BDebug::error('Unknown directive: ' . print_r($d, 1));
-                continue;
-            }
-            if (empty($d['name']) && !empty($d[1])) {
-                $d['name'] = $d[1];
-            }
-            $d['name'] = trim($d['name']);
-            $d['layout_name'] = $layoutName;
-            $callback = static::$_metaDirectives[$d['type']];
 
-            if ($d['type'] === 'remove') {
-                if ($d['name'] === 'ALL') { //TODO: allow removing specific instructions
-                    BDebug::debug('LAYOUT.REMOVE ALL');
-                    $callbacks = [];
+            let callback = this._metaDirectives[d['type']];
+            if (d['type'] === 'remove') {
+                if (d['name'] === 'ALL') { //TODO: allow removing specific instructions
+                    (await this.logger).debug('LAYOUT.REMOVE ALL');
+                    callbacks = [];
                 }
             } else {
-                $callbacks[] = [$callback, $d];
+                callbacks.push([callback, d]);
             }
         }
-
         // perform all callbacks
-        foreach ($callbacks as $cb) {
-            $this->BUtil->call($cb[0], $cb[1]);
+        let cb;
+        for (cb of callbacks) {
+            console.log(cb);
+            await this[cb[0]](cb[1]);
         }
-        */
+
         return this;
     }
     /**
@@ -380,6 +431,79 @@ class Core_Model_Layout extends Class {
         return this;
     }
 
+    async metaDirectiveIncludeCallback(args){
+        if (args['name'] == args['layout_name']) { // simple 1 level recursion stop
+            throw new Error('Layout recursion detected: ' + args['name']);
+            return;
+        }
+        let layoutsApplied = [];
+        if (args['name'] in layoutsApplied && !('repeat' in args)) {
+            return;
+        }
+        layoutsApplied.push(args['name']);
+        //console.log(layoutsApplied);
+        await this.applyLayout(args['name']);
+    }
+
+    async metaDirectiveViewCallback(args) {
+        console.log(args);
+    }
+
+    async metaDirectiveHookCallback(args) {
+        console.log(args);
+        /*
+        $args = !empty($d['args']) ? $d['args'] : [];
+        if (!empty($d['position'])) {
+            $args['position'] = $d['position'];
+        }
+        $params = !empty($d['params']) ? $d['params'] : [];
+
+        if (!empty($d['callbacks'])) {
+            foreach ($d['callbacks'] as $cb) {
+                $this->hook($d['name'], $cb, $args, $params);
+            }
+        }
+        if (!empty($d['clear'])) {
+            $this->hookClear($d['name'], $d['clear']);
+        }
+        if (!empty($d['views'])) {
+            foreach ((array)$d['views'] as $v) {
+                if ($v[0] === '^') {
+                    $this->hookViewsRegex($d['name'], '#' . $v . '#', $args, $params);
+                } else {
+                    $this->hookView($d['name'], $v, $args, $params);
+                }
+            }
+            if (!empty($d['use_meta'])) {
+                $this->view($v)->useMetaData();
+            }
+        }
+        if (!empty($d['text'])) {
+            foreach ((array)$d['text'] as $text) {
+                $this->hook($d['name'], function() use ($text) { return $text; });
+            }
+        }
+        */
+    }
+
+    async metaDirectiveRootCallback(args){
+        console.log(args);
+        /*
+        $this->setRootView($d['name']);
+        BDebug::debug('SET ROOT VIEW: ' . $d['name']);
+        */
+    }
+
+    async metaDirectiveCallback(args) {
+        console.log(args);
+        //$this->BUtil->call($d['name'], !empty($d['args']) ? $d['args'] : [], true);
+    }
+
+    async metaDirectiveRemoveCallback(args) {
+        console.log(args);
+        //TODO: implement
+    }
+
     objectMerge(...rest) {
       let base = rest.shift();
       for (let append of rest) {
@@ -400,9 +524,43 @@ class Core_Model_Layout extends Class {
       return base;
     }
 
+    arrayMerge(...rest) {
+        let base = rest.shift();
+        for (let append of rest) {
+            // base is not mergable, replace instead with last argument passed
+            if (typeof base !== 'object') {
+              return append;
+            }
+            // both base and argument are arrays
+            if (Array.isArray(append) && Array.isArray(base)) {
+                for (let val of append) {
+                  if (this.contains(base, val)) {
+                      base[base.indexOf(val)] = val;
+                      append.splice(append.indexOf(val), 1);
+                  }
+                }
+                base.push(...append);
+            }
+        }
+        return base;
+    }
+
     contains(haystack, needle) {
         return !!~haystack.indexOf(needle);
     }
+
+    foundInArray(element, index, array) {
+        return this.contains(Object.keys(d), element);
+    }
+
+    async methodExists(obj, method) {
+        try {
+            let clbClass = obj;//await Class.i(obj);
+            return typeof clbClass[method] === 'function';
+        } catch(e) {
+            return false;
+        }
+    }
 }
 
-export default Core_Model_Layout
+export default Awy_Core_Model_Layout

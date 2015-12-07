@@ -431,6 +431,18 @@ class Core_Model_Module_Registry extends Class {
         return circ;
     }
 
+    expandPath(path) {
+        if (path[0] !== '@') {
+            return path;
+        }
+        let parts = path.split("/");
+        let mod = this._modules.get(parts.shift().substr(1));
+        if (!mod) {
+            return path;
+        }
+        return mod.root_dir + '/' + parts.join("/");
+    }
+
     version_compare(v1, v2, operator=false) {
         let compare = 0;
         v1 = this.prepVersion(v1);

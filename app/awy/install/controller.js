@@ -14,7 +14,7 @@ class Awy_Install_Controller extends Awy_Core_Controller_Abstract {
         switch(method){
         	case 'GET':
         		let layout = await Class.i('awy_core_model_layout');
-        		layout.applyTheme('awy_install');
+        		await layout.applyTheme('awy_install');
         		break;
         	case 'POST':
         		/*
@@ -31,7 +31,7 @@ class Awy_Install_Controller extends Awy_Core_Controller_Abstract {
     async action_index(){
     	console.log('Awy_Install_Controller.action_index');
     	let layout = await Class.i('awy_core_model_layout');
-    	layout.applyLayout('/');
+    	await layout.applyLayout('/');
     }
 }
 

@@ -43,6 +43,7 @@ class Core_Model_Router_Response extends Class {
         //(await this.logger).debug(this._content);
         // templates as template strings
         app.host.innerHTML = this._content;
+        //console.log(this.toString());
         // templates as array of emmet commands joined and exported
         //HTML.ify(app.host);
         //app.host.add("" + this._content); 

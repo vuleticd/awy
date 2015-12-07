@@ -7,6 +7,7 @@ let config =  {
         awy_install: {
             views: {
                 root: { view_class: 'awy_core_view_root' },
+                index: { },
             },
             //auto_use: [ 'bootstrap', 'views' ],
             //before_bootstrap: { callback: "awy_admin_admin.onBeforeBootstrap" },
@@ -34,8 +35,9 @@ let config =  {
     },*/
 	themes: { 
 		awy_install: {
-        	layout_before: 'layout.yml',
-        	views_before: 'views' 
+        	layout_before: 'layout'
+        	// parent: 'awy_blah' // basically saying this theme depends on parent theme, so load parent theme first
+        	// area: 'awy_install' // either missing or matching the area where this theme is allowed
         }
     },
     observe: [
