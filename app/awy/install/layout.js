@@ -9,12 +9,13 @@ let layout =  {
 	]
 	*/
 	base: [
-		{ 	hook: 'head', views: 'head' },
-		{	view: 'head', do: [] }
+		//{ hook: 'head', views: 'head' },
+		//{	view: 'head', do: [] }
 
 	],
 	"/": [
 		{ include: 'base' },
+		//{ hook: 'main', text: 'Blah Blah' }
 		{ hook: 'main', views: 'index' }
 	],
 	"/step1": [

@@ -186,6 +186,38 @@ class Awy_Core_Model_View extends Class {
         return template;
     }
 
+    bindModel(container) {
+        let bindings = container.querySelectorAll('[data-bind]').map((node) => {
+            let parts = node.dataset.bind.split(' ');
+            return this.bindObject(node, parts[0], object, parts[1]);
+        });
+        console.log(bindings);
+    }
+
+    bindObject(node, binderName, object, propertyName) {
+        /*
+        var updateValue = function(newValue) {
+            object[propertyName] = newValue;
+        };
+        var binder = binders[binderName](node, updateValue, object);
+        binder.updateProperty(object[propertyName]);
+        var observer = function(changes) {
+            var changed = changes.some(function(change) {
+                return change.name === propertyName;
+            });
+            if (changed) {
+                binder.updateProperty(object[propertyName]);
+            }
+        };
+        Object.observe(object, observer);
+        return {
+            unobserve: function() {
+                Object.unobserve(object, observer);
+            }
+        };
+        */
+    }
+
     async render(args = {}, retrieveMetaData = false) {
         let viewName = this.param('view_name');
         let modName = this.param('module_name');
@@ -195,7 +227,12 @@ class Awy_Core_Model_View extends Class {
         }
 
         let viewContent = await this._render();
-
+        console.log(viewContent);
+        let parser = new DOMParser();
+        let doc = parser.parseFromString(viewContent, "application/xml");
+        console.log(doc);
+        // !! TRY TO BIND WITH OBJECT OBSERVE HERE !! https://curiosity-driven.org/object-observe-data-binding
+        // this.bindModel(doc, this);
         return viewContent;
         /*
         foreach ($args as $k => $v) {

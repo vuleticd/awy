@@ -32,6 +32,21 @@ class Awy_Install_Controller extends Awy_Core_Controller_Abstract {
     	console.log('Awy_Install_Controller.action_index');
     	let layout = await Class.i('awy_core_model_layout');
     	await layout.applyLayout('/');
+        console.log(document.getElementById("gr"));
+        let enevts = await Class.i('awy_core_model_events');
+        for (var [key, value] of enevts._events) {
+            console.log("EVENT: " + key);
+            console.log(value.observers || null);
+        }
+    }
+
+    async action_step1() {
+        console.log('Awy_Install_Controller.action_step1');
+        let layout = await Class.i('awy_core_model_layout');
+        await layout.applyLayout('/step1');
+        
+        //throw new Error('dsds');
+        //return;
     }
 }
 

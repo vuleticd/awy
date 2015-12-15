@@ -27,7 +27,8 @@ class Core_Model_App extends Class {
             console.log("EVENT: " + key);
             console.log(value.observers || null);
         }
-        //router.navigate('/install');
+        //setTimeout(router.navigate('install/step1'), 10000);
+        //router.navigate('install/step1');
     } catch(e) {
         try {
             let layout = await Class.i('awy_core_model_layout');

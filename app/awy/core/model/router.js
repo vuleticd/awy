@@ -74,13 +74,16 @@ class Awy_Core_Model_Router extends Class {
         //throw new Error('dsdsd');
         let fragment = f || this.getFragment();
         for(var i=0; i<this.routes.length; i++) {
-            let match = ("/"+fragment).match(this.routes[i].re);
-            if(match) {
+            let escaperRoute = this.routes[i].re.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+            let match = ("/"+fragment).match(new RegExp(escaperRoute));
+            if(match && match[0] == "/"+fragment) {
                 match.shift();
+                //console.log(match);
                 let className = this.routes[i].handler.split(".")[0];
+                //console.log(className);
                 let method = this.routes[i].handler.split(".")[1];
                 let clbClass = await Class.i(className);
-                console.log(method);
+                //console.log(method);
                 let forward = await clbClass.dispatch(method, match);
                 if (Array.isArray(forward)) {
                     let actionName = forward[0];

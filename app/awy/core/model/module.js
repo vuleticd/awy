@@ -302,7 +302,7 @@ class Core_Model_Module extends Class {
             }
             await hlp[method](route, callback, args, name, multiple);
         }
-        console.log(hlp);
+        //console.log(hlp);
     }
 
     async processObserve() {

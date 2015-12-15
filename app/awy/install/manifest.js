@@ -8,6 +8,7 @@ let config =  {
             views: {
                 root: { view_class: 'awy_core_view_root' },
                 index: { },
+                step1: { },
             },
             //auto_use: [ 'bootstrap', 'views' ],
             //before_bootstrap: { callback: "awy_admin_admin.onBeforeBootstrap" },
@@ -28,6 +29,7 @@ let config =  {
 	routing: [
 		['/','awy_install_controller.index'],
 		['/install','awy_install_controller.index'],
+		['/install/step1','awy_install_controller.step1'],
 		['/install/.action','awy_install_controller']
 	],
 	/*default_config: {

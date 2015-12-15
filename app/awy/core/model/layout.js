@@ -426,7 +426,8 @@ class Awy_Core_Model_Layout extends Class {
      */
     async hook(hookName, callback, args = {}, params = {}) {
         let evt = await Class.i('awy_core_model_events');
-        evt.on('Layout::hook:' . hookName, callback, args, params);
+        //console.log(callback);
+        await evt.on('Layout::hook:' + hookName, callback, args, params);
 
         return this;
     }
@@ -446,18 +447,19 @@ class Awy_Core_Model_Layout extends Class {
     }
 
     async metaDirectiveViewCallback(args) {
-        console.log(args);
+        //console.log(args);
     }
 
     async metaDirectiveHookCallback(args) {
         console.log(args);
+        let hookArgs = args['args'] || {};
         /*
-        $args = !empty($d['args']) ? $d['args'] : [];
         if (!empty($d['position'])) {
             $args['position'] = $d['position'];
         }
-        $params = !empty($d['params']) ? $d['params'] : [];
-
+        */
+        let params = args['params'] || {};
+        /*
         if (!empty($d['callbacks'])) {
             foreach ($d['callbacks'] as $cb) {
                 $this->hook($d['name'], $cb, $args, $params);
@@ -466,28 +468,44 @@ class Awy_Core_Model_Layout extends Class {
         if (!empty($d['clear'])) {
             $this->hookClear($d['name'], $d['clear']);
         }
-        if (!empty($d['views'])) {
-            foreach ((array)$d['views'] as $v) {
-                if ($v[0] === '^') {
-                    $this->hookViewsRegex($d['name'], '#' . $v . '#', $args, $params);
+        */
+        // process this as example layout directive
+        // { hook: 'main', views: 'index' }
+        if ('views' in args) {
+            if (!Array.isArray(args.views)) {
+                    args.views = [args.views];
+            }
+            let v;
+            for (v of args.views) {
+                if (v[0] === '^') {
+                    //this.hookViewsRegex(args.name, '#'+v+'#', hookArgs, params);
                 } else {
-                    $this->hookView($d['name'], $v, $args, $params);
+                    await this.hookView(args.name, v, hookArgs, params);
                 }
             }
-            if (!empty($d['use_meta'])) {
-                $this->view($v)->useMetaData();
+            if ('use_meta' in args) {
+                //this.view(v).useMetaData();
             }
         }
-        if (!empty($d['text'])) {
-            foreach ((array)$d['text'] as $text) {
-                $this->hook($d['name'], function() use ($text) { return $text; });
+        // process this as example layout directive
+        // { hook: 'main', text: 'Blah Blah' }
+        if ('text' in args) {
+            if (!Array.isArray(args.text)) {
+                    args.text = [args.text];
+            }
+            let t;
+            let obj;
+            for (t of args.text) {
+                await this.hook(args.name, (obj) => obj.text || '', {text: t});
             }
         }
-        */
+
+        return;
+        
     }
 
     async metaDirectiveRootCallback(args){
-        console.log(args);
+        //console.log(args);
         /*
         $this->setRootView($d['name']);
         BDebug::debug('SET ROOT VIEW: ' . $d['name']);
@@ -495,12 +513,12 @@ class Awy_Core_Model_Layout extends Class {
     }
 
     async metaDirectiveCallback(args) {
-        console.log(args);
+        //console.log(args);
         //$this->BUtil->call($d['name'], !empty($d['args']) ? $d['args'] : [], true);
     }
 
     async metaDirectiveRemoveCallback(args) {
-        console.log(args);
+        //console.log(args);
         //TODO: implement
     }
 

@@ -1,6 +1,6 @@
 //let str = 'form[method="POST" action="install" class="form-horizontal"]>div.panel-heading>h1.panel-title>{Welcome to Awy installation wizard!}';
 let str = `
-<form method="POST" action="VIEW{href("install")}" class="form-horizontal">
+<form id="grr" method="POST" action="VIEW{href("install")}" class="form-horizontal">
 	<input type="hidden" name="X-CSRF-TOKEN" value=""/>
 	<div class="panel-heading">
 		<h1 class="panel-title">Welcome to Fulleron installation wizard!</h1>
@@ -19,7 +19,7 @@ let str = `
 	</div>
 	<div class="clearfix">
 		<div class="checkbox pull-right">
-			<label class="required"><input type="checkbox" name="w[agree]" value="Agree" required> I agree</label>
+			<label class="required"><input type="checkbox" name="w[agree]" value="Agree" required="required"/> I agree</label>
 		</div>
 	</div>
 	<ul class="list-group list-group-flush">

@@ -186,7 +186,8 @@ class Awy_Core_Model_Events extends Class {
                 }
             }
 
-            let s = await cb();
+            //console.log(cb(args));
+            let s = await cb(args);
             result.push(s);
 
             if ('module_name' in observer) {
