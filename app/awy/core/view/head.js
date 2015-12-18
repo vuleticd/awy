@@ -1,4 +1,4 @@
-import Core_Model_View from 'awy/core/model/view';
+import Core_Model_View from 'awy/core/model/view.js';
 
 class Core_View_Head extends Core_Model_View {
 	constructor(params) {

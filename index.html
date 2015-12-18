@@ -2,21 +2,30 @@
 <html> 
   <head>
     <title>Hello Awy!</title>
-    <!-- Runtime configuration  
+    <!-- Runtime configuration 
     <script src="/lib/traceur-runtime.js"></script>
     <script src="/lib/system-register-only.src.js"></script>  
     <script src="/config-prod.js"></script>
     -->
+    <!-- Build configuration NOT WORKING
+    <script src="/lib/traceur-runtime.js"></script> 
+    <script src="/lib/es6-loader.js"></script> 
+    <script src="/lib/system.js"></script> 
+    <script src="/config-build.js"></script>
+    <script src="/app/awy-build.js"></script> 
+    --> 
     <!-- Development configuration -->
     <script src="/lib/es6-loader.js"></script> 
     <script src="/config.js"></script>
+
     <!-- Global configuration -->
+    <script src="/lib/object-observe.js"></script>
     <script src="/lib/firebase.js"></script>
     <script src="/lib/emmet.js"></script>
   </head> 
   <body class="container" awy-app config="config/module/test">
     <script>
-        System.import('bootstrap').then(m => {
+        System.import('bootstrap.js').then(m => {
           var boot = new m.default();
           boot.run('awy_frontend');
         });

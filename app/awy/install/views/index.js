@@ -24,7 +24,7 @@ let str = `
 	</div>
 	<ul class="list-group list-group-flush">
 		<li class="list-group-item clearfix">
-			<button type="submit" class="btn btn-primary pull-right" name="do" value="next">Continue</button>
+			<button data-bind="click showStructure" type="button" class="btn btn-primary pull-right" name="do" value="next">Continue</button>
 		</li>
 	</ul>
 </form>

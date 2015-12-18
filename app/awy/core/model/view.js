@@ -4,6 +4,26 @@ class Awy_Core_Model_View extends Class {
 		super();
 		this._params = params || {};
         this.logger = Class.i('awy_core_model_logger', 'View');
+        this.binders = {
+            click: function(node, onchange, object) {
+                var previous;
+                return {
+                    updateProperty: function(fn) {
+                        console.log(fn);
+                        var listener = function(e) {
+                            fn.apply(object, arguments);
+                            e.preventDefault();
+                        };
+                        if (previous) {
+                            node.removeEventListener(previous);
+                            previous = listener;
+                        }
+                        node.addEventListener('click', listener);
+                        //console.log(fn);
+                    }
+                };
+            }
+        };
 	}
 
     async href(url = '') {
@@ -168,7 +188,7 @@ class Awy_Core_Model_View extends Class {
             template = modReg._modules.get(modName).view_root_dir + '/views/' + viewName;
         }
         (await this.logger).debug('TEMPLATE ' + template + '.js');
-        template = await System.import(template);
+        template = await System.import(template + '.js');
         template = template.default;
         /*
         if (template) {
@@ -187,35 +207,48 @@ class Awy_Core_Model_View extends Class {
     }
 
     bindModel(container) {
-        let bindings = container.querySelectorAll('[data-bind]').map((node) => {
+        let bi = container.querySelectorAll('[data-bind]');
+        let bi_array = Array.from(bi); 
+        let bindings = bi_array.map((node) => {
             let parts = node.dataset.bind.split(' ');
-            return this.bindObject(node, parts[0], object, parts[1]);
+            return this.bindObject(node, parts[0], parts[1]);
         });
-        console.log(bindings);
+        //console.log(bindings);
+        return {
+            unobserve: function() {
+                bindings.forEach(function(binding) {
+                    binding.unobserve();
+                });
+            }
+        };
     }
 
-    bindObject(node, binderName, object, propertyName) {
-        /*
+    showStructure() {
+        alert('sdsdsdsd');
+        //alert(JSON.stringify(this, null, 4));
+    }
+
+    bindObject(node, binderName, propertyName) {
+        
         var updateValue = function(newValue) {
-            object[propertyName] = newValue;
+            this[propertyName] = newValue;
         };
-        var binder = binders[binderName](node, updateValue, object);
-        binder.updateProperty(object[propertyName]);
+        var binder = this.binders[binderName](node, updateValue, this);
+        binder.updateProperty(this[propertyName]);
         var observer = function(changes) {
             var changed = changes.some(function(change) {
                 return change.name === propertyName;
             });
             if (changed) {
-                binder.updateProperty(object[propertyName]);
+                binder.updateProperty(this[propertyName]);
             }
         };
-        Object.observe(object, observer);
+        Object.observe(this, observer);
         return {
             unobserve: function() {
-                Object.unobserve(object, observer);
+                Object.unobserve(this, observer);
             }
         };
-        */
     }
 
     async render(args = {}, retrieveMetaData = false) {
@@ -227,12 +260,12 @@ class Awy_Core_Model_View extends Class {
         }
 
         let viewContent = await this._render();
-        console.log(viewContent);
+        //console.log(viewContent);
         let parser = new DOMParser();
-        let doc = parser.parseFromString(viewContent, "application/xml");
-        console.log(doc);
+        let doc = parser.parseFromString(viewContent, "text/html");
+        //console.log(doc);
         // !! TRY TO BIND WITH OBJECT OBSERVE HERE !! https://curiosity-driven.org/object-observe-data-binding
-        // this.bindModel(doc, this);
+        this.bindModel(doc);
         return viewContent;
         /*
         foreach ($args as $k => $v) {

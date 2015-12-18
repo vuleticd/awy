@@ -17,7 +17,7 @@ let config =  {
         },
 	themes: { awy_admin_defaultTheme: {
 				name: 'awy_admin_aefaultTheme',
-                layout_before: 'admin/layout.yml',
+                layout_before: 'admin/layout.js',
                 area: 'awy_admin' },
             },
     default_config: {

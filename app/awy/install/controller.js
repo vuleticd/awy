@@ -1,4 +1,4 @@
-import Awy_Core_Controller_Abstract from 'awy/core/controller/abstract';
+import Awy_Core_Controller_Abstract from 'awy/core/controller/abstract.js';
 
 class Awy_Install_Controller extends Awy_Core_Controller_Abstract {
 	constructor() {

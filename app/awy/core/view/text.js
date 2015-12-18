@@ -1,4 +1,4 @@
-import Awy_Core_Model_View from 'awy/core/model/view';
+import Awy_Core_Model_View from 'awy/core/model/view.js';
 
 class Awy_Core_View_Text extends Awy_Core_Model_View {
 	constructor(params) {

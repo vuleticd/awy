@@ -37,7 +37,7 @@ let config =  {
     },*/
 	themes: { 
 		awy_install: {
-        	layout_before: 'layout'
+        	layout_before: 'layout.js'
         	// parent: 'awy_blah' // basically saying this theme depends on parent theme, so load parent theme first
         	// area: 'awy_install' // either missing or matching the area where this theme is allowed
         }

@@ -124,7 +124,7 @@ export class ObjectRegistry extends Aobject {
             className = className in _classes ? _classes[className]['class_name'] : className;
     
             let path = replaceAll(String(className), "_", '/');
-            return System.import(path).then(file => {
+            return System.import(path+'.js').then(file => {
                 let instance = Object.create(file.default.prototype);
                 file.default.call(instance, ...rest);
                 //console.log(instance);

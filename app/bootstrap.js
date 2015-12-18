@@ -1,4 +1,5 @@
-import {Aobject, ObjectRegistry} from 'awy/core/model/aobject';
+import {Aobject, ObjectRegistry} from 'awy/core/model/aobject.js';
+
 Class = Aobject;
 ClassRegistry = ObjectRegistry;
 

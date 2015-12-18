@@ -1,4 +1,4 @@
-import * as moduleConstants from 'awy/core/model/module';
+import * as moduleConstants from 'awy/core/model/module.js';
 
 class Core_Model_Module_Registry extends Class {
 	constructor(key: Object) {
@@ -109,7 +109,7 @@ class Core_Model_Module_Registry extends Class {
      */
 	async getEnabled() {
         (await this.logger).debug('Fetching enabled modules from /app/modules.js');
-        let m = await System.import('modules');
+        let m = await System.import('modules.js');
         let result = [];
         for (let key of Object.keys(m.default)) {
             if (m.default[key].enabled) {
@@ -127,7 +127,7 @@ class Core_Model_Module_Registry extends Class {
         (await this.logger).debug('Fetching manifest.js files of all enabled modules.');
         let promises = defined.map(async function([key, value]) {
             key = key.replace(/_/g,'/');
-            let m = await System.import(key + '/manifest');
+            let m = await System.import(key + '/manifest.js');
             m.default.key = key;
             return m.default;
         });
