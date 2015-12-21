@@ -3,4 +3,6 @@
 /.settings
 /BUILD.md
 /config-prod.js
+/config-build.js
+/compile.php
 /es5

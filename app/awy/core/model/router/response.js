@@ -31,19 +31,21 @@ class Core_Model_Router_Response extends Class {
             }
         } else if (null === this._content) {
             let l = await Class.i('awy_core_model_layout');
-            //Class.i('awy_core_model_layout').then(l => {
-                //console.log(l);
-                this._content = await l.render();
-            //});
-            //this._content = Layout.i().render();
+            this._content = await l.render();
         }
         //let parser = new DOMParser();
         //this._content = parser.parseFromString(this._content, "text/xml");
         let app = await Class.i('awy_core_model_app');
         //(await this.logger).debug(this._content);
         // templates as template strings
-        app.host.innerHTML = this._content;
-        console.log(document.getElementById("gr"));
+        //app.host.innerHTML = this._content;
+        let v = await Class.i('awy_core_model_view');
+        let doc = v.fragmentFromString(this._content);
+        v.bindModel(doc, v);
+        //v.withBinders(v.binders).bind(doc, v);
+        app.host.innerHTML = "";
+        app.host.appendChild(doc);
+        //console.log(document.getElementById("gr"));
         //console.log(this.toString());
         // templates as array of emmet commands joined and exported
         //HTML.ify(app.host);

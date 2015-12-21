@@ -9,7 +9,6 @@ class Awy_Core_Model_View extends Class {
                 var previous;
                 return {
                     updateProperty: function(fn) {
-                        console.log(fn);
                         var listener = function(e) {
                             fn.apply(object, arguments);
                             e.preventDefault();
@@ -19,7 +18,6 @@ class Awy_Core_Model_View extends Class {
                             previous = listener;
                         }
                         node.addEventListener('click', listener);
-                        //console.log(fn);
                     }
                 };
             }
@@ -165,6 +163,7 @@ class Awy_Core_Model_View extends Class {
         $result .= join('', $this->BEvents->fire('BView::hook:before', {'view': this, 'name': hookName}));
         */
         let hookRes = await eventsInstance.fire('Layout::hook:' + hookName, args);
+        //console.log(hookRes);
         result +=  hookRes.join('');
         //result += eventsInstance.fire('Layout::hook:' + hookName, args).join('');
         /*
@@ -206,14 +205,30 @@ class Awy_Core_Model_View extends Class {
         return template;
     }
 
-    bindModel(container) {
-        let bi = container.querySelectorAll('[data-bind]');
-        let bi_array = Array.from(bi); 
-        let bindings = bi_array.map((node) => {
-            let parts = node.dataset.bind.split(' ');
-            return this.bindObject(node, parts[0], parts[1]);
-        });
-        //console.log(bindings);
+    onlyDirectNested(container, selector) {
+        let collection = container.querySelectorAll(selector);
+        return Array.prototype.filter.call(collection, this['isDirectNested']);
+    }
+
+    isDirectNested(node) {
+        node = node.parentElement;
+        while (node) {
+            if (node.dataset.repeat) {
+                return false;
+            }
+            node = node.parentElement;
+        }
+        return true;
+    }
+
+    bindModel(container, object) {
+        var bindings = this.onlyDirectNested(container, '[data-bind]').map((node) => {
+            var parts = node.dataset.bind.split(' ');
+            return this.bindObject(node, parts[0], object, parts[1]);
+        }, this)/*.concat(this.onlyDirectNested(container, '[data-repeat]').map((node) => {
+            return this.bindCollection(node, object[node.dataset.repeat]);
+        }, this))*/;
+
         return {
             unobserve: function() {
                 bindings.forEach(function(binding) {
@@ -223,32 +238,35 @@ class Awy_Core_Model_View extends Class {
         };
     }
 
+    bindObject(node, binderName, object, propertyName) {
+        var binder = this.binders[binderName](node, (v) => {object[propertyName] = v;}, object);
+        binder.updateProperty(object[propertyName]);
+        var observer = function(changes) {
+            var changed = changes.some((change) => change.name === propertyName);
+            if (changed) {
+                binder.updateProperty(object[propertyName]);
+            }
+        };
+        Object.observe(object, observer);
+        return {
+            unobserve: function() {
+                Object.unobserve(object, observer);
+            }
+        };
+    }
+
+
     showStructure() {
-        alert('sdsdsdsd');
+        let router = Class.i('awy_core_model_router').then( r => {
+            console.log(r);
+            r.navigate('install/step1');
+        });
+        //router.navigate('install/step1');
         //alert(JSON.stringify(this, null, 4));
     }
 
-    bindObject(node, binderName, propertyName) {
-        
-        var updateValue = function(newValue) {
-            this[propertyName] = newValue;
-        };
-        var binder = this.binders[binderName](node, updateValue, this);
-        binder.updateProperty(this[propertyName]);
-        var observer = function(changes) {
-            var changed = changes.some(function(change) {
-                return change.name === propertyName;
-            });
-            if (changed) {
-                binder.updateProperty(this[propertyName]);
-            }
-        };
-        Object.observe(this, observer);
-        return {
-            unobserve: function() {
-                Object.unobserve(this, observer);
-            }
-        };
+    fragmentFromString(strHTML) {
+        return document.createRange().createContextualFragment(strHTML);
     }
 
     async render(args = {}, retrieveMetaData = false) {
@@ -261,11 +279,15 @@ class Awy_Core_Model_View extends Class {
 
         let viewContent = await this._render();
         //console.log(viewContent);
-        let parser = new DOMParser();
-        let doc = parser.parseFromString(viewContent, "text/html");
+
+        //let parser = new DOMParser();
+        //let doc = parser.parseFromString(viewContent, "text/html");
+        //let doc = this.fragmentFromString(viewContent);
         //console.log(doc);
         // !! TRY TO BIND WITH OBJECT OBSERVE HERE !! https://curiosity-driven.org/object-observe-data-binding
-        this.bindModel(doc);
+        //this.withBinders(this.binders).bind(doc, this);
+
+        //this.bindModel(doc);
         return viewContent;
         /*
         foreach ($args as $k => $v) {

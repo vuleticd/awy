@@ -1,5 +1,9 @@
+// https://google.github.io/traceur-compiler/bin/traceur.js 
+System.paths['traceur'] = '/lib/traceur.js';
 // auto loader
-System.paths['*'] = '/app/*';
+System.config({
+  baseURL: '/app'
+});
 
 System.traceurOptions = {
     //annotations: true,
