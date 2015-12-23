@@ -12,6 +12,8 @@ class Core_Model_Router_Response extends Class {
     }
 
     async output(type = null) {
+        let app = await Class.i('awy_core_model_app');
+        app.host.innerHTML = "";
         if (null !== type) {
             this.setContentType(type);
         }
@@ -25,26 +27,31 @@ class Core_Model_Router_Response extends Class {
 
         this.header(headers);
 */
+        //this._content = null;
         if (this._contentType == 'application/json') {
             if (null !== this._content) {
                 this._content = this._content;// is_string($this->_content) ? $this->_content : $this->BUtil->toJson($this->_content);
             }
-        } else if (null === this._content) {
+        } else {
+            /*else if (null === this._content) {*/
             let l = await Class.i('awy_core_model_layout');
-            this._content = await l.render();
+            this._content = await l.render(null, {parent: app.host});
         }
+        //console.log(this._content);
         //let parser = new DOMParser();
         //this._content = parser.parseFromString(this._content, "text/xml");
-        let app = await Class.i('awy_core_model_app');
         //(await this.logger).debug(this._content);
         // templates as template strings
         //app.host.innerHTML = this._content;
+        /*
         let v = await Class.i('awy_core_model_view');
         let doc = v.fragmentFromString(this._content);
         v.bindModel(doc, v);
-        //v.withBinders(v.binders).bind(doc, v);
-        app.host.innerHTML = "";
-        app.host.appendChild(doc);
+        */
+        //app.host.innerHTML = "";
+        //app.host.appendChild(doc);
+
+
         //console.log(document.getElementById("gr"));
         //console.log(this.toString());
         // templates as array of emmet commands joined and exported

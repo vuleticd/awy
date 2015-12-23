@@ -1,7 +1,7 @@
 //let str = 'form[method="POST" action="install" class="form-horizontal"]>div.panel-heading>h1.panel-title>{Welcome to Awy installation wizard!}';
 let str = `
-<form id="grr" method="POST" action="VIEW{href("install")}" class="form-horizontal">
-	<input type="hidden" name="X-CSRF-TOKEN" value=""/>
+<form id="grr" method="POST" action="#" data-bind="value action" class="form-horizontal">
+	<input type="hidden" name="X-CSRF-TOKEN" data-bind="value token"/>
 	<div class="panel-heading">
 		<h1 class="panel-title">Welcome to Fulleron installation wizard!</h1>
 	</div>
@@ -24,7 +24,7 @@ let str = `
 	</div>
 	<ul class="list-group list-group-flush">
 		<li class="list-group-item clearfix">
-			<button data-bind="click showStructure" type="button" class="btn btn-primary pull-right" name="do" value="next">Continue</button>
+			<button data-bind="click completeStep" type="button" class="btn btn-primary pull-right" name="do" value="next">Continue</button>
 		</li>
 	</ul>
 </form>

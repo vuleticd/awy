@@ -120,6 +120,12 @@ class Awy_Core_Model_Events extends Class {
         return this;
     }
     /*
+     * Disable all observers for all events
+     */
+    clear(){
+        this._events.clear();
+    }
+    /*
      * Dispatch event observers
      * dispatch|fire|notify|pub|publish ?
      * @return Collection of results from observers
@@ -141,6 +147,8 @@ class Awy_Core_Model_Events extends Class {
         }
 
         let e = this._events.get(eventName);
+        (await this.logger).debug(e);
+        (await this.logger).debug(args);
         let observers = e.observers;
         let observer;
         for (observer of observers) {
@@ -149,7 +157,7 @@ class Awy_Core_Model_Events extends Class {
                 args = this.objectMerge(e.args, args);
             }
             if ('args' in observer) {
-                args = this.objectMerge(observer.args, args);
+                //args = this.objectMerge(observer.args, args);
             }
             // Set current module to be used in observer callback
             if ('module_name' in observer) {

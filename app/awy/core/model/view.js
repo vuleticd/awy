@@ -5,10 +5,23 @@ class Awy_Core_Model_View extends Class {
 		this._params = params || {};
         this.logger = Class.i('awy_core_model_logger', 'View');
         this.binders = {
+            value: function(node, onchange) {
+                node.addEventListener('keyup', () => {
+                    onchange(node.value);
+                });
+                return {
+                    updateProperty: function(value) {
+                        if (value !== node.value) {
+                            node.value = value;
+                        }
+                    }
+                };
+            },
             click: function(node, onchange, object) {
                 var previous;
                 return {
                     updateProperty: function(fn) {
+                        //alert(object._origClass);
                         var listener = function(e) {
                             fn.apply(object, arguments);
                             e.preventDefault();
@@ -23,6 +36,67 @@ class Awy_Core_Model_View extends Class {
             }
         };
 	}
+
+    /* DATA BINDING */
+    onlyDirectNested(container, selector) {
+        let collection = container.querySelectorAll(selector);
+        return Array.prototype.filter.call(collection, this['isDirectNested']);
+    }
+
+    isDirectNested(node) {
+        node = node.parentElement;
+        while (node) {
+            if (node.dataset.repeat) {
+                return false;
+            }
+            node = node.parentElement;
+        }
+        return true;
+    }
+
+    async bindModel(container, object) {
+        var bindings = this.onlyDirectNested(container, '[data-bind]').map((node) => {
+            var parts = node.dataset.bind.split(' ');
+            return this.bindObject(node, parts[0], object, parts[1]);
+        }, this)/*.concat(this.onlyDirectNested(container, '[data-hook]').map((node) => {
+            return this.hook(node.dataset.hook, {parent: node});
+        }, this))*//*.concat(this.onlyDirectNested(container, '[data-repeat]').map((node) => {
+            return this.bindCollection(node, object[node.dataset.repeat]);
+        }, this))*/;
+
+        return {
+            unobserve: function() {
+                bindings.forEach(function(binding) {
+                    binding.unobserve();
+                });
+            }
+        };
+    }
+
+    bindObject(node, binderName, object, propertyName) {
+        var binder = this.binders[binderName](node, (v) => {object[propertyName] = v;}, object);
+        binder.updateProperty(object[propertyName]);
+        var observer = function(changes) {
+            var changed = changes.some((change) => change.name === propertyName);
+            if (changed) {
+                binder.updateProperty(object[propertyName]);
+            }
+        };
+        Object.observe(object, observer);
+        return {
+            unobserve: function() {
+                Object.unobserve(object, observer);
+            }
+        };
+    }
+
+    showStructure() {
+        alert(JSON.stringify(this, null, 4));
+    }
+
+    getBodyClass() {
+        alert(this.body_class.join(' '));
+    }
 
     async href(url = '') {
         let app = await Class.i('awy_core_model_app');
@@ -124,7 +198,69 @@ class Awy_Core_Model_View extends Class {
     */
 
     async _render(params){
+        console.log('VIEW OBJECT');
+        console.log(this);
+        let parent;
+        if ('parent' in params) {
+            parent = params.parent;
+        } else {
+            parent = this.get('parent');
+        }
+
+        console.log(parent);
         let t = await this.getTemplateFileName();
+        let doc = this.fragmentFromString(t);
+        /*
+        var tmp = document.createElement("div");
+        tmp.appendChild(doc);
+        console.log(tmp.innerHTML);
+        */
+        //console.log(doc);
+        /*
+        var nodeIterator = document.createNodeIterator(
+          // Node to use as root
+          doc,
+
+          // Only consider nodes that are text nodes (nodeType 3)
+          NodeFilter.SHOW_TEXT,
+
+          // Object containing the function to use for the acceptNode method
+          // of the NodeFilter
+            { acceptNode: function(node) {
+              // Logic to determine whether to accept, reject or skip node
+              // In this case, only accept nodes that have content
+              // other than whitespace
+              if ( ! /^\s*$/.test(node.data) &&  /VIEW\{([^}\n]*)\}/.test(node.data) ) {
+                return NodeFilter.FILTER_ACCEPT;
+              }
+            }
+          },
+          false
+        );
+
+        // Show the content of every non-empty text node that is a child of root
+        var node;
+
+        while ((node = nodeIterator.nextNode())) {
+          alert(node.data);
+          alert(node.parentElement);
+        }
+
+
+        var tmp = document.createElement("div");
+        tmp.appendChild(doc);
+        console.log(tmp.innerHTML); // <p>Test</p>
+        //console.log(doc.outerHTML);
+        */
+        await this.bindModel(doc, this);
+        let collection = Array.from(doc.querySelectorAll('[data-hook]'));
+        let node;
+        for (node of collection){
+            await this.hook(node.dataset.hook, {parent: node});
+        }
+        
+        parent.appendChild(doc);
+        /*
         // templates as template strings
         let matches = t.match(/VIEW\{([^}\n]*)\}/g);
         //console.log(matches);
@@ -150,9 +286,12 @@ class Awy_Core_Model_View extends Class {
                 t = t.replace(m,r);
             }
         }
+        */
+        //let doc = this.fragmentFromString(t);
+        //console.log(doc);
         //console.log(matches);
         //let ex = HTML.add.expand(t); // Creates unattached document fragment from emmet template
-        return t;
+        return doc;
     }
 
     async hook(hookName, args = {}) {
@@ -163,8 +302,13 @@ class Awy_Core_Model_View extends Class {
         $result .= join('', $this->BEvents->fire('BView::hook:before', {'view': this, 'name': hookName}));
         */
         let hookRes = await eventsInstance.fire('Layout::hook:' + hookName, args);
-        //console.log(hookRes);
-        result +=  hookRes.join('');
+        
+        //console.log(args.parent);
+        let doc;
+        for(doc of hookRes) {
+            args.parent.appendChild(doc);
+        }
+        //result +=  hookRes.join('');
         //result += eventsInstance.fire('Layout::hook:' + hookName, args).join('');
         /*
         $result .= join('', $this->BEvents->fire('BView::hook:after', ['view' => $this, 'name' => $hookName]));
@@ -205,66 +349,6 @@ class Awy_Core_Model_View extends Class {
         return template;
     }
 
-    onlyDirectNested(container, selector) {
-        let collection = container.querySelectorAll(selector);
-        return Array.prototype.filter.call(collection, this['isDirectNested']);
-    }
-
-    isDirectNested(node) {
-        node = node.parentElement;
-        while (node) {
-            if (node.dataset.repeat) {
-                return false;
-            }
-            node = node.parentElement;
-        }
-        return true;
-    }
-
-    bindModel(container, object) {
-        var bindings = this.onlyDirectNested(container, '[data-bind]').map((node) => {
-            var parts = node.dataset.bind.split(' ');
-            return this.bindObject(node, parts[0], object, parts[1]);
-        }, this)/*.concat(this.onlyDirectNested(container, '[data-repeat]').map((node) => {
-            return this.bindCollection(node, object[node.dataset.repeat]);
-        }, this))*/;
-
-        return {
-            unobserve: function() {
-                bindings.forEach(function(binding) {
-                    binding.unobserve();
-                });
-            }
-        };
-    }
-
-    bindObject(node, binderName, object, propertyName) {
-        var binder = this.binders[binderName](node, (v) => {object[propertyName] = v;}, object);
-        binder.updateProperty(object[propertyName]);
-        var observer = function(changes) {
-            var changed = changes.some((change) => change.name === propertyName);
-            if (changed) {
-                binder.updateProperty(object[propertyName]);
-            }
-        };
-        Object.observe(object, observer);
-        return {
-            unobserve: function() {
-                Object.unobserve(object, observer);
-            }
-        };
-    }
-
-
-    showStructure() {
-        let router = Class.i('awy_core_model_router').then( r => {
-            console.log(r);
-            r.navigate('install/step1');
-        });
-        //router.navigate('install/step1');
-        //alert(JSON.stringify(this, null, 4));
-    }
-
     fragmentFromString(strHTML) {
         return document.createRange().createContextualFragment(strHTML);
     }
@@ -276,8 +360,7 @@ class Awy_Core_Model_View extends Class {
         if (this.param('raw_text') !== null) {
             return this.param('raw_text');
         }
-
-        let viewContent = await this._render();
+        let viewContent = await this._render(args);
         //console.log(viewContent);
 
         //let parser = new DOMParser();

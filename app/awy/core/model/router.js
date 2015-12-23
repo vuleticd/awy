@@ -84,6 +84,11 @@ class Awy_Core_Model_Router extends Class {
                 let method = this.routes[i].handler.split(".")[1];
                 let clbClass = await Class.i(className);
                 //console.log(method);
+
+                // Disable all observers for all (??Layout??) events, since this is equivalent to page refresh
+                let evt = await Class.i('awy_core_model_events');
+                evt.clear();
+
                 let forward = await clbClass.dispatch(method, match);
                 if (Array.isArray(forward)) {
                     let actionName = forward[0];
@@ -123,7 +128,7 @@ class Awy_Core_Model_Router extends Class {
         }
     }
 
-    navigate(path): Awy_Core_Model_Router {
+    async navigate(path): Awy_Core_Model_Router {
         path = path ? path : '';
         if(this.mode === 'history') {
             history.pushState(null, null, this.root + this.clearSlashes(path));

@@ -18,7 +18,7 @@ let str = `
     <ul class="list-group list-group-flush">
         <li class="list-group-item clearfix">
             <a class="btn btn-link pull-left" name="do" value="back" href="VIEW{href("install")}"> Back</a>
-            <button type="submit" class="btn btn-primary pull-right" name="do" value="next">Continue</button>
+            <button type="submit" class="btn btn-primary pull-right" name="do" value="next" data-bind="click completeStep">Continue</button>
         </li>
     </ul>
 </form>

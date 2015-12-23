@@ -105,16 +105,15 @@ class Awy_Core_Model_Layout extends Class {
 
     async render(routeName = null, args = {}) {
         //$this->dispatch('render:before', $routeName, $args);
-
         let rootView = this.rootView;
         //console.log(rootView);
         (await this.logger).debug('LAYOUT.RENDER ');
-        //(await this.logger).debug(rootView);
+        (await this.logger).debug(rootView);
         if (!rootView) {
             (await this.logger).error('Main view not found: ' + this._rootViewName);
         }
 
-        let result = await this.rootView.render();
+        let result = await this.rootView.render(args);
 
         //$args['output'] =& $result;
         //$this->dispatch('render:after', $routeName, $args);
@@ -336,8 +335,8 @@ class Awy_Core_Model_Layout extends Class {
                 (await this.logger).debug('LAYOUT.ADD ' + layoutName);
                 this._layouts.set(layoutName, layout);
             } else {
-                (await this.logger).debug('LAYOUT.UPDATE ' + layoutName);
-                this.arrayMerge(this._layouts.get(layoutName), layout);
+                //(await this.logger).debug('LAYOUT.UPDATE ' + layoutName);
+                //this.arrayMerge(this._layouts.get(layoutName), layout);
             }
         }
         return this;
@@ -405,6 +404,7 @@ class Awy_Core_Model_Layout extends Class {
      * or an array in which first field is view name and the rest are view parameters.
      */
     async hookView(hookName, viewName, args = {}, params = {}) {
+        //console.log(params);
         if (Array.isArray(viewName)) {
             let viewParams = viewName;
             viewName = viewParams.shift();
@@ -415,10 +415,12 @@ class Awy_Core_Model_Layout extends Class {
             (await this.logger).warn('Invalid view name: ' + viewName);
             return this;
         }
+        let p = {};
         if (!('alias' in params)) {
-            params['alias'] = viewName;
+            p['alias'] = viewName;
         }
-        await this.hook(hookName, view, args, params);
+        //console.log(p);
+        await this.hook(hookName, view, args, p);
         return this;
     }
     /**
@@ -451,7 +453,7 @@ class Awy_Core_Model_Layout extends Class {
     }
 
     async metaDirectiveHookCallback(args) {
-        console.log(args);
+        //console.log(args);
         let hookArgs = args['args'] || {};
         /*
         if (!empty($d['position'])) {
