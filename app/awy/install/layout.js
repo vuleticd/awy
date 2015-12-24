@@ -16,7 +16,7 @@ let layout =  {
 	"/": [
 		{ include: 'base' },
 		//{ hook: 'main', text: 'Blah Blah' }
-		{ hook: 'main', views: ['index','step1','step2'] }
+		{ hook: 'main', views: 'index' }
 	],
 	"/step1": [
 		{ include: 'base' },

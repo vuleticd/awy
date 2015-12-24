@@ -4,7 +4,7 @@ class Awy_Core_View_Root extends Awy_Core_Model_View {
 	constructor(params) {
 		super();
 		this._params = params;
-		this.binders.rootClass = function(node, onchange) {
+		this.binders.rootClass = function(node, onchange, object) {
             return {
                 updateProperty: async function(value) {
                     //if (value !== node.value) {
@@ -19,7 +19,8 @@ class Awy_Core_View_Root extends Awy_Core_Model_View {
                         //alert(scr);
                         node.className = value.join(' ').trim();
                     //}
-                }
+                },
+                observer: (changes) => false
             };
         }
 		this.body_class = ['sdsdsd'];// [];

@@ -5,22 +5,58 @@ class Awy_Core_Model_View extends Class {
 		this._params = params || {};
         this.logger = Class.i('awy_core_model_logger', 'View');
         this.binders = {
-            value: function(node, onchange) {
+            checked: function(node, propertyName, object) {
+                console.log(this);
+                node.addEventListener('change', () => {
+                    object.updateObjectValue(propertyName, node.checked);
+                    //onchange(node.checked);
+                });
+                return {
+                    updateProperty: function(checked) {
+                        if (checked !== node.checked) {
+                            node.checked = checked;
+                        }
+                    },
+                    observer: function(changes) {
+                        let change;
+                        for (change of changes){
+                            if(change.name === propertyName){
+                                if(change.object[change.name] !== node.checked){
+                                    node.checked = change.object[change.name];
+                                }
+                            }
+                        }
+                    }
+                };
+            },
+            value: function(node, propertyName, object) {
                 node.addEventListener('keyup', () => {
-                    onchange(node.value);
+                    object.updateObjectValue(propertyName, node.value);
+                    //onchange(node.value);
                 });
                 return {
                     updateProperty: function(value) {
                         if (value !== node.value) {
                             node.value = value;
                         }
+                    },
+                    observer: function(changes) {
+                        let change;
+                        for (change of changes){
+                            if(change.name === propertyName){
+                                if(change.object[change.name] !== node.checked){
+                                    node.checked = change.object[change.name];
+                                }
+                            }
+                        }
                     }
                 };
             },
-            click: function(node, onchange, object) {
+            click: function(node, propertyName, object) {
                 var previous;
                 return {
                     updateProperty: function(fn) {
+                        node.href = "javascript:void(0)";
                         //alert(object._origClass);
                         var listener = function(e) {
                             fn.apply(object, arguments);
@@ -31,7 +67,8 @@ class Awy_Core_Model_View extends Class {
                             previous = listener;
                         }
                         node.addEventListener('click', listener);
-                    }
+                    },
+                    observer: (changes) => false
                 };
             }
         };
@@ -54,40 +91,43 @@ class Awy_Core_Model_View extends Class {
         return true;
     }
 
-    async bindModel(container, object) {
-        var bindings = this.onlyDirectNested(container, '[data-bind]').map((node) => {
-            var parts = node.dataset.bind.split(' ');
-            return this.bindObject(node, parts[0], object, parts[1]);
-        }, this)/*.concat(this.onlyDirectNested(container, '[data-hook]').map((node) => {
-            return this.hook(node.dataset.hook, {parent: node});
-        }, this))*//*.concat(this.onlyDirectNested(container, '[data-repeat]').map((node) => {
-            return this.bindCollection(node, object[node.dataset.repeat]);
-        }, this))*/;
+    async bindModel(container) {
+        let bindings = this.onlyDirectNested(container, '[data-bind]');
+        let i;
+        for (i in bindings){
+            bindings[i] =  await this.bindObject(bindings[i]);
+        }
 
         return {
-            unobserve: function() {
-                bindings.forEach(function(binding) {
+            unobserve: () => {
+                bindings.forEach((binding) => {
                     binding.unobserve();
                 });
             }
         };
     }
 
-    bindObject(node, binderName, object, propertyName) {
-        var binder = this.binders[binderName](node, (v) => {object[propertyName] = v;}, object);
-        binder.updateProperty(object[propertyName]);
-        var observer = function(changes) {
-            var changed = changes.some((change) => change.name === propertyName);
-            if (changed) {
-                binder.updateProperty(object[propertyName]);
-            }
-        };
-        Object.observe(object, observer);
+    async bindObject(node) {
+        let object = this;
+        let parts = node.dataset.bind.split(' ');
+        let propertyName = parts[1];
+        let binderName = parts[0];
+        // initiate template->object change
+        let binder = this.binders[binderName](node, propertyName, this);
+        // trigger object->template change
+        binder.updateProperty(this[propertyName]);
+        // listen for object->template changes
+        Object.observe(this, binder['observer']);
+
         return {
             unobserve: function() {
-                Object.unobserve(object, observer);
+                Object.unobserve(object, binder['observer']);
             }
         };
+    }
+
+    updateObjectValue(propertyName, v){
+        this[propertyName] = v;
     }
 
     showStructure() {
@@ -144,6 +184,13 @@ class Awy_Core_Model_View extends Class {
         return this;
     }
 
+    get(name) {
+        if (!('args' in this._params)) {
+            return null;
+        }
+        return this._params['args'][name] || null;
+    }
+
     /**
      * Render as string=
      * If there's exception during render, output as string as well
@@ -158,44 +205,6 @@ class Awy_Core_Model_View extends Class {
 
         return result;
     }
-
-    get(name) {
-        if (!('args' in this._params)) {
-            return null;
-        }
-        return this._params['args'][name] || null;
-    }
-    /*
-    html(strings, ...values){
-        let raw = strings.raw;
-        let result = '';
-
-        values.forEach((subst, i) => {
-            // Retrieve the literal section preceding
-            // the current substitution
-            let lit = raw[i];
-            console.log(lit);
-            // In the example, map() returns an array:
-            // If substitution is an array (and not a string),
-            // we turn it into a string
-            if (Array.isArray(subst)) {
-                subst = subst.join('');
-            }
-    
-            // If the substitution is preceded by a dollar sign,
-            // we escape special characters in it
-            if (lit.endsWith('$')) {
-                subst = htmlEscape(subst);
-                lit = lit.slice(0, -1);
-            }
-            result += lit;
-            result += subst;
-        });
-        console.log(raw);
-        console.log(values);
-        return 3;
-    }
-    */
 
     async _render(params){
         console.log('VIEW OBJECT');
@@ -252,7 +261,11 @@ class Awy_Core_Model_View extends Class {
         console.log(tmp.innerHTML); // <p>Test</p>
         //console.log(doc.outerHTML);
         */
-        await this.bindModel(doc, this);
+        let bnd = await this.bindModel(doc);
+        // STOP PROPAGATING object->template CHANGES FOR THIS FRAGMENT
+        //bnd.unobserve();
+
+
         let collection = Array.from(doc.querySelectorAll('[data-hook]'));
         let node;
         for (node of collection){
