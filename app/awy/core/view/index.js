@@ -4,11 +4,11 @@ class Awy_Core_View_Index extends Awy_Core_Model_View {
 	constructor(params) {
 		super();
 		this._params = params;
-		this.agree = false;
+		this.set('agree', false);
 	}
 
 	completeStep(){
-		if (!this.agree) {
+		if (!this.get('agree')) {
 			alert('Please tick the agree to our terms and conditions!');
 			return false;
 		}

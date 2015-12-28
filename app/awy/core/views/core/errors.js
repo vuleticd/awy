@@ -1,7 +1,9 @@
 //let str = 'div.container.container-low>{$get("errors")}';
 let str = `
 <div class="container container-low"> 
-	VIEW{get("errors")}
+	<ul>
+		<li data-bind="text errors"></li>
+	</ul>
 <div>
 `;
 

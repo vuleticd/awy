@@ -40,6 +40,15 @@ class Core_Model_App extends Class {
             l.view('core/errors').set('errors', e);
             let response = await Class.i('awy_core_model_router_response');
             await response.output();
+            /* Demonstration of how error can change and be displayed after the load
+            setInterval(async () => {
+              let layout = await Class.i('awy_core_model_layout');
+              let erV = layout.view('core/errors');
+              let e = new Error('tttt');
+              erV.set('errors', e);
+              console.log(erV);
+            }, 1000);
+            */
             //throw e;
         } catch(er) {
             //(await this.logger).error(er);

@@ -6,21 +6,25 @@ class Awy_Core_Model_View extends Class {
         this.logger = Class.i('awy_core_model_logger', 'View');
         this.binders = {
             checked: function(node, propertyName, object) {
-                console.log(this);
+                //console.log(this);
                 node.addEventListener('change', () => {
-                    object.updateObjectValue(propertyName, node.checked);
-                    //onchange(node.checked);
+                    //object.updateObjectValue(propertyName, node.checked);
+                    object.set(propertyName, node.checked);
                 });
                 return {
-                    updateProperty: function(checked) {
+                    updateProperty: function() {
+                        let checked = object.get(propertyName);
                         if (checked !== node.checked) {
                             node.checked = checked;
                         }
                     },
                     observer: function(changes) {
                         let change;
+                        console.log(changes);
                         for (change of changes){
+                            console.log(change);
                             if(change.name === propertyName){
+                                console.log(change);
                                 if(change.object[change.name] !== node.checked){
                                     node.checked = change.object[change.name];
                                 }
@@ -31,11 +35,12 @@ class Awy_Core_Model_View extends Class {
             },
             value: function(node, propertyName, object) {
                 node.addEventListener('keyup', () => {
-                    object.updateObjectValue(propertyName, node.value);
-                    //onchange(node.value);
+                    //object.updateObjectValue(propertyName, node.value);
+                    object.set(propertyName, node.value);
                 });
                 return {
-                    updateProperty: function(value) {
+                    updateProperty: function() {
+                        let value = object.get(propertyName);
                         if (value !== node.value) {
                             node.value = value;
                         }
@@ -44,18 +49,40 @@ class Awy_Core_Model_View extends Class {
                         let change;
                         for (change of changes){
                             if(change.name === propertyName){
-                                if(change.object[change.name] !== node.checked){
-                                    node.checked = change.object[change.name];
+                                if(change.object[change.name] !== node.value){
+                                    node.value = change.object[change.name];
                                 }
                             }
                         }
                     }
                 };
             },
+            text: function(node, propertyName, object) {
+                return {
+                    updateProperty: function() {
+                        let value = object.get(propertyName);
+                        if (value !== node.innerHTML) {
+                            node.innerHTML = value;
+                        }
+                    },
+                    observer: function(changes) {
+                        let change;
+                        for (change of changes){
+                            if(change.name === propertyName){
+                                if(change.object[change.name] !== node.innerHTML){
+                                    node.innerHTML = change.object[change.name];
+                                }
+                            }
+                        }
+                    }
+                };
+            },
+
             click: function(node, propertyName, object) {
                 var previous;
                 return {
-                    updateProperty: function(fn) {
+                    updateProperty: function() {
+                        let fn = object[propertyName];
                         node.href = "javascript:void(0)";
                         //alert(object._origClass);
                         var listener = function(e) {
@@ -115,28 +142,21 @@ class Awy_Core_Model_View extends Class {
         // initiate template->object change
         let binder = this.binders[binderName](node, propertyName, this);
         // trigger object->template change
-        binder.updateProperty(this[propertyName]);
+        binder.updateProperty();
         // listen for object->template changes
-        Object.observe(this, binder['observer']);
+        Object.observe(this._params.args, binder['observer']);
 
         return {
             unobserve: function() {
-                Object.unobserve(object, binder['observer']);
+                Object.unobserve(object._params.args, binder['observer']);
             }
         };
-    }
-
-    updateObjectValue(propertyName, v){
-        this[propertyName] = v;
     }
 
     showStructure() {
         alert(JSON.stringify(this, null, 4));
     }
 
-    getBodyClass() {
-        alert(this.body_class.join(' '));
-    }
 
     async href(url = '') {
         let app = await Class.i('awy_core_model_app');
