@@ -9,7 +9,8 @@ let config =  {
                 root: { view_class: 'awy_core_view_root' },
                 index: { view_class: 'awy_core_view_index' },
                 step1: { view_class: 'awy_install_view_step1'},
-                step2: { },
+                step2: { view_class: 'awy_install_view_step2' },
+                step3: { view_class: 'awy_install_view_step3' },
             },
             //auto_use: [ 'bootstrap', 'views' ],
             //before_bootstrap: { callback: "awy_admin_admin.onBeforeBootstrap" },
@@ -32,6 +33,7 @@ let config =  {
 		['/install','awy_install_controller.index'],
 		['/install/step1','awy_install_controller.step1'],
 		['/install/step2','awy_install_controller.step2'],
+		['/install/step3','awy_install_controller.step3'],
 		['/install/.action','awy_install_controller']
 	],
 	/*default_config: {

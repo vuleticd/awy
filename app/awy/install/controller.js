@@ -57,6 +57,12 @@ class Awy_Install_Controller extends Awy_Core_Controller_Abstract {
         //throw new Error('dsds');
         //return;
     }
+
+    async action_step3() {
+        console.log('Awy_Install_Controller.action_step3');
+        let layout = await Class.i('awy_core_model_layout');
+        await layout.applyLayout('/step3');
+    }
 }
 
 export default Awy_Install_Controller

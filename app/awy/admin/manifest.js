@@ -3,6 +3,7 @@ let config =  {
 	version: '0.0.0.1',
 	description: "Base Admin functionality",
 	require: { module: { awy_core: '0.0.0.1' } },
+    /*migrate: 'awy_admin_instalacija',*/
     areas: {
             awy_admin: {
                 views: {

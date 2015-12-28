@@ -12,7 +12,7 @@ class Awy_Core_Model_View extends Class {
                     object.set(propertyName, node.checked);
                 });
                 return {
-                    updateProperty: function() {
+                    updateProperty: async function() {
                         let checked = object.get(propertyName);
                         if (checked !== node.checked) {
                             node.checked = checked;
@@ -20,7 +20,7 @@ class Awy_Core_Model_View extends Class {
                     },
                     observer: function(changes) {
                         let change;
-                        console.log(changes);
+                        //console.log(changes);
                         for (change of changes){
                             console.log(change);
                             if(change.name === propertyName){
@@ -39,7 +39,7 @@ class Awy_Core_Model_View extends Class {
                     object.set(propertyName, node.value);
                 });
                 return {
-                    updateProperty: function() {
+                    updateProperty: async function() {
                         let value = object.get(propertyName);
                         if (value !== node.value) {
                             node.value = value;
@@ -59,7 +59,7 @@ class Awy_Core_Model_View extends Class {
             },
             text: function(node, propertyName, object) {
                 return {
-                    updateProperty: function() {
+                    updateProperty: async function() {
                         let value = object.get(propertyName);
                         if (value !== node.innerHTML) {
                             node.innerHTML = value;
@@ -81,12 +81,14 @@ class Awy_Core_Model_View extends Class {
             click: function(node, propertyName, object) {
                 var previous;
                 return {
-                    updateProperty: function() {
+                    updateProperty: async function() {
                         let fn = object[propertyName];
                         node.href = "javascript:void(0)";
                         //alert(object._origClass);
-                        var listener = function(e) {
-                            fn.apply(object, arguments);
+                        var listener = async function(e) {
+                            //alert(fn);
+                            await object[propertyName]();
+                            //fn.apply(object, arguments);
                             e.preventDefault();
                         };
                         if (previous) {

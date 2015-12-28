@@ -7,7 +7,7 @@ class Awy_Core_View_Index extends Awy_Core_Model_View {
 		this.set('agree', false);
 	}
 
-	completeStep(){
+	async completeStep(){
 		if (!this.get('agree')) {
 			alert('Please tick the agree to our terms and conditions!');
 			return false;
