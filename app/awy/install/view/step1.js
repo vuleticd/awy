@@ -5,8 +5,8 @@ class Awy_Install_View_Step1 extends Awy_Core_Model_View {
 		super();
 		this._params = params;
 
-		this.set('db_url', 'Your Firebase DB URL');
-		this.set('db_key', 'Your Firebase Secure Key');
+		this.set('db_url', 'https://torrid-heat-5927.firebaseio.com');
+		this.set('db_key', 'HkAgAjx75eRzC4sLqzV1HVw4rPmEFqqcTQcUSAt0');
 	}
 
 	async completeStep(){
@@ -16,8 +16,11 @@ class Awy_Install_View_Step1 extends Awy_Core_Model_View {
 		}
 
 		alert(JSON.stringify(this, null, 4));
+		let config = await Class.i('awy_core_model_config');
+		config.set('db', { host: this.get('db_url'), key: this.get('db_key')}, false, true);
+    	config.writeLocalStorage('db');
+
 		let migri = await Class.i('awy_core_model_migrate');
-		//console.log(migri);
         await migri.migrateModules(['awy_core', 'awy_admin'], true);
 
 		let r = await Class.i('awy_core_model_router');

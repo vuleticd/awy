@@ -12,6 +12,8 @@ class Core_Model_App extends Class {
       //throw new Error('dsdsdsd');
         let modReg = await this.init(area);
         let migrate = await modReg.bootstrap();
+        let migri = await Class.i('awy_core_model_migrate');
+        await migri.migrateModules(true);
         console.log('migrate'); 
         let router = await Class.i('awy_core_model_router');
         console.log('router listen');

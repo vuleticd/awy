@@ -20,7 +20,8 @@ let config =  {
     ],
 	default_config: {
             db: {
-                db: 'awy',
+                host: 'https://localhost.firebaseio.com',
+                key: '123456',
                 implicit_migration: true,
             },
             web: {

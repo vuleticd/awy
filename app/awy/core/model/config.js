@@ -68,12 +68,13 @@ class Core_Model_Config extends Class {
             };
             this.writeFile('core', core);
         }
-        /*
-        if (in_array('db', $files)) {
+        if (files.findIndex(x => x == 'db') !== -1) {
+            console.log(c['db']);
             // db connections
-            $db = !empty($c['db'])? ['db' => $c['db']]: [];
-            $this->writeFile('db.php', $db);
+            let db = c['db'] || {};
+            this.writeFile('db', db);
         }
+        /*
         if (in_array('local', $files)) {
             // the rest of configuration
             $local = $this->BUtil->arrayMask($c,

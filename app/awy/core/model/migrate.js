@@ -1,6 +1,7 @@
 class Awy_Core_Model_Migrate extends Class {
 	constructor() {
 		super();
+        this.logger = Class.i('awy_core_model_logger', 'Migrate');
 	}
 
 	async methodExists(obj, method) {
@@ -16,8 +17,100 @@ class Awy_Core_Model_Migrate extends Class {
     	return await this.methodExists(obj, 'constructor');
     }
 
+    contains(haystack, needle) {
+        return !!~haystack.indexOf(needle);
+    }
+
+    version_compare(v1, v2, operator=false) {
+        let compare = 0;
+        v1 = this.prepVersion(v1);
+        v2 = this.prepVersion(v2);
+        let x = Math.max(v1.length, v2.length);
+        for (let i = 0; i < x; i++) {
+            if (v1[i] == v2[i]) {
+              continue;
+            }
+            v1[i] = this.numVersion(v1[i]);
+            v2[i] = this.numVersion(v2[i]);
+            if (v1[i] < v2[i]) {
+              compare = -1;
+              break;
+            } else if (v1[i] > v2[i]) {
+              compare = 1;
+              break;
+            }
+        }
+
+        if (!operator) {
+            return compare;
+        }
+
+        switch (operator) {
+          case '>':
+          case 'gt':
+            return (compare > 0);
+          case '>=':
+          case 'ge':
+            return (compare >= 0);
+          case '<=':
+          case 'le':
+            return (compare <= 0);
+          case '==':
+          case '=':
+          case 'eq':
+            return (compare === 0);
+          case '<>':
+          case '!=':
+          case 'ne':
+            return (compare !== 0);
+          case '':
+          case '<':
+          case 'lt':
+            return (compare < 0);
+          default:
+            return null;
+        }
+    }
+
+    prepVersion(v) {
+      v = ('' + v).replace(/[_\-+]/g, '.');
+      v = v.replace(/([^.\d]+)/g, '.$1.').replace(/\.{2,}/g, '.');
+      return (!v.length ? [-8] : v.split('.'));
+    }
+
+    numVersion(v) {
+        return !v ? 0 : (isNaN(v) ? this.vm(v) || -7 : parseInt(v, 10));
+    }
+
+    vm(v) {
+        switch (v) {
+            case 'dev':
+                return -6;
+                break;
+            case 'alpha':
+            case 'a':
+                return -5;
+                break;
+            case 'beta':
+            case 'b':
+                return -4;
+                break;
+            case 'RC':
+            case 'rc':
+                return -3;
+                break;
+            case '#':
+                return -2;
+                break;
+            case 'p':
+            case 'pl':
+                return 1;
+                break;
+        }
+    }
+
 	/**
-    * Collect migration data from all modules
+    * Collect migration data from all modules with valid migration scripts found
     *
     * @return array
     */
@@ -56,6 +149,8 @@ class Awy_Core_Model_Migrate extends Class {
             }
             
         }
+        (await this.logger).debug("MIGRATION DATA: ");
+        (await this.logger).debug(migration);
         return migration;
     }
 
@@ -68,9 +163,14 @@ class Awy_Core_Model_Migrate extends Class {
     *   - array or comma separated string: migrate only specified modules
     */
     async migrateModules(limitModules = false, force = false, redirectUrl = null) {
-    	/*
-        if (!$force) {
-            $conf = $this->BConfig;
+    	
+        if (!force) {
+            let config = await Class.i('awy_core_model_config');
+            if (config.get('install_status') !== 'installed' || !config.get('db/implicit_migration')) {
+                return;
+
+            }
+            /*
             $req = $this->BRequest;
             if ($conf->get('install_status') !== 'installed'
                 || !$conf->get('db/implicit_migration')
@@ -78,80 +178,116 @@ class Awy_Core_Model_Migrate extends Class {
             ) {
                 return;
             }
+            */
         }
-        */
+        
 
         let modReg = await Class.i('awy_core_model_module_registry');
         let migration = await this.getMigrationData(modReg);
         if (!Object.keys(migration).length) {
-        	alert('empty returen');
             return;
         }
         console.log(migration);
-        /*
-        if (is_string($limitModules)) {
-            $limitModules = explode(',', $limitModules);
+    
+        if (typeof limitModules === 'string') {
+            limitModules = limitModules.split(/\s*,\s*/);
         }
+        console.log(limitModules);
         // initialize module tables
         // find all installed modules
-        $num = 0;
-        foreach ($migration as $connectionName => &$modules) {
-            if ($limitModules) {
-                foreach ($modules as $modName => $mod) {
-                    if ((true === $limitModules && $mod['run_status'] === 'LOADED')
-                        || (is_array($limitModules) && in_array($modName, $limitModules))
+        let num = 0;
+        let connectionName;
+        for (connectionName in migration) {
+            let modules = migration[connectionName];
+            //console.log(modules);
+            if (limitModules !== false) {
+                for (let modName of Object.keys(modules)){
+                    let mod = modules[modName];
+                    if ((true === limitModules && mod['run_status'] === 'LOADED')
+                        || (Array.isArray(limitModules) && this.contains(limitModules,modName))
                     ) {
+                        (await this.logger).debug("KEEP MIGRATION FOR: " + modName);
                         continue;
                     }
-                    unset($modules[$modName]);
+                    (await this.logger).debug("SKIP MIGRATION FOR: " + modName);
+                    delete modules[modName];
                 }
             }
-            $this->BDb->connect($connectionName); // switch connection
-            $this->BDbModule->init(); // Ensure modules table in current connection
+
+            
+            let db = await Class.i('awy_core_model_db');
+            let ref = await db.connect(connectionName); // switch connection
+
             // collect module db schema versions
-            $dbModules = $this->BDbModule->orm()->find_many();
-            foreach ($dbModules as $m) {
-                if ($m->last_status === 'INSTALLING') { // error during last installation
-                    $m->delete();
-                    continue;
+            ref.child('modules').once("value", function(snapshot) {
+              snapshot.forEach(function(m) {
+                let mData = m.val();
+                if (mData.last_status === 'INSTALLING') { // error during last installation
+                    m.ref().remove();
+                    return;
                 }
-                $modules[$m->module_name]['schema_version'] = $m->schema_version;
-            }
+                modules[m.key()]['schema_version'] = mData.schema_version;
+              });
+            });
+
+
+            console.log(modules);
+            //$this->BDbModule->init(); // Ensure modules table in current connection
+            
             // run required migration scripts
-            foreach ($modules as $modName => $mod) {
-                if (empty($mod['code_version'])) {
+            for (let modName of Object.keys(modules)){
+                let mod = modules[modName];
+                if (!('code_version' in mod)) {
+                    console.log( modName + ' not currently active');
                     continue; // skip migration of registered module that is not currently active
                 }
-                if (!empty($mod['schema_version']) && $mod['schema_version'] === $mod['code_version']) {
+                if ('schema_version' in mod && mod['schema_version'] === mod['code_version']) {
+                    console.log( modName + ' no migration necessary');
                     continue; // no migration necessary
                 }
-                if (empty($mod['script'])) {
-                    BDebug::warning('No migration script found: ' . $modName);
+                if (!('script' in mod)) {
+                    (await this.logger).warn("No migration script found: " + modName);
                     continue;
                 }
 
-                $modules[$modName]['migrate'] = true;
-                $num++;
+                modules[modName]['migrate'] = true;
+                num++;
             }
+            
         }
-        unset($modules);
+        //delete modules;
 
-        if (!$num) {
+        if (!num) {
             return;
         }
 
-        $this->BConfig->set('db/logging', 1);
 
-        // TODO: move special cases from buckyball to fulleron
-        // special case for FCom_Admin because some frontend modules require its tables
-        if (empty($migration['DEFAULT']['FCom_Admin']['schema_version'])
-            && empty($migration['DEFAULT']['FCom_Admin']['migrate'])
-        ) {
-            $this->BModuleRegistry->module('FCom_Admin')->run_status = BModule::LOADED;
-            static::migrateModules('FCom_Core,FCom_Admin');
-            //return;
+        for (connectionName in migration) {
+            let modules = migration[connectionName];
+            for (let modName of Object.keys(modules)){
+                let mod = modules[modName];
+                if (!('migrate' in mod)) {
+                    continue;
+                }
+                let action = null;
+                if (!('schema_version' in mod)) {
+                    action = 'install';
+                } else if (this.version_compare(mod.schema_version, mod.code_version, "<")) {
+                    action = 'upgrade';
+                } else if (this.version_compare(mod.schema_version, mod.code_version, ">")) {
+                    action = 'downgrade';
+                }
+                if (this.methodExists(mod.script,action)) {
+                    let clbClass = await Class.i(mod.script);
+                    await clbClass[action]();
+                }
+                //console.log(action);
+
+            }
         }
 
+        //$this->BConfig->set('db/logging', 1);
+        /*
         if (class_exists('FCom_Core_Main')) {
             $this->BConfig->writeConfigFiles('core');
         }
