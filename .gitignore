@@ -5,4 +5,6 @@
 /config-prod.js
 /config-build.js
 /compile.php
+/app/db.js
+/c.php
 /es5

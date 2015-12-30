@@ -17,14 +17,15 @@ class Awy_Install_View_Step1 extends Awy_Core_Model_View {
 
 		alert(JSON.stringify(this, null, 4));
 		let config = await Class.i('awy_core_model_config');
-		config.set('db', { host: this.get('db_url'), key: this.get('db_key')}, false, true);
+		config.add({db:{ host: this.get('db_url'), key: this.get('db_key')} }, true);
     	config.writeLocalStorage('db');
+    	config.writeGlobalConfig('db');
 
 		let migri = await Class.i('awy_core_model_migrate');
         await migri.migrateModules(['awy_core', 'awy_admin'], true);
 
 		let r = await Class.i('awy_core_model_router');
-        //r.navigate('install/step2');
+        r.navigate('install/step2');
 	}
 }
 

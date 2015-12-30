@@ -2,11 +2,11 @@ class Awy_Admin_Migrate extends Class {
 	constructor() {
 		super();
 	}
-/*
+
 	async install() {
 		console.log('admin install');
 	}
-*/
+
 	async upgrade() {
 		console.log('admin upgrade');
 	}

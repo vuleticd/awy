@@ -12,6 +12,7 @@ class Awy_Install_View_Step3 extends Awy_Core_Model_View {
 		let config = await Class.i('awy_core_model_config');
 		config.set('install_status', 'installed', false, true);
     	config.writeLocalStorage('core');
+    	await config.writeCoreConfig('core');
     	window.location.href = '/';
 		//let r = await Class.i('awy_core_model_router');
         //r.navigate('/');

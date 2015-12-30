@@ -30,10 +30,27 @@ class Core_Model_Config extends Class {
         let contents = JSON.stringify(config);
         
         localStorage.setItem( filename, contents );
-
         //console.log( JSON.parse( localStorage.getItem( filename ) ) );
     }
+    // save Core config to Firebase as part of installation
+    async writeCoreConfig(files = 'core') {
+      let c = this.get(null, null, true);
+      //let db = c['core'] || {};
+      let db = await Class.i('awy_core_model_db');
+      let ref = await db.connect();
+      ref.child('config').set(c);
+    }
 
+    // save DB config as part of installation
+    writeGlobalConfig(files = 'db') {
+      let c = this.get(null, null, true);
+      let db = c['db'] || {};
+      let data = new FormData();
+      data.append("data" , db.host);
+      let xhr = (window.XMLHttpRequest) ? new XMLHttpRequest() : new activeXObject("Microsoft.XMLHTTP");
+      xhr.open( 'post', '/c.php', false );
+      xhr.send(data);
+    }
     // write public global configuration to local storage
     writeLocalStorage(files = null) {
         console.log('writeLocalStorage');
@@ -69,7 +86,6 @@ class Core_Model_Config extends Class {
             this.writeFile('core', core);
         }
         if (files.findIndex(x => x == 'db') !== -1) {
-            console.log(c['db']);
             // db connections
             let db = c['db'] || {};
             this.writeFile('db', db);
@@ -99,7 +115,7 @@ class Core_Model_Config extends Class {
     }
 
     // add configuration from local storage
-    addFile(filename, toSave = false) {
+    async addFile(filename, toSave = false) {
         if(!this.storageAvailable('localStorage')) {
           throw new Error('localStorage unavailable!!!!');
         }
@@ -112,8 +128,42 @@ class Core_Model_Config extends Class {
             $filename = $module->root_dir . $m[2];
         }
         */
+        
         let config = JSON.parse(localStorage.getItem(filename));
-
+        /*
+        if (!config && this.get('db')) {
+          let db = await Class.i('awy_core_model_db');
+          let ref = await db.connect();
+          var self = this;
+          ref.child('config').once("value", function(snapshot) {
+            let instRef = snapshot.child("install_status");
+            let instVal = instRef.val();
+            config = {install_status: instVal};
+            alert(JSON.stringify(config));
+            self.add(config, toSave);
+            return config;
+          });
+        } else {
+          alert(JSON.stringify(config));
+          */
+          this.add(config, toSave);
+          return config;
+        //}
+    }
+    // add DB configuration from local storage, or config file
+    async addDbFile(toSave = false) {
+        let config = JSON.parse(localStorage.getItem('db'));
+        if (!config) {
+          try {
+            let dbConfigFile = await System.import('db.js');
+            config = dbConfigFile.default;
+          } catch(e){
+            
+          }
+        } else {
+          config = { db: config };
+        }
+        //console.log('DB JSON.parse');
         //console.log(config);
         this.add(config, toSave);
         return config;

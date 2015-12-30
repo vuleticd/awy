@@ -96,8 +96,14 @@ class Core_Model_App extends Class {
     //          (array)$config->get('module_run_levels/FCom_Core');
     config.add({'module_run_levels': {'request': runLevels}});
     let modules = await moduleRegistry.scan();
-    (await this.logger).debug('dbConfigFile localConfigFile');
-    
+    (await this.logger).debug('DB CONFIG START');
+    await config.addDbFile(true);
+    config.writeLocalStorage('db');
+    (await this.logger).debug('DB URL: ' + config.get('db/host'));
+    (await this.logger).debug('localConfigFile');
+    //await config.addFile('core', true);
+    //config.writeLocalStorage('core');
+
     return modules;
   }
 
@@ -128,9 +134,11 @@ class Core_Model_App extends Class {
     // later change it with
     //    config.set('install_status', 'installedYEP', false, true);
     //    config.writeLocalStorage('core');
-    if (config.addFile('core', true) == null) {
+    let coreConf = await config.addFile('core', true);
+    if (coreConf == null) {
       config.writeLocalStorage('core');
     }
+    
     req.area = area;
 
     return config;
