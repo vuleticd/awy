@@ -37,7 +37,7 @@ export class Aobject{
     constructor() {
         this._origClass = this.constructor.name;
         this._diConfig = {
-            '*': 'ALL'
+            '*': 'ALL',
         };
         this._diLocal = {};
     }

@@ -113,6 +113,9 @@ class Awy_Core_Model_Layout extends Class {
             (await this.logger).error('Main view not found: ' + this._rootViewName);
         }
 
+        let eventsInstance = await Class.i('awy_core_model_events'); 
+        let hookRes = await eventsInstance.fire('Layout::hook:head', args);
+
         let result = await this.rootView.render(args);
 
         //$args['output'] =& $result;
@@ -181,9 +184,8 @@ class Awy_Core_Model_Layout extends Class {
         evnt.fire('Layout::applyTheme:before', {'theme_name': themeName});
 
         await this.loadTheme(themeName);
+        await this.loadLayoutFilesFromAllModules();
         /*
-        $this->loadLayoutFilesFromAllModules();
-
         $theme = $this->_themes[$themeName];
         $modReg = $this->BModuleRegistry;
 
@@ -279,8 +281,8 @@ class Awy_Core_Model_Layout extends Class {
             await this.addAllViewsDir('/' + moduleRootDir + '/' + areaDir + '/views');
         }
         if (this.contains(module.auto_use,'all') || this.contains(module.auto_use,'layout')) {
-            this.loadLayoutAfterTheme('/' + moduleRootDir + '/layout.js');
-            this.loadLayoutAfterTheme('/' + moduleRootDir + '/' + areaDir + '/layout.js');
+            this.loadLayoutAfterTheme( moduleRootDir + '/layout.js');
+            this.loadLayoutAfterTheme( moduleRootDir + '/' + areaDir + '/layout.js');
         }
         return this;
     }  
@@ -298,9 +300,13 @@ class Awy_Core_Model_Layout extends Class {
      */
     async loadLayout(layoutFilename) {
         (await this.logger).debug('LAYOUT.LOAD: ' + layoutFilename);
-        let layoutData = await System.import(layoutFilename);
-        layoutData = layoutData.default;
-        await this.addLayout(layoutData);
+        try {
+            let layoutData = await System.import(layoutFilename);
+            layoutData = layoutData.default;
+            await this.addLayout(layoutData);
+        } catch(e) {
+            (await this.logger).warn('LAYOUT.LOAD.MISSING: ' + layoutFilename);
+        }
         return this;
     }
 
@@ -313,6 +319,15 @@ class Awy_Core_Model_Layout extends Class {
         } else {
             this._loadLayoutFiles.push(layoutFilename);
         }
+        return this;
+    }
+
+    async loadLayoutFilesFromAllModules(){
+        let layoutFile;
+        for (layoutFile of this._loadLayoutFiles) {
+            await this.loadLayout(layoutFile);
+        }
+        this._loadLayoutFiles = [];
         return this;
     }
 
@@ -335,7 +350,7 @@ class Awy_Core_Model_Layout extends Class {
                 (await this.logger).debug('LAYOUT.ADD ' + layoutName);
                 this._layouts.set(layoutName, layout);
             } else {
-                //(await this.logger).debug('LAYOUT.UPDATE ' + layoutName);
+                (await this.logger).warn('!!NOT WORKING!! LAYOUT.UPDATE ' + layoutName);
                 //this.arrayMerge(this._layouts.get(layoutName), layout);
             }
         }
@@ -449,7 +464,34 @@ class Awy_Core_Model_Layout extends Class {
     }
 
     async metaDirectiveViewCallback(args) {
-        //console.log(args);
+        let view = this.view(args['name']);
+        console.log(view);
+        if ('set' in args) {
+            let k;
+            for (k of Object.keys(args['set'])) {
+                view.set(k, args['set'][k]);
+            }
+        }
+        
+        if ('param' in args) {
+            let key;
+            for (key of Object.keys(args['param'])) {
+                view.setParam(key, args['param'][key]);
+            }
+        }
+        
+        if ('do' in args) {
+            let i;
+            for (i of args['do']) {
+                let job = JSON.parse(JSON.stringify(i));
+                let method = job.shift();
+                (await this.logger).debug('LAYOUT.view.do ' + method);
+                let exist = await this.methodExists(view , method);
+                if (exist) {
+                    await view[method](job);
+                }
+            }
+        }
     }
 
     async metaDirectiveHookCallback(args) {

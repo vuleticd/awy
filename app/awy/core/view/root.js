@@ -25,7 +25,7 @@ class Awy_Core_View_Root extends Awy_Core_Model_View {
             };
         }
 
-        this.set('body_class',  ['gggg']);
+        this.set('body_class',  []);
 
 	}
 
