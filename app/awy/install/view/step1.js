@@ -4,25 +4,40 @@ class Awy_Install_View_Step1 extends Awy_Core_Model_View {
 	constructor(params) {
 		super();
 		this._params = params;
-
-		this.set('db_url', 'https://torrid-heat-5927.firebaseio.com');
-		this.set('db_key', 'HkAgAjx75eRzC4sLqzV1HVw4rPmEFqqcTQcUSAt0');
 	}
 
 	async completeStep(){
+		// validation
+		let keyEl = document.querySelector("input[name=key]");
+		let hostEl = document.querySelector("input[name=host]");
+		keyEl.parentElement.classList.remove("has-errors");
+		hostEl.parentElement.classList.remove("has-errors");
+		this.set('errors', null);
 		if (!this.get('db_url') || !this.get('db_key') ) {
-			alert('Please submit all required fields!');
+			this.set('errors', '<li><i class="fa-li fa fa-close"></i>Please submit all required fields!</li>');
+			if (!this.get('db_url')) {
+				hostEl.parentElement.classList.add("has-errors");
+			}
+			if (!this.get('db_key')) {
+				keyEl.parentElement.classList.add("has-errors");
+			}
 			return false;
 		}
-
-		alert(JSON.stringify(this, null, 4));
+		// submit
 		let config = await Class.i('awy_core_model_config');
 		config.add({db:{ host: this.get('db_url'), key: this.get('db_key')} }, true);
     	config.writeLocalStorage('db');
-    	config.writeGlobalConfig('db');
 
 		let migri = await Class.i('awy_core_model_migrate');
-        await migri.migrateModules(['awy_core', 'awy_admin'], true);
+		try {
+        	await migri.migrateModules(['awy_core', 'awy_admin'], true);
+        	//@todo: make sure rules are successfully written before proceeding further
+    	} catch(e){
+    		this.set('errors', '<li><i class="fa-li fa fa-close"></i>' + e + '</li>');
+    		return false;
+    	}
+
+        config.writeGlobalConfig('db');
 
 		let r = await Class.i('awy_core_model_router');
         r.navigate('install/step2');

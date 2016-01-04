@@ -84,9 +84,7 @@ class Awy_Core_Model_View extends Class {
                     updateProperty: async function() {
                         let fn = object[propertyName];
                         node.href = "javascript:void(0)";
-                        //alert(object._origClass);
                         var listener = async function(e) {
-                            //alert(fn);
                             await object[propertyName]();
                             //fn.apply(object, arguments);
                             e.preventDefault();

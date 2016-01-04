@@ -1,21 +1,33 @@
-//let str = 'form[method="POST" action="install" class="form-horizontal"]>div.panel-heading>h1.panel-title>{Welcome to Awy installation wizard!}';
 let str = `
-<div class="panel-heading">
-	<h1 class="panel-title">Welcome to Awy installation wizard!</h1>
+<div class="row errors">
+	<ul class="fa-ul" data-bind="text errors"></ul>
 </div>
-<div class="well" style="max-height:300px; overflow-y:auto">
+<div class="row">
+	<h1>Welcome to Distro.</h1>
+</div>
+<div class="row license">
 	<h3>Open Software License v. 3.0 (OSL-3.0)</h3>
+	<p>Lorem ipsum dolor sit amet, vim at melius noluisse. Ei alia dicta duo, ad cum zril facete disputando. Vim molestie assentior consequuntur et, te eum ignota cetero, meis simul possit ad sed. Vel ad tota consequat scriptorem.
+
+Ei has nostrum mediocrem quaerendum, alia modus constituto ea sed. His eu enim esse volutpat, qui quot errem aeterno ut. Eum ludus homero labores ad. Te viris dolorem mnesarchum vim. Ut viderer inimicus assueverit vix.
+
+Vitae senserit qui an, at est ornatus nonumes vivendum. Nam sale maiorum deleniti ex. Has pertinax invenire mandamus ea, cu est nostrud commune. Vidit doctus ad mel, dolore perpetua intellegebat te sea.
+
+Labores voluptatum quo te, mel graecis epicuri scribentur eu. Et vocibus iracundia voluptatibus per. Dolore tamquam id eam. Cu euismod facilis noluisse eum, no eirmod qualisque nam. Mea at modo brute nostrum, nam eu persius tibique. Dolores tincidunt ea vix, copiosae argumentum nam ei.
+
+Dico iisque argumentum et mea. Cu nostro euismod docendi his, per vocent docendi te, impedit inermis tacimates cu per. Mei ad fabulas concludaturque, dico probatus in cum, nec no paulo menandri signiferumque. Nec ei ludus dolore melius. Sed ad legere recteque forensibus.</p>
 </div>
-<div class="clearfix">
-	<div class="checkbox pull-right">
-		<label class="required"><input data-bind="checked agree" type="checkbox" name="w[agree]" value="Agree" required="required"/> I agree</label>
+<div class="row">
+	<div class="three columns">
+		<button class="button-primary" data-bind="click completeStep">Continue</button>
+	</div>
+	<div class="seven columns">
+		<label class="required u-pull-right">
+			<input data-bind="checked agree" type="checkbox" name="agree" required="required"/> 
+			<span class="label-body">I agree</span>
+		</label>
 	</div>
 </div>
-<ul class="list-group list-group-flush">
-	<li class="list-group-item clearfix">
-		<a data-bind="click completeStep">Continue</a>
-	</li>
-</ul>
 `;
 
 export default str;

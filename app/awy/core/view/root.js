@@ -4,6 +4,7 @@ class Awy_Core_View_Root extends Awy_Core_Model_View {
 	constructor(params) {
 		super();
 		this._params = params;
+        /*
 		this.binders.rootClass = function(node, propertyName, object) {
             return {
                 updateProperty: async function() {
@@ -24,14 +25,14 @@ class Awy_Core_View_Root extends Awy_Core_Model_View {
                 observer: (changes) => false
             };
         }
-
         this.set('body_class',  []);
-
+        */
 	}
-
+    /*
     contains(haystack, needle) {
     	return !!~haystack.indexOf(needle);
-  	}	
+  	}
+    */	
 }
 
 export default Awy_Core_View_Root

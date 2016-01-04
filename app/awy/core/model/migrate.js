@@ -17,6 +17,39 @@ class Awy_Core_Model_Migrate extends Class {
     	return await this.methodExists(obj, 'constructor');
     }
 
+    /*
+    * Merges any number of objects / parameters recursively
+    */
+    objectMerge(...rest) {
+      let base = rest.shift();
+      for (let append of rest) {
+        // base is not mergable, replace instead with last argument passed
+        if (typeof base !== 'object') {
+          return append;
+        }
+        // both base and argument are arrays
+        if (Array.isArray(append) && Array.isArray(base)) {
+            for (let val of append) {
+              if (this.contains(base, val)) {
+                  base[base.indexOf(val)] = val;
+                  append.splice(append.indexOf(val), 1);
+              }
+            }
+            base.push(...append);
+        }
+        // both base and argument are objects
+        let key;
+        for (key in append) {
+            if (key in base) {
+              base[key] = this.objectMerge(base[key], append[key]);
+            } else {
+              Object.assign(base,append);
+            }
+        }
+      }
+      return base;
+    }
+
     contains(haystack, needle) {
         return !!~haystack.indexOf(needle);
     }
@@ -183,6 +216,9 @@ class Awy_Core_Model_Migrate extends Class {
         
 
         let modReg = await Class.i('awy_core_model_module_registry');
+        let req = await Class.i('awy_core_model_router_request');
+        let db = await Class.i('awy_core_model_db');
+
         let migration = await this.getMigrationData(modReg);
         if (!Object.keys(migration).length) {
             return;
@@ -214,8 +250,6 @@ class Awy_Core_Model_Migrate extends Class {
                 }
             }
 
-            
-            let db = await Class.i('awy_core_model_db');
             let ref = await db.connect(connectionName); // switch connection
 
             // collect module db schema versions
@@ -256,12 +290,14 @@ class Awy_Core_Model_Migrate extends Class {
             
         }
         //delete modules;
-
+        console.log(num);
         if (!num) {
             return;
         }
 
-
+        let f = await req.ajax('GET', db._config.host + '/.settings/rules.json?auth=' + db._config.key);
+        let rules = JSON.parse(f);
+        console.log("OLD RULES", rules);
         for (connectionName in migration) {
             let modules = migration[connectionName];
             for (let modName of Object.keys(modules)){
@@ -279,11 +315,16 @@ class Awy_Core_Model_Migrate extends Class {
                 }
                 if (this.methodExists(mod.script,action)) {
                     let clbClass = await Class.i(mod.script);
-                    await clbClass[action]();
+                    let rule = await clbClass[action]();
+                    rule = rule || {};
+                    rules = this.objectMerge(rules, rule);
                 }
                 //console.log(action);
 
             }
+            //install merged security rules
+            let ff = await req.ajax('PUT', db._config.host + '/.settings/rules.json', {"auth": db._config.key}, JSON.stringify(rules));
+            console.log("NEW RULES", rules);
         }
 
         //$this->BConfig->set('db/logging', 1);

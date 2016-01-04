@@ -4,7 +4,17 @@ class Awy_Admin_Migrate extends Class {
 	}
 
 	async install() {
-		console.log('admin install');
+		let rules = { "rules": { 
+			"admin_user": {
+				".read": false,
+				".write": false 
+			},
+			"admin_role": {
+				".read": false,
+				".write": false 
+			}
+		}};
+		return rules;
 	}
 
 	async upgrade() {

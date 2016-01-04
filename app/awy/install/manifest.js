@@ -6,7 +6,7 @@ let config =  {
 	areas: {
         awy_install: {
             views: {
-                root: { view_class: 'awy_core_view_root' },
+                root: {  },
                 index: { view_class: 'awy_core_view_index' },
                 step1: { view_class: 'awy_install_view_step1'},
                 step2: { view_class: 'awy_install_view_step2' },

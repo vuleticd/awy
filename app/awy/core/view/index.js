@@ -4,20 +4,22 @@ class Awy_Core_View_Index extends Awy_Core_Model_View {
 	constructor(params) {
 		super();
 		this._params = params;
-		this.set('agree', false);
+		this.set('agree', false); // default value @todo: fetch from sessionStorage
 	}
 
 	async completeStep(){
+		// validation
+		let el = document.querySelector("input[name=agree]");
+		el.parentElement.classList.remove("has-errors");
+		this.set('errors', null);
 		if (!this.get('agree')) {
-			alert('Please tick the agree to our terms and conditions!');
+			this.set('errors', '<li><i class="fa-li fa fa-close"></i>Please tick the agree to our terms and conditions!</li>');
+			el.parentElement.classList.add("has-errors");
 			return false;
 		}
-
-
-		alert(JSON.stringify(this, null, 4));
-		let router = Class.i('awy_core_model_router').then( r => {
-            r.navigate('install/step1');
-        });
+		// submit
+		let r = await Class.i('awy_core_model_router');
+        r.navigate('install/step1');
 	}
 }
 

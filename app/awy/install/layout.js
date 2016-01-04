@@ -4,6 +4,14 @@ let layout =  {
 		{
 			if: "class_name.method" // apply this block only if this method return true
 			hook: 'hook_name', views: 'view_name' // Add a view to a hook
+			view: 'view_name', do: [
+				[ 'css_raw', 'media=screen','title=awy_style'], // add blank and named style tag
+				[ 'css_rule', 'awy_style','.container','left: 50%;'] // add css rule to named style tag
+			], set: {
+				X: 'Y' // <==> VIEW_CLASS._params['args']['X'] = 'Y'
+			}, param: {
+				X: 'Y' // <==> VIEW_CLASS._params['X'] = 'Y'
+			}
 
 		}
 	]
@@ -11,8 +19,7 @@ let layout =  {
 	base: [
 		{ view: 'head', do: [
 			[ 'css' , 'css/normalize.css@awy_core', 'css/skeleton.css@awy_core'],
-			[ 'css_raw', 'media=screen','title=awy_style'],
-			[ 'css_rule', 'awy_style','div.panel','text-align: center;']
+			[ 'css' , 'css/install.css@awy_install'],
 		] }
 
 	],
@@ -20,40 +27,18 @@ let layout =  {
 		{ include: 'base' },
 		//{ hook: 'main', text: 'Blah Blah' }
 		{ hook: 'main', views: 'index' },
-		/*{ view: 'root', set: { 
-			body_class: ['install','index']
-		}},*/
 	],
 	"/step1": [
 		{ include: 'base' },
 		{ hook: 'main', views: 'step1' },
-		/*{ view: 'step1', set: { 
-			db_url: 'https://torrid-heat-5927.firebaseio.com',
-			db_key: 'HkAgAjx75eRzC4sLqzV1HVw4rPmEFqqcTQcUSAt0'
-		}},
-		{ 
-			view: 'root', 
-			set: { 
-				body_class: ['install','step1']
-			},
-			param: {
-				x: 'y'
-			}
-		},*/
 	],
 	"/step2": [
 		{ include: 'base' },
 		{ hook: 'main', views: 'step2' },
-		/*{ view: 'root', set: { 
-			body_class: ['install','step2']
-		}},*/
 	],
 	"/step3": [
 		{ include: 'base' },
 		{ hook: 'main', views: 'step3' },
-		/*{ view: 'root', set: { 
-			body_class: ['install','step3']
-		}},*/
 	]
 }
 export default layout;

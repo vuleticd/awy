@@ -41,6 +41,47 @@ class Core_Model_Router_Request extends Class {
     scheme() {
         return window.location.protocol.replace(/:/,'');
     }
+
+    ajax(method, url, args = null, data = null) {
+        return new Promise( (resolve, reject) => {
+            // Instantiates the XMLHttpRequest
+            let client = new XMLHttpRequest();
+            let uri = url;
+
+            if (args && (method === 'POST' || method === 'PUT')) {
+              uri += '?';
+              let argcount = 0;
+              for (let key in args) {
+                if (args.hasOwnProperty(key)) {
+                  if (argcount++) {
+                    uri += '&';
+                  }
+                  uri += encodeURIComponent(key) + '=' + encodeURIComponent(args[key]);
+                }
+              }
+            }
+
+            client.open(method, uri);
+            if (data && method === 'PUT') {
+                client.send(data);
+            } else {
+                client.send();
+            }
+
+            client.onload = function() {
+              if (this.status >= 200 && this.status < 300) {
+                // Performs the function "resolve" when this.status is equal to 2xx
+                resolve(this.response);
+              } else {
+                // Performs the function "reject" when this.status is different than 2xx
+                reject(this.statusText);
+              }
+            };
+            client.onerror = function() {
+              reject(this.statusText);
+            };
+        });
+    }
 }
 
 export default Core_Model_Router_Request

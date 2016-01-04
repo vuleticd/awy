@@ -1,0 +1,6 @@
+@import url(https://fonts.googleapis.com/css?family=Raleway:400,500,700,600,900,800,300,200,100);
+@import url(https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css);
+.container { left: 50%; position: fixed; top: 50%; transform: translate(-50%, -50%); font-family: 'Raleway', sans-serif;}
+.license { max-height:300px; overflow-y:auto; margin-bottom: 2rem; }
+.errors { color: red; }
+.has-errors { color: red;}

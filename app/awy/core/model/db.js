@@ -40,21 +40,24 @@ class Awy_Core_Model_Db extends Class {
         console.log(dbCfg);
         this._currentConnectionName = name;
         this._config = dbCfg;
-        return this.getDb();
+        let dbRef = await this.getDb();
+        return dbRef;
     }
 
-    getDb() {
-    	console.log(this._config.host);
-    	let ref = new Firebase(this._config.host);
-    	ref.authWithCustomToken(this._config.key, function(error, authData) {
-		  if (error) {
-		    console.log("Authentication Failed!", error);
-		  } else {
-		    console.log("Authenticated successfully with payload:", authData);
-		  }
-		});
+    async getDb() {
+    	return new Promise(function(resolve, reject) {
+    		let ref = new Firebase(this._config.host);
+    		ref.authWithCustomToken(this._config.key, function(error, authData) {
+				if (error) {
+					return reject("Database Authentication Failed!" + error);
+					//throw new Error("Database Authentication Failed!" + error);
+				} else {
+					console.log("Authenticated successfully with payload:", authData);
+					return resolve(ref);
+				}
+			});
 
-        return ref;
+    	}.bind(this));
     }
 }
 
