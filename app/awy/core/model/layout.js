@@ -216,12 +216,13 @@ class Awy_Core_Model_Layout extends Class {
 
         let theme = this._themes[themeName];
         let req = await Class.i('awy_core_model_router_request');
+        let util = await Class.i('awy_core_util_misc');
         let area = req.area;
         // arrayize if present
         if ('area' in theme && !Array.isArray(theme.area)) {
             theme.area = [theme.area];
         }
-        if ('area' in theme && !this.contains(theme.area, area)) {
+        if ('area' in theme && !util.contains(theme.area, area)) {
             (await this.logger).debug('Theme ' + themeName + ' can not be used in ' + area);
             return false;
         }
@@ -274,13 +275,14 @@ class Awy_Core_Model_Layout extends Class {
      * Add all view dirs and layouts declared in module manifest
      */
     async addModuleViewsDirsAndLayouts(module, area){
+        let util = await Class.i('awy_core_util_misc');
         let areaDir = area.replace('awy_', '');
         let moduleRootDir = module.root_dir;
-        if (this.contains(module.auto_use,'all') || this.contains(module.auto_use,'views')) {
+        if (util.contains(module.auto_use,'all') || util.contains(module.auto_use,'views')) {
             await this.addAllViewsDir('/' + moduleRootDir + '/views');
             await this.addAllViewsDir('/' + moduleRootDir + '/' + areaDir + '/views');
         }
-        if (this.contains(module.auto_use,'all') || this.contains(module.auto_use,'layout')) {
+        if (util.contains(module.auto_use,'all') || util.contains(module.auto_use,'layout')) {
             this.loadLayoutAfterTheme( moduleRootDir + '/layout.js');
             this.loadLayoutAfterTheme( moduleRootDir + '/' + areaDir + '/layout.js');
         }
@@ -364,6 +366,7 @@ class Awy_Core_Model_Layout extends Class {
             return this;
         }
         (await this.logger).debug('LAYOUT.APPLY ' + layoutName);
+        let util = await Class.i('awy_core_util_misc');
         //console.log(this._layouts.get(layoutName));
         // collect callbacks
         let callbacks = [];
@@ -384,7 +387,7 @@ class Awy_Core_Model_Layout extends Class {
                 //console.log(Object.keys(this._metaDirectives));
                 //console.log(Object.keys(d));
                 let key = Object.keys(this._metaDirectives).find((element, index, array) => { 
-                    return this.contains(Object.keys(d), element); 
+                    return util.contains(Object.keys(d), element); 
                 }, this);
                 if (!(key in this._metaDirectives)){
                     throw new Error('Unknown layout directive: ');
@@ -596,7 +599,7 @@ class Awy_Core_Model_Layout extends Class {
             // both base and argument are arrays
             if (Array.isArray(append) && Array.isArray(base)) {
                 for (let val of append) {
-                  if (this.contains(base, val)) {
+                  if (!!~base.indexOf(val)) {
                       base[base.indexOf(val)] = val;
                       append.splice(append.indexOf(val), 1);
                   }
@@ -605,14 +608,6 @@ class Awy_Core_Model_Layout extends Class {
             }
         }
         return base;
-    }
-
-    contains(haystack, needle) {
-        return !!~haystack.indexOf(needle);
-    }
-
-    foundInArray(element, index, array) {
-        return this.contains(Object.keys(d), element);
     }
 
     async methodExists(obj, method) {

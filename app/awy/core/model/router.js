@@ -156,8 +156,8 @@ class Awy_Core_Model_Router extends Class {
             args['module_name'] = modReg.currentModuleName();
         }
         (await this.logger).debug('ROUTE ' + route);
-
-        if (!this.contains(this.routes,route)) {
+        let util = await Class.i('awy_core_util_misc');
+        if (!util.contains(this.routes,route)) {
             this.routes.push({ re: route, handler: callback});
             //this.routes[$route] = new BRouteNode(['route_name' => $route]);
         }
@@ -169,10 +169,6 @@ class Awy_Core_Model_Router extends Class {
         }
         */
         return this;
-    }
-
-    contains(haystack, needle) {
-        return !!~haystack.indexOf(needle);
     }
 }
 

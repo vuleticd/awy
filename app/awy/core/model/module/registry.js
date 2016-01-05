@@ -176,6 +176,7 @@ class Core_Model_Module_Registry extends Class {
         // validate required modules
         (await this.logger).debug('Checking for required modules and modules with errors');
         let config = await Class.i('awy_core_model_config');
+        let util = await Class.i('awy_core_util_misc');
         let requestRunLevels = config.get('module_run_levels/request');
         let modName;
         for (modName in requestRunLevels) {     
@@ -207,7 +208,7 @@ class Core_Model_Module_Registry extends Class {
                         mod.errors.push({type: 'disabled', mod: req});
                         continue;
                     // is the module version not equal to required
-                    } else if (!this.version_compare(reqMod.version, mod.require.module[req], '=')) {
+                    } else if (!util.version_compare(reqMod.version, mod.require.module[req], '=')) {
                         mod.errors.push({type: 'version', mod: req});
                         continue;
                     }
@@ -385,9 +386,6 @@ class Core_Model_Module_Registry extends Class {
         return this;
     }
 
-    contains(haystack, needle) {
-        return !!~haystack.indexOf(needle);
-    }
     /**
      * Detect circular module dependencies references
      */
@@ -399,7 +397,7 @@ class Core_Model_Module_Registry extends Class {
         if (mod.parents.length) {
             for (let p of mod.parents) {
                 //console.log(p + ' is parent of ' + mod.module_name );
-                if (this.contains(depPathArr, p)) {
+                if (!!~depPathArr.indexOf(p)) {
                     //console.log('depPathArr contains ' + p);
                     let found = false;
                     let circPath = [];
@@ -441,94 +439,6 @@ class Core_Model_Module_Registry extends Class {
             return path;
         }
         return mod.root_dir + '/' + parts.join("/");
-    }
-
-    version_compare(v1, v2, operator=false) {
-        let compare = 0;
-        v1 = this.prepVersion(v1);
-        v2 = this.prepVersion(v2);
-        let x = Math.max(v1.length, v2.length);
-        for (let i = 0; i < x; i++) {
-            if (v1[i] == v2[i]) {
-              continue;
-            }
-            v1[i] = this.numVersion(v1[i]);
-            v2[i] = this.numVersion(v2[i]);
-            if (v1[i] < v2[i]) {
-              compare = -1;
-              break;
-            } else if (v1[i] > v2[i]) {
-              compare = 1;
-              break;
-            }
-        }
-
-        if (!operator) {
-            return compare;
-        }
-
-        switch (operator) {
-          case '>':
-          case 'gt':
-            return (compare > 0);
-          case '>=':
-          case 'ge':
-            return (compare >= 0);
-          case '<=':
-          case 'le':
-            return (compare <= 0);
-          case '==':
-          case '=':
-          case 'eq':
-            return (compare === 0);
-          case '<>':
-          case '!=':
-          case 'ne':
-            return (compare !== 0);
-          case '':
-          case '<':
-          case 'lt':
-            return (compare < 0);
-          default:
-            return null;
-        }
-    }
-
-    prepVersion(v) {
-      v = ('' + v).replace(/[_\-+]/g, '.');
-      v = v.replace(/([^.\d]+)/g, '.$1.').replace(/\.{2,}/g, '.');
-      return (!v.length ? [-8] : v.split('.'));
-    }
-
-    numVersion(v) {
-        return !v ? 0 : (isNaN(v) ? this.vm(v) || -7 : parseInt(v, 10));
-    }
-
-    vm(v) {
-        switch (v) {
-            case 'dev':
-                return -6;
-                break;
-            case 'alpha':
-            case 'a':
-                return -5;
-                break;
-            case 'beta':
-            case 'b':
-                return -4;
-                break;
-            case 'RC':
-            case 'rc':
-                return -3;
-                break;
-            case '#':
-                return -2;
-                break;
-            case 'p':
-            case 'pl':
-                return 1;
-                break;
-        }
     }
 }
 

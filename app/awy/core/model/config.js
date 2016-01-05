@@ -231,7 +231,7 @@ class Core_Model_Config extends Class {
         // both base and argument are arrays
         if (Array.isArray(append) && Array.isArray(base)) {
             for (let val of append) {
-              if (this.contains(base, val)) {
+              if (!!~base.indexOf(val)) {
                   base[base.indexOf(val)] = val;
                   append.splice(append.indexOf(val), 1);
               }
@@ -249,13 +249,6 @@ class Core_Model_Config extends Class {
         }
       }
       return base;
-  }
-
-  /* 
-   * return true/false if value is found in array
-   */
-  contains(haystack, needle) {
-    return !!~haystack.indexOf(needle);
   }
 }
 

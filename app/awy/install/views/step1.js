@@ -22,6 +22,5 @@ let str = `
             <button type="submit" class="button-primary" data-bind="click completeStep">Continue</button>
         </div>
     </div>
-</form>
 `;
 export default str;

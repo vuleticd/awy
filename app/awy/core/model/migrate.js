@@ -30,7 +30,7 @@ class Awy_Core_Model_Migrate extends Class {
         // both base and argument are arrays
         if (Array.isArray(append) && Array.isArray(base)) {
             for (let val of append) {
-              if (this.contains(base, val)) {
+              if (!!~base.indexOf(val)) {
                   base[base.indexOf(val)] = val;
                   append.splice(append.indexOf(val), 1);
               }
@@ -48,98 +48,6 @@ class Awy_Core_Model_Migrate extends Class {
         }
       }
       return base;
-    }
-
-    contains(haystack, needle) {
-        return !!~haystack.indexOf(needle);
-    }
-
-    version_compare(v1, v2, operator=false) {
-        let compare = 0;
-        v1 = this.prepVersion(v1);
-        v2 = this.prepVersion(v2);
-        let x = Math.max(v1.length, v2.length);
-        for (let i = 0; i < x; i++) {
-            if (v1[i] == v2[i]) {
-              continue;
-            }
-            v1[i] = this.numVersion(v1[i]);
-            v2[i] = this.numVersion(v2[i]);
-            if (v1[i] < v2[i]) {
-              compare = -1;
-              break;
-            } else if (v1[i] > v2[i]) {
-              compare = 1;
-              break;
-            }
-        }
-
-        if (!operator) {
-            return compare;
-        }
-
-        switch (operator) {
-          case '>':
-          case 'gt':
-            return (compare > 0);
-          case '>=':
-          case 'ge':
-            return (compare >= 0);
-          case '<=':
-          case 'le':
-            return (compare <= 0);
-          case '==':
-          case '=':
-          case 'eq':
-            return (compare === 0);
-          case '<>':
-          case '!=':
-          case 'ne':
-            return (compare !== 0);
-          case '':
-          case '<':
-          case 'lt':
-            return (compare < 0);
-          default:
-            return null;
-        }
-    }
-
-    prepVersion(v) {
-      v = ('' + v).replace(/[_\-+]/g, '.');
-      v = v.replace(/([^.\d]+)/g, '.$1.').replace(/\.{2,}/g, '.');
-      return (!v.length ? [-8] : v.split('.'));
-    }
-
-    numVersion(v) {
-        return !v ? 0 : (isNaN(v) ? this.vm(v) || -7 : parseInt(v, 10));
-    }
-
-    vm(v) {
-        switch (v) {
-            case 'dev':
-                return -6;
-                break;
-            case 'alpha':
-            case 'a':
-                return -5;
-                break;
-            case 'beta':
-            case 'b':
-                return -4;
-                break;
-            case 'RC':
-            case 'rc':
-                return -3;
-                break;
-            case '#':
-                return -2;
-                break;
-            case 'p':
-            case 'pl':
-                return 1;
-                break;
-        }
     }
 
 	/**
@@ -216,6 +124,7 @@ class Awy_Core_Model_Migrate extends Class {
         
 
         let modReg = await Class.i('awy_core_model_module_registry');
+        let util = await Class.i('awy_core_util_misc');
         let req = await Class.i('awy_core_model_router_request');
         let db = await Class.i('awy_core_model_db');
 
@@ -240,7 +149,7 @@ class Awy_Core_Model_Migrate extends Class {
                 for (let modName of Object.keys(modules)){
                     let mod = modules[modName];
                     if ((true === limitModules && mod['run_status'] === 'LOADED')
-                        || (Array.isArray(limitModules) && this.contains(limitModules,modName))
+                        || (Array.isArray(limitModules) && util.contains(limitModules,modName))
                     ) {
                         (await this.logger).debug("KEEP MIGRATION FOR: " + modName);
                         continue;
@@ -308,9 +217,9 @@ class Awy_Core_Model_Migrate extends Class {
                 let action = null;
                 if (!('schema_version' in mod)) {
                     action = 'install';
-                } else if (this.version_compare(mod.schema_version, mod.code_version, "<")) {
+                } else if (util.version_compare(mod.schema_version, mod.code_version, "<")) {
                     action = 'upgrade';
-                } else if (this.version_compare(mod.schema_version, mod.code_version, ">")) {
+                } else if (util.version_compare(mod.schema_version, mod.code_version, ">")) {
                     action = 'downgrade';
                 }
                 if (this.methodExists(mod.script,action)) {

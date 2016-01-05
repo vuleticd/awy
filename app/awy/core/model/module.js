@@ -243,9 +243,10 @@ class Core_Model_Module extends Class {
         }
         // array_flip -> Map
         let req = await Class.i('awy_core_model_router_request');
+        let util = await Class.i('awy_core_util_misc');
         let area = req.area;
         let areaDir = area.replace('awy_', '');
-        if (this.contains(this.auto_use,'all') || this.contains(this.auto_use,'bootstrap')) {
+        if (util.contains(this.auto_use,'all') || util.contains(this.auto_use,'bootstrap')) {
             if (!('bootstrap' in this)) {
                 this['bootstrap'] = [];
             }
@@ -348,7 +349,7 @@ class Core_Model_Module extends Class {
         // both base and argument are arrays
         if (Array.isArray(append) && Array.isArray(base)) {
             for (let val of append) {
-              if (this.contains(base, val)) {
+              if (!!~base.indexOf(val)) {
                   base[base.indexOf(val)] = val;
                   append.splice(append.indexOf(val), 1);
               }
@@ -366,10 +367,6 @@ class Core_Model_Module extends Class {
         }
       }
       return base;
-    }
-
-    contains(haystack, needle) {
-        return !!~haystack.indexOf(needle);
     }
 }
 
