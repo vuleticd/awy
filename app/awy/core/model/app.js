@@ -21,14 +21,9 @@ class Core_Model_App extends Class {
 
         let config = await Class.i('awy_core_model_config');
         let layout = await Class.i('awy_core_model_layout');
-        let enevts = await Class.i('awy_core_model_events');
         console.log(config);
         console.log(router);
         console.log(layout);
-        for (var [key, value] of enevts._events) {
-            console.log("EVENT: " + key);
-            console.log(value.observers || null);
-        }
         //setTimeout(router.navigate('install/step1'), 10000);
         //router.navigate('install/step1');
     } catch(e) {
@@ -71,6 +66,56 @@ class Core_Model_App extends Class {
   }
 
   /*
+   * return Core_Model_Config instance
+   */
+  async initConfig(area) {
+    (await this.logger).debug('initConfig');
+    let config = await Class.i('awy_core_model_config');
+    let req = await Class.i('awy_core_model_router_request');
+    let localConfig = {};
+
+    let rootDir = config.get('fs/root_dir');
+    if (!rootDir) {
+      rootDir =  req.scriptDir();
+    }
+    localConfig.fs = { root_dir: rootDir };
+    (await this.logger).debug('ROOTDIR = ' + rootDir);
+
+    let coreDir = config.get('fs/core_dir');
+    if (!coreDir) {
+        coreDir = '/app/awy/core';
+        config.set('fs/core_dir', coreDir);
+    }
+    config.add(localConfig, true);
+
+    (await this.logger).debug('DB CONFIG START');
+    await config.addDbFile(true);
+    await config.writeLocalStorage('db');
+    (await this.logger).debug('DB URL: ' + config.get('db/host'));
+    console.log('AFTER initDBConfig');
+    console.log(JSON.parse(JSON.stringify(config)));
+    console.log(JSON.parse(JSON.stringify(localStorage)));
+    
+    // try to add from localStorage, 
+    // if there's nothing there generate initial local storage config for core
+    // later change it with
+    //    config.set('install_status', 'installedYEP', false, true);
+    //    config.writeLocalStorage('core');
+    let coreConf = await config.addCoreFile(true);
+    console.log(JSON.parse(JSON.stringify(coreConf)));
+    //if (coreConf == null) {
+      await config.writeLocalStorage('core');
+    //}
+    console.log('AFTER initCoreConfig');
+    console.log(JSON.parse(JSON.stringify(config)));
+    console.log(JSON.parse(JSON.stringify(localStorage)));
+
+    req.area = area;
+
+    return config;
+  }
+
+  /*
    * return Core_Model_Module_Registry instance
    */
   async initModules() {
@@ -96,52 +141,11 @@ class Core_Model_App extends Class {
     //          (array)$config->get('module_run_levels/FCom_Core');
     config.add({'module_run_levels': {'request': runLevels}});
     let modules = await moduleRegistry.scan();
-    (await this.logger).debug('DB CONFIG START');
-    await config.addDbFile(true);
-    config.writeLocalStorage('db');
-    (await this.logger).debug('DB URL: ' + config.get('db/host'));
     (await this.logger).debug('localConfigFile');
     //await config.addFile('core', true);
     //config.writeLocalStorage('core');
 
     return modules;
-  }
-
-  /*
-   * return Core_Model_Config instance
-   */
-  async initConfig(area) {
-    (await this.logger).debug('initConfig');
-    let config = await Class.i('awy_core_model_config');
-    let req = await Class.i('awy_core_model_router_request');
-    let localConfig = {};
-
-    let rootDir = config.get('fs/root_dir');
-    if (!rootDir) {
-      rootDir =  req.scriptDir();
-    }
-    localConfig.fs = { root_dir: rootDir };
-    (await this.logger).debug('ROOTDIR = ' + rootDir);
-
-    let coreDir = config.get('fs/core_dir');
-    if (!coreDir) {
-        coreDir = '/app/awy/core';
-        config.set('fs/core_dir', coreDir);
-    }
-    config.add(localConfig, true);
-    // try to add from localStorage, 
-    // if there's nothing there generate initial local storage config for core
-    // later change it with
-    //    config.set('install_status', 'installedYEP', false, true);
-    //    config.writeLocalStorage('core');
-    let coreConf = await config.addFile('core', true);
-    if (coreConf == null) {
-      config.writeLocalStorage('core');
-    }
-    
-    req.area = area;
-
-    return config;
   }
 
   async onBeforeBootstrap() {

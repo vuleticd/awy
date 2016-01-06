@@ -59,6 +59,15 @@ class Awy_Core_Model_Db extends Class {
 
     	}.bind(this));
     }
+
+    async get(path= null, name = null) {
+    	let ref = await this.connect(name);
+    	return new Promise( (resolve, reject) => {
+    		ref.child(path).once("value", function(snapshot) {
+    			resolve(snapshot.val());
+            });
+    	});
+    }
 }
 
 

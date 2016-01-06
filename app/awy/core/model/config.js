@@ -52,8 +52,9 @@ class Core_Model_Config extends Class {
       xhr.send(data);
     }
     // write public global configuration to local storage
-    writeLocalStorage(files = null) {
+    async writeLocalStorage(files = null) {
         console.log('writeLocalStorage');
+        let util = await Class.i('awy_core_util_misc');
         if(!this.storageAvailable('localStorage')) {
           throw new Error('localStorage unavailable!!!!');
         }
@@ -64,11 +65,29 @@ class Core_Model_Config extends Class {
         if (typeof files === 'string') {
             files = files.toLowerCase().split(',');
         }
-
+        //console.log(util.contains(files,'core'));
         let c = this.get(null, null, true);
         // !!!! THIS SHOULD GO INTO DB SOMEWHERE
-        if (files.findIndex(x => x == 'core') !== -1) {
-            //console.log(c);
+        if (util.contains(files,'core')) {
+          /*
+            let noCoreConfigInLocalStorage = await this.addFile('core', true);
+            if(noCoreConfigInLocalStorage == null) {
+              //alert('NO Core Conf');
+              if (this.get('db')) {
+                alert('NO LS Core Conf and YES DB');
+                // try to fetch core config from database and merge it into config
+              } else {
+                alert('NO LS Core Conf and NO DB'); // only possible on 1st steps of installation
+              }  
+            } else {
+              alert('YES Core Conf');
+              if (this.get('db')) {
+                alert('YES LS Core Conf and YES DB');
+              } else {
+                alert('YES LS Core Conf and NO DB');
+              }
+            }
+            */
             // configuration necessary for core startup
             if ('module_run_levels' in c && 'request' in c['module_run_levels']) {
               delete(c['module_run_levels']['request']);
@@ -77,15 +96,15 @@ class Core_Model_Config extends Class {
             
             let core = {
                 'install_status': 'install_status' in c ? c['install_status']: null,
-                'core': 'core' in c ? c['core']: null,
+                //'core': 'core' in c ? c['core']: null,
                 'module_run_levels': 'module_run_levels' in c? c['module_run_levels']: {},
                 'recovery': 'recovery' in c ? c['recovery']: null,
                 'mode_by_ip': 'mode_by_ip' in c ? c['mode_by_ip']: {},
-                'cache': 'cache' in c ? c['cache']: {},
+                //'cache': 'cache' in c ? c['cache']: {},
             };
             this.writeFile('core', core);
         }
-        if (files.findIndex(x => x == 'db') !== -1) {
+        if (util.contains(files,'db')) {
             // db connections
             let db = c['db'] || {};
             this.writeFile('db', db);
@@ -155,13 +174,42 @@ class Core_Model_Config extends Class {
         let config = JSON.parse(localStorage.getItem('db'));
         if (!config) {
           try {
-            let dbConfigFile = await System.import('db.js');
-            config = dbConfigFile.default;
+            let coreConfigFile = await System.import('db.js');
+            config = coreConfigFile.default;
           } catch(e){
-            
+            console.log(e);//('CANT GET DB CONFIG FROM FILE');
           }
         } else {
           config = { db: config };
+        }
+        //console.log('DB JSON.parse');
+        //console.log(config);
+        this.add(config, toSave);
+        return config;
+    }
+
+    // add Core configuration from local storage, or Firebase
+    async addCoreFile(toSave = false) {
+        let config = JSON.parse(localStorage.getItem('core'));
+        let def = { 
+                    'install_status': null,
+                    'module_run_levels': {},
+                    'recovery': null,
+                    'mode_by_ip': {} 
+                  };
+        //alert(config['install_status'] !== 'installed');
+        if ( (!config || (config && config['install_status'] !== 'installed')) && this.get('db') !== null) {
+          try {
+            let db = await Class.i('awy_core_model_db');
+            config = await db.get('config');
+            alert(JSON.stringify(config));
+          } catch(e){
+            console.log(e);
+            alert('CANT GET CORE CONFIG FROM DATABASE');
+            config = def;
+          }
+        } else {
+          config = def;
         }
         //console.log('DB JSON.parse');
         //console.log(config);

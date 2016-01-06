@@ -28,16 +28,20 @@ class Awy_Install_Controller extends Awy_Core_Controller_Abstract {
         return true;
     }
 
-    async action_index(){
-    	console.log('Awy_Install_Controller.action_index');
-    	let layout = await Class.i('awy_core_model_layout');
-    	await layout.applyLayout('/');
-        console.log(document.getElementById("gr"));
+    async onAfterDispatch() {
+        await super.onAfterDispatch();
+        // debug
         let enevts = await Class.i('awy_core_model_events');
         for (var [key, value] of enevts._events) {
             console.log("EVENT: " + key);
             console.log(value.observers || null);
         }
+    }
+
+    async action_index(){
+    	console.log('Awy_Install_Controller.action_index');
+    	let layout = await Class.i('awy_core_model_layout');
+    	await layout.applyLayout('/');
     }
 
     async action_step1() {

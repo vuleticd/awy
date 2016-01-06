@@ -52,6 +52,14 @@ class Awy_Install_View_Step2 extends Awy_Core_Model_View {
 			return false;
 		}
 		// submit
+		/*
+		$this->BMigrate->migrateModules('FCom_Admin', true);
+            $this->FCom_Admin_Model_User
+                ->create($w['admin'])
+                ->set('is_superadmin', 1)
+                ->save()
+                ->login();
+		*/
 		let r = await Class.i('awy_core_model_router');
         r.navigate('install/step3');
 	}

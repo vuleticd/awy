@@ -31,7 +31,6 @@ class Awy_Install_View_Step1 extends Awy_Core_Model_View {
 		let migri = await Class.i('awy_core_model_migrate');
 		try {
         	await migri.migrateModules(['awy_core', 'awy_admin'], true);
-        	//@todo: make sure rules are successfully written before proceeding further
     	} catch(e){
     		this.set('errors', '<li><i class="fa-li fa fa-close"></i>' + e + '</li>');
     		return false;

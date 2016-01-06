@@ -141,7 +141,7 @@ class Awy_Core_Controller_Abstract extends Class {
      * Execute before dispatch and return resutl
      * If false, do not dispatch action, and either forward or default
      */
-    onBeforeDispatch(){
+    async onBeforeDispatch(){
     	console.log('Awy_Core_Controller_Abstract.onBeforeDispatch');
         //$className = static::$_origClass ? static::$_origClass : get_class($this);
         let args = {'action': this._action, 'controller': this};
