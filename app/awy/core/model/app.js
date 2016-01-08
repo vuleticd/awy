@@ -88,19 +88,26 @@ class Core_Model_App extends Class {
     }
     config.add(localConfig, true);
 
-    (await this.logger).debug('DB CONFIG START');
-    await config.addDbFile(true);
-    await config.writeLocalStorage('db');
+    (await this.logger).debug('DB HOST CONFIG START');
+    await config.initDbHost();
     (await this.logger).debug('DB URL: ' + config.get('db/host'));
-    console.log('AFTER initDBConfig');
+    console.log('AFTER DB HOST CONFIG');
     console.log(JSON.parse(JSON.stringify(config)));
     console.log(JSON.parse(JSON.stringify(localStorage)));
     
+    // INIT USER TOKEN HERE
+
+    (await this.logger).debug('CORE CONFIG START');
+    await config.initCoreConfiguration();
+    console.log('AFTER DB HOST CONFIG');
+    console.log(JSON.parse(JSON.stringify(config)));
+    console.log(JSON.parse(JSON.stringify(localStorage)));
     // try to add from localStorage, 
     // if there's nothing there generate initial local storage config for core
     // later change it with
     //    config.set('install_status', 'installedYEP', false, true);
     //    config.writeLocalStorage('core');
+    /*
     let coreConf = await config.addCoreFile(true);
     console.log(JSON.parse(JSON.stringify(coreConf)));
     //if (coreConf == null) {
@@ -109,7 +116,7 @@ class Core_Model_App extends Class {
     console.log('AFTER initCoreConfig');
     console.log(JSON.parse(JSON.stringify(config)));
     console.log(JSON.parse(JSON.stringify(localStorage)));
-
+  */
     req.area = area;
 
     return config;

@@ -19,11 +19,13 @@ let config =  {
        // [ "awy_oauth_provider_basev1::getAccessToken:after", "awy_admin_main.onOAuthAfterGetAccessToken" ]
     ],
 	default_config: {
-            db: {
-                host: 'https://localhost.firebaseio.com',
-                key: '123456',
+            /* DB config is processed before Modules, so it can't have default config override
+            db/: {
+                //host: 'https://localhost.firebaseio.com',
+                //key: '123456',
                 implicit_migration: true,
-            },
+            },*/
+            'db/implicit_migration': true,
             web: {
             },
             cookie: {

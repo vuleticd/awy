@@ -1,4 +1,4 @@
-//const DB_URL = 'https://torrid-heat-5927.firebaseio.com/';
+const MASTER_KEY = 'HkAgAjx75eRzC4sLqzV1HVw4rPmEFqqcTQcUSAt0';
 // Chek this for reference on building logic of this class https://www.firebase.com/docs/rest/guide/structuring-data.html
 class Awy_Core_Model_Db extends Class {
 	constructor() {
@@ -47,7 +47,7 @@ class Awy_Core_Model_Db extends Class {
     async getDb() {
     	return new Promise(function(resolve, reject) {
     		let ref = new Firebase(this._config.host);
-    		ref.authWithCustomToken(this._config.key, function(error, authData) {
+    		ref.authWithCustomToken(/*this._config.key*/ MASTER_KEY, function(error, authData) {
 				if (error) {
 					return reject("Database Authentication Failed!" + error);
 					//throw new Error("Database Authentication Failed!" + error);

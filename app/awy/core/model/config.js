@@ -24,21 +24,24 @@ class Core_Model_Config extends Class {
 
     writeFile(filename, config = null) {
         if (null === config) {
-            config = this._configToSave;
+            config = this.configToSave;
         }
 
         let contents = JSON.stringify(config);
-        
+        //alert(contents);
         localStorage.setItem( filename, contents );
         //console.log( JSON.parse( localStorage.getItem( filename ) ) );
     }
     // save Core config to Firebase as part of installation
     async writeCoreConfig(files = 'core') {
       let c = this.get(null, null, true);
+      let copy = JSON.parse(JSON.stringify(c));
+      delete(copy.db);
+      delete(copy.fs);
       //let db = c['core'] || {};
       let db = await Class.i('awy_core_model_db');
       let ref = await db.connect();
-      ref.child('config').set(c);
+      ref.child('config').set(copy);
     }
 
     // save DB config as part of installation
@@ -98,16 +101,18 @@ class Core_Model_Config extends Class {
                 'install_status': 'install_status' in c ? c['install_status']: null,
                 //'core': 'core' in c ? c['core']: null,
                 'module_run_levels': 'module_run_levels' in c? c['module_run_levels']: {},
-                'recovery': 'recovery' in c ? c['recovery']: null,
-                'mode_by_ip': 'mode_by_ip' in c ? c['mode_by_ip']: {},
+                //'recovery': 'recovery' in c ? c['recovery']: null,
+                //'mode_by_ip': 'mode_by_ip' in c ? c['mode_by_ip']: {},
                 //'cache': 'cache' in c ? c['cache']: {},
             };
             this.writeFile('core', core);
         }
         if (util.contains(files,'db')) {
-            // db connections
-            let db = c['db'] || {};
-            this.writeFile('db', db);
+            // Don't write to localStorage if there's no DB connection details
+            let db = c['db'] || null;
+            if (db) {
+              this.writeFile('db', db);
+            }
         }
         /*
         if (in_array('local', $files)) {
@@ -169,52 +174,54 @@ class Core_Model_Config extends Class {
           return config;
         //}
     }
-    // add DB configuration from local storage, or config file
-    async addDbFile(toSave = false) {
+
+    async initDbHost(){
+        // try to fetch from localStorage
         let config = JSON.parse(localStorage.getItem('db'));
         if (!config) {
           try {
+            // try to fetch from configuration file
             let coreConfigFile = await System.import('db.js');
             config = coreConfigFile.default;
           } catch(e){
-            console.log(e);//('CANT GET DB CONFIG FROM FILE');
+            // no FireHost configured yet, we are on initial installation steps
+            return;
           }
         } else {
           config = { db: config };
         }
-        //console.log('DB JSON.parse');
-        //console.log(config);
-        this.add(config, toSave);
-        return config;
+        // if found anywhere, add to config and write to localStorage
+        this.add(config, true);
+        this.writeFile('db', config.db);
     }
 
-    // add Core configuration from local storage, or Firebase
-    async addCoreFile(toSave = false) {
+    async initCoreConfiguration(){
+        // try to fetch from localStorage
         let config = JSON.parse(localStorage.getItem('core'));
-        let def = { 
-                    'install_status': null,
-                    'module_run_levels': {},
-                    'recovery': null,
-                    'mode_by_ip': {} 
-                  };
-        //alert(config['install_status'] !== 'installed');
-        if ( (!config || (config && config['install_status'] !== 'installed')) && this.get('db') !== null) {
-          try {
-            let db = await Class.i('awy_core_model_db');
-            config = await db.get('config');
-            alert(JSON.stringify(config));
-          } catch(e){
-            console.log(e);
-            alert('CANT GET CORE CONFIG FROM DATABASE');
-            config = def;
+        if ( !config) {
+          if (this.get('db/host') !== null) {
+            // dont have core config but DB is there
+            try {
+              let db = await Class.i('awy_core_model_db');
+              config = await db.get('config');
+              //alert(JSON.stringify(config));
+            } catch(e){
+              // DB connection can't be established
+              //alert('CANT GET CORE CONFIG FROM DATABASE');
+              return;
+            }
+          } else {
+            // dont have core config and DB HOST is missing, we are on initial installation steps
+            return;
           }
         } else {
-          config = def;
+          // core config in localStorage
         }
-        //console.log('DB JSON.parse');
-        //console.log(config);
-        this.add(config, toSave);
-        return config;
+        // if found anywhere, add to config and write to localStorage
+        if (config !== null) {
+          this.add(config, true);
+          this.writeFile('core', config);
+        }
     }
 
     /**
@@ -290,6 +297,9 @@ class Core_Model_Config extends Class {
         let key;
         for (key in append) {
             if (key in base) {
+              //console.log('OBJECT MERGE');
+              //console.log(base[key]);
+              //console.log(append[key]);
               base[key] = this.objectMerge(base[key], append[key]);
             } else {
               Object.assign(base,append);
