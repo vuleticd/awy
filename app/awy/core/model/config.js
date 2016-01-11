@@ -22,15 +22,82 @@ class Core_Model_Config extends Class {
       }
     }
 
-    writeFile(filename, config = null) {
+    /*
+     * Init the Firebase URL configuration for app { db: { host: FIREBASE_URL }}
+     * either from localeStorge or from app/db.js file
+     * make sure result is written back to localStorage
+     */
+    async initDbHost(){
+        // try to fetch from localStorage
+        let config = JSON.parse(localStorage.getItem('db'));
+        if (!config) {
+          try {
+            // try to fetch from configuration file
+            let coreConfigFile = await System.import('db.js');
+            config = coreConfigFile.default;
+          } catch(e){
+            // no FireHost configured yet, we are on initial installation steps
+            return;
+          }
+        } else {
+          config = { db: config };
+        }
+        // if found anywhere, add to config and write to localStorage
+        this.add(config, true);
+        this.writeLocalStorage('db', config.db);
+    }
+    /*
+     * Init the core configuration for app
+     * either from localeStorge or from Firebase/config path
+     * make sure result, if present, is written back to localStorage
+     */
+    async initCoreConfiguration(){
+        // try to fetch from localStorage
+        let config = JSON.parse(localStorage.getItem('core'));
+        let def = {
+                'install_status': null,
+                'module_run_levels': {},
+            };
+        if ( !config) {
+          if (this.get('db/host') !== null) {
+            // dont have core config but DB is there
+            try {
+              let db = await Class.i('awy_core_model_db');
+              config = await db.get('config');
+              //alert(JSON.stringify(config));
+            } catch(e){
+              // DB connection can't be established
+              //alert('CANT GET CORE CONFIG FROM DATABASE');
+              config = def; //return;
+            }
+          } else {
+            // dont have core config and DB HOST is missing, we are on initial installation steps
+            config = def; //return;
+          }
+        } else {
+          // core config in localStorage
+        }
+
+        // if found anywhere, add to config and write to localStorage
+        if (config !== null) {
+          this.add(config, true);
+          this.writeLocalStorage('core', config);
+        }
+    }
+    /*
+     * write configuration section or full app configuration to localStorage, if available
+     */ 
+    writeLocalStorage(filename, config = null) {
+        if(!this.storageAvailable('localStorage')) {
+          return;
+        }
+
         if (null === config) {
             config = this.configToSave;
         }
 
         let contents = JSON.stringify(config);
-        //alert(contents);
         localStorage.setItem( filename, contents );
-        //console.log( JSON.parse( localStorage.getItem( filename ) ) );
     }
     // save Core config to Firebase as part of installation
     async writeCoreConfig(files = 'core') {
@@ -44,18 +111,24 @@ class Core_Model_Config extends Class {
       ref.child('config').set(copy);
     }
 
-    // save DB config as part of installation
-    writeGlobalConfig(files = 'db') {
+    /*
+     * save Firebase URL configuration to file.
+     * use server side script to save file
+     * used in installation
+     */
+    saveDbHostConfig() {
+      if (this.get('db/host') === null) {
+        return;
+      }
       let c = this.get(null, null, true);
-      let db = c['db'] || {};
       let data = new FormData();
-      data.append("data" , db.host);
+      data.append("data" , JSON.stringify(c.db.host));
       let xhr = (window.XMLHttpRequest) ? new XMLHttpRequest() : new activeXObject("Microsoft.XMLHTTP");
       xhr.open( 'post', '/c.php', false );
       xhr.send(data);
     }
     // write public global configuration to local storage
-    async writeLocalStorage(files = null) {
+    async writeStorage(files = null) {
         console.log('writeLocalStorage');
         let util = await Class.i('awy_core_util_misc');
         if(!this.storageAvailable('localStorage')) {
@@ -105,13 +178,13 @@ class Core_Model_Config extends Class {
                 //'mode_by_ip': 'mode_by_ip' in c ? c['mode_by_ip']: {},
                 //'cache': 'cache' in c ? c['cache']: {},
             };
-            this.writeFile('core', core);
+            this.writeLocalStorage('core', core);
         }
         if (util.contains(files,'db')) {
             // Don't write to localStorage if there's no DB connection details
             let db = c['db'] || null;
             if (db) {
-              this.writeFile('db', db);
+              this.writeLocalStorage('db', db);
             }
         }
         /*
@@ -120,7 +193,7 @@ class Core_Model_Config extends Class {
             $local = $this->BUtil->arrayMask($c,
                 'db,install_status,module_run_levels,recovery,mode_by_ip,cache,core',
                 true);
-            $this->writeFile('local.php', $local);
+            $this->writeLocalStorage('local.php', $local);
         }
         */
         return this;
@@ -173,55 +246,6 @@ class Core_Model_Config extends Class {
           this.add(config, toSave);
           return config;
         //}
-    }
-
-    async initDbHost(){
-        // try to fetch from localStorage
-        let config = JSON.parse(localStorage.getItem('db'));
-        if (!config) {
-          try {
-            // try to fetch from configuration file
-            let coreConfigFile = await System.import('db.js');
-            config = coreConfigFile.default;
-          } catch(e){
-            // no FireHost configured yet, we are on initial installation steps
-            return;
-          }
-        } else {
-          config = { db: config };
-        }
-        // if found anywhere, add to config and write to localStorage
-        this.add(config, true);
-        this.writeFile('db', config.db);
-    }
-
-    async initCoreConfiguration(){
-        // try to fetch from localStorage
-        let config = JSON.parse(localStorage.getItem('core'));
-        if ( !config) {
-          if (this.get('db/host') !== null) {
-            // dont have core config but DB is there
-            try {
-              let db = await Class.i('awy_core_model_db');
-              config = await db.get('config');
-              //alert(JSON.stringify(config));
-            } catch(e){
-              // DB connection can't be established
-              //alert('CANT GET CORE CONFIG FROM DATABASE');
-              return;
-            }
-          } else {
-            // dont have core config and DB HOST is missing, we are on initial installation steps
-            return;
-          }
-        } else {
-          // core config in localStorage
-        }
-        // if found anywhere, add to config and write to localStorage
-        if (config !== null) {
-          this.add(config, true);
-          this.writeFile('core', config);
-        }
     }
 
     /**

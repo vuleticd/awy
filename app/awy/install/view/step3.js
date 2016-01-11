@@ -11,7 +11,7 @@ class Awy_Install_View_Step3 extends Awy_Core_Model_View {
 		alert(JSON.stringify(this, null, 4));
 		let config = await Class.i('awy_core_model_config');
 		config.set('install_status', 'installed', false, true);
-    	config.writeLocalStorage('core');
+    	config.writeStorage('core');
     	await config.writeCoreConfig('core');
 
     	/*

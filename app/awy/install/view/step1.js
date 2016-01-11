@@ -26,7 +26,7 @@ class Awy_Install_View_Step1 extends Awy_Core_Model_View {
 		// submit
 		let config = await Class.i('awy_core_model_config');
 		config.add({db:{ host: this.get('db_url'), key: this.get('db_key')} }, true);
-    	config.writeLocalStorage('db');
+    	config.writeStorage('db');
 
 		let migri = await Class.i('awy_core_model_migrate');
 		try {
@@ -36,7 +36,7 @@ class Awy_Install_View_Step1 extends Awy_Core_Model_View {
     		return false;
     	}
 
-        config.writeGlobalConfig('db');
+        config.saveDbHostConfig();
 
 		let r = await Class.i('awy_core_model_router');
         r.navigate('install/step2');
