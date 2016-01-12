@@ -68,6 +68,102 @@ class Awy_Core_Model_Db extends Class {
             });
     	});
     }
+
+    /*
+     * write a string, number, boolean, array or any JSON object to our Firebase database.
+     * equivalent to set() in our JavaScript SDK.
+     * supports silent | pretty output.
+     * !! overwrite the data at the specified location, including any child nodes.
+     */
+    async rput(data, path= null, name = null, print = 'silent') {
+        let ref = await this.connect(name);
+        let req = await Class.i('awy_core_model_router_request');
+        let result = await req.ajax('PUT', this._config.host + '/'+ path +'.json', {"auth": this._config.key, "print": print}, JSON.stringify(data));
+        return result;
+    }   
+    /*
+     * update specific children at a location without overwriting existing data
+     * supports multi-path updates.
+     * supports silent | pretty output.
+     * pretty response will contain the updated data written to the database.
+     */
+    async rpatch(data, path= null, name = null, print = 'silent') {
+        let ref = await this.connect(name);
+        let req = await Class.i('awy_core_model_router_request');
+        let result = await req.ajax('PATCH', this._config.host + '/'+ path +'.json', {"auth": this._config.key, "print": print}, JSON.stringify(data));
+        return result;
+    }
+    /*
+     * generate a unique, timestamp-based key for every child added to a Firebase database 
+     * supports silent | pretty output.
+     * pretty response will contain the key "name" of the new data that was added
+     */
+    async rpost(data, path= null, name = null, print = 'pretty') {
+        let ref = await this.connect(name);
+        let req = await Class.i('awy_core_model_router_request');
+        let result = await req.ajax('POST', this._config.host + '/'+ path +'.json', {"auth": this._config.key, "print": print}, JSON.stringify(data));
+        return result;
+    }
+    /*
+     * remove data from the database path
+     * response containing JSON null
+     */
+    async rdelete(path= null, name = null) {
+        if ( path === null) {
+            return;
+        }
+        let ref = await this.connect(name);
+        let req = await Class.i('awy_core_model_router_request');
+        let result = await req.ajax('DELETE', this._config.host + '/'+ path +'.json', {"auth": this._config.key});
+        return result;
+    }
+    /*
+     *  read data from our Firebase database
+     *  pretty response will contain the data we're retrieving
+     *  shallow: true || false (Default)  -- shallow cannot be used with other query parameters.
+     * params
+     *      print : pretty(Default) || silent
+     *      callback: function reference
+     *      orderBy: $key || $value || $priority || common child key name
+     *      startAt:
+     *      endAt:
+     *      limitToFirst:
+     *      limitToLast:
+     *      equalTo:
+     */
+    async rget(path= null, name = null, params = {}, shallow = false) {
+        let ref = await this.connect(name);
+        let req = await Class.i('awy_core_model_router_request');
+
+        if (shallow === true) {
+            let shallowRes = await req.ajax('GET', this._config.host + '/'+ path +'.json', {"auth": this._config.key, "shallow": true});
+            return shallowRes;
+        }
+        params["auth"] = this._config.key;
+        let result = await req.ajax('GET', this._config.host + '/'+ path +'.json', params);
+        return result;
+    }
+    /*
+     * subscribe to changes to a single location in our Firebase database
+     */
+    async listen(path= null, eventname="put", name = null) {
+        let ref = await this.connect(name);
+        let evtSource = new EventSource(this._config.host + '/'+ path +'.json?auth=' + this._config.key);
+        //let eventList = document.createElement("ul");
+        evtSource.addEventListener(eventname, function(e) {
+          //let newElement = document.createElement("li");
+          let obj = JSON.parse(e.data);
+          let epath = obj.path;
+          let evalue = obj.data;
+          if (evalue === null) {
+            console.log("Path: " + path + epath + " has been removed");
+          } else {
+            console.log("Path: " + path + epath + " has new value: ", evalue);
+          }
+          //newElement.innerHTML = "ping at " + obj.time;
+          //eventList.appendChild(newElement);
+        }, false);
+    }
 }
 
 

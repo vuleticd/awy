@@ -204,9 +204,9 @@ class Awy_Core_Model_Migrate extends Class {
             return;
         }
 
-        let f = await req.ajax('GET', db._config.host + '/.settings/rules.json?auth=' + db._config.key);
+        let f = await db.rget('.settings/rules');//await req.ajax('GET', db._config.host + '/.settings/rules.json?auth=' + db._config.key);
         let rules = JSON.parse(f);
-        console.log("OLD RULES", rules);
+        console.log("OLD RULES", JSON.parse(JSON.stringify(rules)));
         for (connectionName in migration) {
             let modules = migration[connectionName];
             for (let modName of Object.keys(modules)){
@@ -222,7 +222,8 @@ class Awy_Core_Model_Migrate extends Class {
                 } else if (util.version_compare(mod.schema_version, mod.code_version, ">")) {
                     action = 'downgrade';
                 }
-                if (this.methodExists(mod.script,action)) {
+
+                if (action !== null && this.methodExists(mod.script,action)) {
                     let clbClass = await Class.i(mod.script);
                     let rule = await clbClass[action]();
                     rule = rule || {};
@@ -232,8 +233,8 @@ class Awy_Core_Model_Migrate extends Class {
 
             }
             //install merged security rules
-            let ff = await req.ajax('PUT', db._config.host + '/.settings/rules.json', {"auth": db._config.key}, JSON.stringify(rules));
-            console.log("NEW RULES", rules);
+            let ff = await db.rput(rules, '.settings/rules');//await req.ajax('PUT', db._config.host + '/.settings/rules.json', {"auth": db._config.key}, JSON.stringify(rules));
+            console.log("NEW RULES", JSON.parse(JSON.stringify(rules)));
         }
 
         //$this->BConfig->set('db/logging', 1);

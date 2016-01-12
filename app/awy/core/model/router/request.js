@@ -48,7 +48,7 @@ class Core_Model_Router_Request extends Class {
             let client = new XMLHttpRequest();
             let uri = url;
 
-            if (args && (method === 'POST' || method === 'PUT')) {
+            if (args && (method === 'GET' || method === 'DELETE' || method === 'POST' || method === 'PUT' || method === 'PATCH')) {
               uri += '?';
               let argcount = 0;
               for (let key in args) {
@@ -62,7 +62,7 @@ class Core_Model_Router_Request extends Class {
             }
 
             client.open(method, uri);
-            if (data && method === 'PUT') {
+            if (data && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
                 client.send(data);
             } else {
                 client.send();

@@ -7,7 +7,7 @@ class Awy_Admin_Controller extends Awy_Admin_Controller_Abstract {
 
     async action_index(){
     	console.log('Awy_Admin_Controller.action_index');
-    	this.layout();
+    	await this.layout();
     }
 }
 

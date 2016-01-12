@@ -105,10 +105,8 @@ class Core_Model_Config extends Class {
       let copy = JSON.parse(JSON.stringify(c));
       delete(copy.db);
       delete(copy.fs);
-      //let db = c['core'] || {};
       let db = await Class.i('awy_core_model_db');
-      let ref = await db.connect();
-      ref.child('config').set(copy);
+      await db.rput(copy, 'config');
     }
 
     /*

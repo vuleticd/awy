@@ -60,6 +60,18 @@ class Awy_Install_View_Step2 extends Awy_Core_Model_View {
                 ->save()
                 ->login();
 		*/
+		let db = await Class.i('awy_core_model_db');
+		let data = {
+			"firstname": this.get('firstname'),
+			"lastname": this.get('lastname'),
+			"email": this.get('email'),
+			"password": this.get('password'),
+			"roles": {
+				"superadmin": true
+			}
+		};
+		await db.rput(data, 'admin_user/' + this.get('username'));
+		await db.rput(true, 'admin_role/superadmin/members/' + this.get('username'));
 		let r = await Class.i('awy_core_model_router');
         r.navigate('install/step3');
 	}
