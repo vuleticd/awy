@@ -53,7 +53,7 @@ class Awy_Install_View_Step3 extends Awy_Core_Model_View {
 
         $this->BConfig->writeConfigFiles();
     	*/
-    	window.location.href = '/';
+    	window.location.href = '/admin';
 		//let r = await Class.i('awy_core_model_router');
         //r.navigate('/');
 	}

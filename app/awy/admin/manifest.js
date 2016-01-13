@@ -7,17 +7,21 @@ let config =  {
     areas: {
             awy_admin: {
                 views: {
-                    root: { view_class: 'awy_core_view_root'},
+                    root: { },
+                    dashboard: { },
+                    login: { view_class: 'awy_admin_view_login' },
+                    "password/recover": { view_class: 'awy_admin_view_password' },
                 },
                 routing: [
-                    ['/','awy_admin_controller.index']
+                    ['/admin','awy_admin_controller.index'],
+                    ['/admin/password/recover','awy_admin_controller.password_recover'],
                 ],
                 auto_use: [ 'bootstrap', 'views' ],
                 before_bootstrap: { callback: "awy_admin_admin.onBeforeBootstrap" },
             },
         },
 	themes: { awy_admin_defaultTheme: {
-				name: 'awy_admin_aefaultTheme',
+				name: 'awy_admin_defaultTheme',
                 layout_before: 'admin/layout.js',
                 area: 'awy_admin' },
             },

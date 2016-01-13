@@ -9,7 +9,6 @@ class Core_Model_App extends Class {
 
 	async run(area='frontend') {  
     try {
-      //throw new Error('dsdsdsd');
         let modReg = await this.init(area);
         let migrate = await modReg.bootstrap();
         let migri = await Class.i('awy_core_model_migrate');

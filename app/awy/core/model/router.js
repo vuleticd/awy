@@ -117,7 +117,6 @@ class Awy_Core_Model_Router extends Class {
     }
 
     loop(): void {
-        //throw new Error('dsdsd');
         try{
             if(this.current !== this.getFragment()) {
                 this.current = this.getFragment();

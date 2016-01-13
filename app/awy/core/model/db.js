@@ -78,7 +78,7 @@ class Awy_Core_Model_Db extends Class {
     async rput(data, path= null, name = null, print = 'silent') {
         let ref = await this.connect(name);
         let req = await Class.i('awy_core_model_router_request');
-        let result = await req.ajax('PUT', this._config.host + '/'+ path +'.json', {"auth": this._config.key, "print": print}, JSON.stringify(data));
+        let result = await req.ajax('PUT', this._config.host + '/'+ path +'.json', {"auth": /*this._config.key*/ MASTER_KEY, "print": print}, JSON.stringify(data));
         return result;
     }   
     /*
@@ -90,7 +90,7 @@ class Awy_Core_Model_Db extends Class {
     async rpatch(data, path= null, name = null, print = 'silent') {
         let ref = await this.connect(name);
         let req = await Class.i('awy_core_model_router_request');
-        let result = await req.ajax('PATCH', this._config.host + '/'+ path +'.json', {"auth": this._config.key, "print": print}, JSON.stringify(data));
+        let result = await req.ajax('PATCH', this._config.host + '/'+ path +'.json', {"auth": /*this._config.key*/ MASTER_KEY, "print": print}, JSON.stringify(data));
         return result;
     }
     /*
@@ -101,7 +101,7 @@ class Awy_Core_Model_Db extends Class {
     async rpost(data, path= null, name = null, print = 'pretty') {
         let ref = await this.connect(name);
         let req = await Class.i('awy_core_model_router_request');
-        let result = await req.ajax('POST', this._config.host + '/'+ path +'.json', {"auth": this._config.key, "print": print}, JSON.stringify(data));
+        let result = await req.ajax('POST', this._config.host + '/'+ path +'.json', {"auth": /*this._config.key*/ MASTER_KEY, "print": print}, JSON.stringify(data));
         return result;
     }
     /*
@@ -114,7 +114,7 @@ class Awy_Core_Model_Db extends Class {
         }
         let ref = await this.connect(name);
         let req = await Class.i('awy_core_model_router_request');
-        let result = await req.ajax('DELETE', this._config.host + '/'+ path +'.json', {"auth": this._config.key});
+        let result = await req.ajax('DELETE', this._config.host + '/'+ path +'.json', {"auth": /*this._config.key*/ MASTER_KEY});
         return result;
     }
     /*
@@ -136,10 +136,10 @@ class Awy_Core_Model_Db extends Class {
         let req = await Class.i('awy_core_model_router_request');
 
         if (shallow === true) {
-            let shallowRes = await req.ajax('GET', this._config.host + '/'+ path +'.json', {"auth": this._config.key, "shallow": true});
+            let shallowRes = await req.ajax('GET', this._config.host + '/'+ path +'.json', {"auth": /*this._config.key*/ MASTER_KEY, "shallow": true});
             return shallowRes;
         }
-        params["auth"] = this._config.key;
+        params["auth"] = /*this._config.key*/ MASTER_KEY;
         let result = await req.ajax('GET', this._config.host + '/'+ path +'.json', params);
         return result;
     }
@@ -148,7 +148,7 @@ class Awy_Core_Model_Db extends Class {
      */
     async listen(path= null, eventname="put", name = null) {
         let ref = await this.connect(name);
-        let evtSource = new EventSource(this._config.host + '/'+ path +'.json?auth=' + this._config.key);
+        let evtSource = new EventSource(this._config.host + '/'+ path +'.json?auth=' + /*this._config.key*/ MASTER_KEY);
         //let eventList = document.createElement("ul");
         evtSource.addEventListener(eventname, function(e) {
           //let newElement = document.createElement("li");

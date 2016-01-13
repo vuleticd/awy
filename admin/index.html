@@ -1,20 +1,29 @@
 <!DOCTYPE html>
-<html> 
+<html lang="en"> 
   <head>
-    <title>Hello Awy!</title>
-    <!-- Runtime configuration 
+    <meta charset="utf-8">
+    <title>Distro Administration</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- PRODUCTION WITHOUT BUILD 
     <script src="/lib/traceur-runtime.js"></script>
     <script src="/lib/system-register-only.src.js"></script>  
     <script src="/config-prod.js"></script>
     -->
+    <!-- PRODUCTION WITH BUILD  
+    <script src="/lib/traceur-runtime.js"></script> 
+    <script src="/lib/system.js"></script> 
+    <script src="/config-build.js"></script>
+    <script src="/es5/autobuild.min.js"></script> 
+    -->
     <!-- Development configuration -->
     <script src="/lib/es6-loader.js"></script> 
     <script src="/config.js"></script>
+    
     <!-- Global configuration -->
+    <script src="/lib/object-observe.js"></script>
     <script src="/lib/firebase.js"></script>
-    <script src="/lib/emmet.js"></script>
   </head> 
-  <body class="container" awy-app config="config/module/test">
+  <body class="" awy-app config="config/module/test">
     <script>
         System.import('bootstrap.js').then(m => {
           Class.i('awy_core_model_config').then(c => {

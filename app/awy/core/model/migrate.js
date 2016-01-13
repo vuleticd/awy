@@ -132,12 +132,12 @@ class Awy_Core_Model_Migrate extends Class {
         if (!Object.keys(migration).length) {
             return;
         }
-        console.log(migration);
+        //console.log(migration);
     
         if (typeof limitModules === 'string') {
             limitModules = limitModules.split(/\s*,\s*/);
         }
-        console.log(limitModules);
+        //console.log(limitModules);
         // initialize module tables
         // find all installed modules
         let num = 0;
@@ -159,33 +159,32 @@ class Awy_Core_Model_Migrate extends Class {
                 }
             }
 
-            let ref = await db.connect(connectionName); // switch connection
 
+            let ref = await db.connect(connectionName); // switch connection
             // collect module db schema versions
-            ref.child('modules').once("value", function(snapshot) {
-              snapshot.forEach(function(m) {
-                let mData = m.val();
+            let modulesSnapshotJson = await db.rget('modules');
+            let modulesSnapshot = JSON.parse(modulesSnapshotJson) || {};
+            Object.keys(modulesSnapshot).forEach(async function(mKey) {
+                let mData = modulesSnapshot[mKey];
                 if (mData.last_status === 'INSTALLING') { // error during last installation
-                    m.ref().remove();
-                    return;
+                    await db.rdelete('modules/' + mKey);
+                } else {
+                    modules[mKey]['schema_version'] = mData.schema_version;
                 }
-                modules[m.key()]['schema_version'] = mData.schema_version;
-              });
             });
 
-
-            console.log(modules);
+            //console.log(modules);
             //$this->BDbModule->init(); // Ensure modules table in current connection
             
             // run required migration scripts
             for (let modName of Object.keys(modules)){
                 let mod = modules[modName];
                 if (!('code_version' in mod)) {
-                    console.log( modName + ' not currently active');
+                    (await this.logger).warn( modName + ' not currently active');
                     continue; // skip migration of registered module that is not currently active
                 }
                 if ('schema_version' in mod && mod['schema_version'] === mod['code_version']) {
-                    console.log( modName + ' no migration necessary');
+                    (await this.logger).warn( modName + ' no migration necessary');
                     continue; // no migration necessary
                 }
                 if (!('script' in mod)) {
@@ -199,14 +198,12 @@ class Awy_Core_Model_Migrate extends Class {
             
         }
         //delete modules;
-        console.log(num);
+        //console.log(num);
         if (!num) {
             return;
         }
-
-        let f = await db.rget('.settings/rules');//await req.ajax('GET', db._config.host + '/.settings/rules.json?auth=' + db._config.key);
-        let rules = JSON.parse(f);
-        console.log("OLD RULES", JSON.parse(JSON.stringify(rules)));
+        // collect security rules for migration
+        let migrationRulesArray = [];
         for (connectionName in migration) {
             let modules = migration[connectionName];
             for (let modName of Object.keys(modules)){
@@ -215,6 +212,13 @@ class Awy_Core_Model_Migrate extends Class {
                     continue;
                 }
                 let action = null;
+                // write migration data to Firebase
+                await db.rput({ 
+                    'schema_version': mod['code_version'],
+                    'last_upgrade': {".sv": "timestamp"},
+                    'last_status': 'INSTALLING' 
+                }, 'modules/' + modName);
+                //console.warn(JSON.parse(JSON.stringify(mod)));
                 if (!('schema_version' in mod)) {
                     action = 'install';
                 } else if (util.version_compare(mod.schema_version, mod.code_version, "<")) {
@@ -222,19 +226,30 @@ class Awy_Core_Model_Migrate extends Class {
                 } else if (util.version_compare(mod.schema_version, mod.code_version, ">")) {
                     action = 'downgrade';
                 }
-
                 if (action !== null && this.methodExists(mod.script,action)) {
                     let clbClass = await Class.i(mod.script);
                     let rule = await clbClass[action]();
                     rule = rule || {};
-                    rules = this.objectMerge(rules, rule);
+                    migrationRulesArray.push(rule);
+                    // write migration data to Firebase
+                    await db.rpatch({'last_status': 'INSTALLED'}, 'modules/'+ modName);
+                    (await this.logger).debug("INCLUDE MIGRATION RULES: " + JSON.stringify(rule) + " FROM MODULE: " + modName);
                 }
-                //console.log(action);
 
+            }
+        }
+        //console.warn(migrationRulesArray.length);
+        if (migrationRulesArray.length) {
+            let f = await db.rget('.settings/rules');
+            let rules = JSON.parse(f);
+            (await this.logger).debug("OLD RULES: " + JSON.stringify(rules));
+            let migrationRule;
+            for(migrationRule of migrationRulesArray){
+                rules = this.objectMerge(rules, migrationRule);
             }
             //install merged security rules
             let ff = await db.rput(rules, '.settings/rules');//await req.ajax('PUT', db._config.host + '/.settings/rules.json', {"auth": db._config.key}, JSON.stringify(rules));
-            console.log("NEW RULES", JSON.parse(JSON.stringify(rules)));
+            (await this.logger).debug("NEW RULES: " + JSON.stringify(rules));
         }
 
         //$this->BConfig->set('db/logging', 1);

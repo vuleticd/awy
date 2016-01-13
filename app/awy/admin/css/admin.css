@@ -1,0 +1,6 @@
+@import url(https://fonts.googleapis.com/css?family=Raleway:400,500,700,600,900,800,300,200,100);
+@import url(https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css);
+.long-text-button { width: 100%; white-space: normal !important; height: auto !important; padding: 0 10% !important;}
+.login-container { width: 50%; left: 50%; position: fixed; top: 40%; transform: translate(-50%, -50%); font-family: 'Raleway', sans-serif;}
+.errors { color: red; }
+.has-errors { color: red;}

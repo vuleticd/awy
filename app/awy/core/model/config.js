@@ -63,7 +63,8 @@ class Core_Model_Config extends Class {
             // dont have core config but DB is there
             try {
               let db = await Class.i('awy_core_model_db');
-              config = await db.get('config');
+              config = await db.rget('config');
+              config = JSON.parse(config) || {};
               //alert(JSON.stringify(config));
             } catch(e){
               // DB connection can't be established
