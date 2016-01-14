@@ -22,7 +22,7 @@ let config =  {
         },
 	themes: { awy_admin_defaultTheme: {
 				name: 'awy_admin_defaultTheme',
-                layout_before: 'admin/layout.js',
+                layout_before: 'layout.js',
                 area: 'awy_admin' },
             },
     default_config: {

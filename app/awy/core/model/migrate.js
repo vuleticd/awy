@@ -160,7 +160,7 @@ class Awy_Core_Model_Migrate extends Class {
             }
 
 
-            let ref = await db.connect(connectionName); // switch connection
+            //let ref = await db.connect(connectionName); // switch connection
             // collect module db schema versions
             let modulesSnapshotJson = await db.rget('modules');
             let modulesSnapshot = JSON.parse(modulesSnapshotJson) || {};

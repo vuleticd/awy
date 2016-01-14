@@ -19,6 +19,8 @@ class Awy_Core_Model_Db extends Class {
 	    */
 	    this._config = {};
 
+        this._connection = null;
+
 		//this.data_ref = new Firebase(DB_URL);
 	}
 
@@ -40,14 +42,43 @@ class Awy_Core_Model_Db extends Class {
         console.log(dbCfg);
         this._currentConnectionName = name;
         this._config = dbCfg;
-        let dbRef = await this.getDb();
-        return dbRef;
+        this._connection = await this.getDb();
+        config.writeLocalStorage('db', this._config);
+        return this._connection;
     }
 
     async getDb() {
     	return new Promise(function(resolve, reject) {
-    		let ref = new Firebase(this._config.host);
-    		ref.authWithCustomToken(/*this._config.key*/ MASTER_KEY, function(error, authData) {
+            try {
+    		    let ref = new Firebase(this._config.host);
+                let auth = ref.getAuth();
+                if (auth) {
+                    console.log("User " + auth.uid + " is logged in with " + auth.provider);
+                    return resolve(ref);
+                }
+                let cfg = this._config;
+                if (!('key' in cfg)) {
+                    ref.authAnonymously(function(error, authData) {
+                        if (error) {
+                            //return reject("Database Authentication Failed!" + error);
+                            throw new Error("Database Authentication Failed!" + error);
+                        } else {
+                            console.log("Authenticated successfully with payload:", authData);
+                            cfg['key'] = authData.token; 
+                            return resolve(ref);
+                        }
+                    });
+                } else {
+                    // key set before db.connect
+                    return resolve(ref);
+                }
+                //return resolve(ref);
+            } catch(e) {
+                return reject("Database Authentication Failed!" + e);
+            }
+            /*
+    		ref.authWithCustomToken(//this._config.key
+             MASTER_KEY, function(error, authData) {
 				if (error) {
 					return reject("Database Authentication Failed!" + error);
 					//throw new Error("Database Authentication Failed!" + error);
@@ -56,6 +87,7 @@ class Awy_Core_Model_Db extends Class {
 					return resolve(ref);
 				}
 			});
+            */
 
     	}.bind(this));
     }
@@ -76,9 +108,13 @@ class Awy_Core_Model_Db extends Class {
      * !! overwrite the data at the specified location, including any child nodes.
      */
     async rput(data, path= null, name = null, print = 'silent') {
-        let ref = await this.connect(name);
+        console.log("rput conn: ", this._connection, this._config);
+        if (this._connection === null) {
+            await this.connect(name);
+        }
+        //let ref = await this.connect(name);
         let req = await Class.i('awy_core_model_router_request');
-        let result = await req.ajax('PUT', this._config.host + '/'+ path +'.json', {"auth": /*this._config.key*/ MASTER_KEY, "print": print}, JSON.stringify(data));
+        let result = await req.ajax('PUT', this._config.host + '/'+ path +'.json', {"auth": this._config.key /*MASTER_KEY*/, "print": print}, JSON.stringify(data));
         return result;
     }   
     /*
@@ -88,9 +124,13 @@ class Awy_Core_Model_Db extends Class {
      * pretty response will contain the updated data written to the database.
      */
     async rpatch(data, path= null, name = null, print = 'silent') {
-        let ref = await this.connect(name);
+        console.log("rpatch conn: ", this._connection, this._config);
+        if (this._connection === null) {
+            await this.connect(name);
+        }
+        //let ref = await this.connect(name);
         let req = await Class.i('awy_core_model_router_request');
-        let result = await req.ajax('PATCH', this._config.host + '/'+ path +'.json', {"auth": /*this._config.key*/ MASTER_KEY, "print": print}, JSON.stringify(data));
+        let result = await req.ajax('PATCH', this._config.host + '/'+ path +'.json', {"auth": this._config.key /*MASTER_KEY*/, "print": print}, JSON.stringify(data));
         return result;
     }
     /*
@@ -99,9 +139,13 @@ class Awy_Core_Model_Db extends Class {
      * pretty response will contain the key "name" of the new data that was added
      */
     async rpost(data, path= null, name = null, print = 'pretty') {
-        let ref = await this.connect(name);
+        console.log("rpost conn: ", this._connection, this._config);
+        if (this._connection === null) {
+            await this.connect(name);
+        }
+        //let ref = await this.connect(name);
         let req = await Class.i('awy_core_model_router_request');
-        let result = await req.ajax('POST', this._config.host + '/'+ path +'.json', {"auth": /*this._config.key*/ MASTER_KEY, "print": print}, JSON.stringify(data));
+        let result = await req.ajax('POST', this._config.host + '/'+ path +'.json', {"auth": this._config.key /*MASTER_KEY*/, "print": print}, JSON.stringify(data));
         return result;
     }
     /*
@@ -109,12 +153,16 @@ class Awy_Core_Model_Db extends Class {
      * response containing JSON null
      */
     async rdelete(path= null, name = null) {
+        console.log("rdelete conn: ", this._connection, this._config);
         if ( path === null) {
             return;
         }
-        let ref = await this.connect(name);
+        if (this._connection === null) {
+            await this.connect(name);
+        }
+        //let ref = await this.connect(name);
         let req = await Class.i('awy_core_model_router_request');
-        let result = await req.ajax('DELETE', this._config.host + '/'+ path +'.json', {"auth": /*this._config.key*/ MASTER_KEY});
+        let result = await req.ajax('DELETE', this._config.host + '/'+ path +'.json', {"auth": this._config.key /*MASTER_KEY*/});
         return result;
     }
     /*
@@ -132,14 +180,23 @@ class Awy_Core_Model_Db extends Class {
      *      equalTo:
      */
     async rget(path= null, name = null, params = {}, shallow = false) {
-        let ref = await this.connect(name);
+        console.log("rget conn: ", this._connection, this._config);
+        if (this._connection === null) {
+            await this.connect(name);
+        }
+        //let ref = await this.connect(name);
         let req = await Class.i('awy_core_model_router_request');
 
         if (shallow === true) {
-            let shallowRes = await req.ajax('GET', this._config.host + '/'+ path +'.json', {"auth": /*this._config.key*/ MASTER_KEY, "shallow": true});
+            let shallowRes = await req.ajax('GET', this._config.host + '/'+ path +'.json', {"auth": this._config.key /*MASTER_KEY*/, "shallow": true});
             return shallowRes;
         }
-        params["auth"] = /*this._config.key*/ MASTER_KEY;
+        for (let p in params){
+            if ((p == "orderBy" || p == "equalTo") && typeof params[p] === "string") {
+                params[p] = JSON.stringify(params[p]);
+            }
+        }
+        params["auth"] = this._config.key /*MASTER_KEY*/;
         let result = await req.ajax('GET', this._config.host + '/'+ path +'.json', params);
         return result;
     }
@@ -147,7 +204,10 @@ class Awy_Core_Model_Db extends Class {
      * subscribe to changes to a single location in our Firebase database
      */
     async listen(path= null, eventname="put", name = null) {
-        let ref = await this.connect(name);
+        if (this._connection === null) {
+            await this.connect(name);
+        }
+        //let ref = await this.connect(name);
         let evtSource = new EventSource(this._config.host + '/'+ path +'.json?auth=' + /*this._config.key*/ MASTER_KEY);
         //let eventList = document.createElement("ul");
         evtSource.addEventListener(eventname, function(e) {

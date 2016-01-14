@@ -70,10 +70,21 @@ class Awy_Install_View_Step2 extends Awy_Core_Model_View {
 				"superadmin": true
 			}
 		};
-		await db.rput(data, 'admin_user/' + this.get('username'));
-		await db.rput(true, 'admin_role/superadmin/members/' + this.get('username'));
-		let r = await Class.i('awy_core_model_router');
-        r.navigate('install/step3');
+
+		db._connection.createUser({
+		  email    : data['email'],
+		  password : data['password']
+		}, async function(error, userData) {
+		  if (error) {
+		    console.log("Error creating user:", error);
+		  } else {
+		    console.log("Successfully created user account with uid:", userData);
+		    await db.rput(data, 'admin_user/' + this.get('username'));
+			await db.rput(true, 'admin_role/superadmin/members/' + this.get('username'));
+			let r = await Class.i('awy_core_model_router');
+        	r.navigate('install/step3');
+		  }
+		}.bind(this));
 	}
 }
 

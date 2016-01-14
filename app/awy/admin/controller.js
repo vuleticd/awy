@@ -8,9 +8,13 @@ class Awy_Admin_Controller extends Awy_Core_Controller_Abstract {
     async action_index(){
     	console.log('Awy_Admin_Controller.action_index');
     	// if logged in 
-    	//await this.layout("/");
-    	// else
-    	await this.layout("/login");
+        let db = await Class.i('awy_core_model_db');
+        if (db._connection.getAuth()) {
+    	   await this.layout("/");
+           db._connection.unauth();
+        } else {
+    	   await this.layout("/login");
+        }
     }
 
     async action_password_recover(){

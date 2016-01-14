@@ -93,6 +93,10 @@ class Core_Model_App extends Class {
     console.log('AFTER DB HOST CONFIG', JSON.parse(JSON.stringify(config)), JSON.parse(JSON.stringify(localStorage)));
     
     // INIT USER TOKEN HERE
+    /*
+    1. check config.get('db/key')
+    2. if not found, auth as annonymous
+    */
 
     (await this.logger).debug('CORE CONFIG START');
     await config.initCoreConfiguration();

@@ -305,14 +305,14 @@ export default Awy_Core_Util_Vertex
 
 /** Usage
  * 
- * let vertex = await Class.i('awy_core_util_vertex');
+ * let vertex = await ClassRegistry.getInstance('awy_core_util_vertex');
  * let tester = vertex.startOfLine().next("http").maybe( "s" ).next( "://" ).maybe( "www." ).anythingBut( " " ).endOfLine();
  * let testMe = "https://www.google.com";
  * if( tester.test( testMe ) ) alert( "We have a correct URL ");
  * else alert( "The URL is incorrect" );
  * console.log(tester);
 
- * let vertex = await Class.i('awy_core_util_vertex');
+ * let vertex = await ClassRegistry.getInstance('awy_core_util_vertex');
  * // Create a test string
  * let replaceMe = "Replace bird with a duck";
  * // Create an expression that seeks for word "bird"
@@ -321,7 +321,7 @@ export default Awy_Core_Util_Vertex
  * let result = expression.replace( replaceMe, "duck" );
  * console.log( result ); // Outputs "Replace duck with a duck"
 
- * let vertex = await Class.i('awy_core_util_vertex');
+ * let vertex = await ClassRegistry.getInstance('awy_core_util_vertex');
  * let result = vertex.find( "red" ).replace( "We have a red house", "blue" );
  * console.log( result ); // Outputs "We have a blue house"
 
