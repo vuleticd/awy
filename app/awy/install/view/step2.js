@@ -54,37 +54,22 @@ class Awy_Install_View_Step2 extends Awy_Core_Model_View {
 		// submit
 		/*
 		$this->BMigrate->migrateModules('FCom_Admin', true);
-            $this->FCom_Admin_Model_User
-                ->create($w['admin'])
-                ->set('is_superadmin', 1)
-                ->save()
-                ->login();
 		*/
-		let db = await Class.i('awy_core_model_db');
 		let data = {
-			"firstname": this.get('firstname'),
-			"lastname": this.get('lastname'),
 			"email": this.get('email'),
 			"password": this.get('password'),
+			"firstname": this.get('firstname'),
+			"lastname": this.get('lastname'),
+			"username": this.get('username'),
 			"roles": {
 				"superadmin": true
 			}
 		};
 
-		db._connection.createUser({
-		  email    : data['email'],
-		  password : data['password']
-		}, async function(error, userData) {
-		  if (error) {
-		    console.log("Error creating user:", error);
-		  } else {
-		    console.log("Successfully created user account with uid:", userData);
-		    await db.rput(data, 'admin_user/' + this.get('username'));
-			await db.rput(true, 'admin_role/superadmin/members/' + this.get('username'));
-			let r = await Class.i('awy_core_model_router');
-        	r.navigate('install/step3');
-		  }
-		}.bind(this));
+		let admin = await Class.i('awy_admin_model_user');
+		await admin.create(data);
+		let r = await Class.i('awy_core_model_router');
+        r.navigate('install/step3');
 	}
 }
 

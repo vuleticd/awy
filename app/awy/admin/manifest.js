@@ -14,6 +14,7 @@ let config =  {
                 },
                 routing: [
                     ['/admin','awy_admin_controller.index'],
+                    [ '/admin/logout', 'awy_admin_controller.logout' ], // replace by binded view helper function
                     ['/admin/password/recover','awy_admin_controller.password_recover'],
                 ],
                 auto_use: [ 'bootstrap', 'views' ],

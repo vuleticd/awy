@@ -4,3 +4,4 @@
 .login-container { width: 50%; left: 50%; position: fixed; top: 40%; transform: translate(-50%, -50%); font-family: 'Raleway', sans-serif;}
 .errors { color: red; }
 .has-errors { color: red;}
+span.spinner { font-size: 38px; line-height: 38px;}

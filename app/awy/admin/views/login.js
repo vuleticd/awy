@@ -23,7 +23,7 @@ let str = `
         	<button type="button" class="button long-text-button u-pull-left" data-bind="click forgotPassword">Forgot your password?</button>
         </div>
         <div class="one-half column u-pull-right">
-            <button type="button" class="button-primary u-pull-right" data-bind="click signIn">Sign In</button>
+            <button type="button" class="button-primary u-pull-right" data-bind="click signIn">Sign In</button><span class="u-pull-right spinner" data-bind="text spin"></span>
         </div>
     </div>
 </div>

@@ -7,8 +7,6 @@ class Awy_Install_View_Step3 extends Awy_Core_Model_View {
 	}
 
 	async completeStep(){
-
-		//alert(JSON.stringify(this, null, 4));
 		let config = await Class.i('awy_core_model_config');
 		config.set('install_status', 'installed', false, true);
     	config.writeStorage('core');
@@ -53,9 +51,9 @@ class Awy_Install_View_Step3 extends Awy_Core_Model_View {
 
         $this->BConfig->writeConfigFiles();
     	*/
-    	window.location.href = '/admin';
-		//let r = await Class.i('awy_core_model_router');
-        //r.navigate('/');
+    	
+		let r = await Class.i('awy_core_model_router');
+        r.redirect('/admin');
 	}
 }
 

@@ -72,11 +72,13 @@ class Awy_Core_Model_Router extends Class {
 
     async check(f): Awy_Core_Model_Router {
         //throw new Error('dsdsd');
+        let found = false;
         let fragment = f || this.getFragment();
         for(var i=0; i<this.routes.length; i++) {
             let escaperRoute = this.routes[i].re.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
             let match = ("/"+fragment).match(new RegExp(escaperRoute));
             if(match && match[0] == "/"+fragment) {
+                found = true;
                 match.shift();
                 //console.log(match);
                 let className = this.routes[i].handler.split(".")[0];
@@ -99,7 +101,7 @@ class Awy_Core_Model_Router extends Class {
 
                 //this.routes[i].handler.apply({}, match);
                 return this;
-            }           
+            }         
         }
         return this;
     }
@@ -136,6 +138,11 @@ class Awy_Core_Model_Router extends Class {
         }
         return this;
     }
+
+    redirect(path) {
+        window.location.href = path;
+    }
+
     // Declare route
     async route(route, callback = null, args = null, name = null, multiple = true) {
         if (Array.isArray(route)) {

@@ -8,7 +8,7 @@ class Awy_Admin_Migrate extends Class {
 			"admin_user": {
 				".read": "auth !== null",
 				".write": false,
-				".indexOn": ["email"] 
+				".indexOn": ["username"] 
 			},
 			"admin_role": {
 				".read": false,

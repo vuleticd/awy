@@ -112,7 +112,6 @@ class Awy_Core_Model_Db extends Class {
         if (this._connection === null) {
             await this.connect(name);
         }
-        //let ref = await this.connect(name);
         let req = await Class.i('awy_core_model_router_request');
         let result = await req.ajax('PUT', this._config.host + '/'+ path +'.json', {"auth": this._config.key /*MASTER_KEY*/, "print": print}, JSON.stringify(data));
         return result;
@@ -128,7 +127,6 @@ class Awy_Core_Model_Db extends Class {
         if (this._connection === null) {
             await this.connect(name);
         }
-        //let ref = await this.connect(name);
         let req = await Class.i('awy_core_model_router_request');
         let result = await req.ajax('PATCH', this._config.host + '/'+ path +'.json', {"auth": this._config.key /*MASTER_KEY*/, "print": print}, JSON.stringify(data));
         return result;
@@ -143,7 +141,6 @@ class Awy_Core_Model_Db extends Class {
         if (this._connection === null) {
             await this.connect(name);
         }
-        //let ref = await this.connect(name);
         let req = await Class.i('awy_core_model_router_request');
         let result = await req.ajax('POST', this._config.host + '/'+ path +'.json', {"auth": this._config.key /*MASTER_KEY*/, "print": print}, JSON.stringify(data));
         return result;
@@ -160,7 +157,6 @@ class Awy_Core_Model_Db extends Class {
         if (this._connection === null) {
             await this.connect(name);
         }
-        //let ref = await this.connect(name);
         let req = await Class.i('awy_core_model_router_request');
         let result = await req.ajax('DELETE', this._config.host + '/'+ path +'.json', {"auth": this._config.key /*MASTER_KEY*/});
         return result;
@@ -184,7 +180,6 @@ class Awy_Core_Model_Db extends Class {
         if (this._connection === null) {
             await this.connect(name);
         }
-        //let ref = await this.connect(name);
         let req = await Class.i('awy_core_model_router_request');
 
         if (shallow === true) {
@@ -207,7 +202,6 @@ class Awy_Core_Model_Db extends Class {
         if (this._connection === null) {
             await this.connect(name);
         }
-        //let ref = await this.connect(name);
         let evtSource = new EventSource(this._config.host + '/'+ path +'.json?auth=' + /*this._config.key*/ MASTER_KEY);
         //let eventList = document.createElement("ul");
         evtSource.addEventListener(eventname, function(e) {
