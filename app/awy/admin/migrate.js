@@ -6,9 +6,8 @@ class Awy_Admin_Migrate extends Class {
 	async install() {
 		let rules = { "rules": { 
 			"admin_user": {
-				".read": "auth !== null",
-				".write": false,
-				".indexOn": ["username"] 
+				".read": false,
+				".write": false
 			},
 			"admin_role": {
 				".read": false,

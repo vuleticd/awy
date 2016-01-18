@@ -33,9 +33,8 @@ class Bootstrap extends Class {
      */
     async run(area) {
       try {
-          let appHost = false;
           let doc = await this.ready(window);
-          appHost = doc.querySelectorAll('[awy-app]');
+          let appHost = doc.querySelectorAll('[distro]');
           let app = await Class.i('awy_core_model_app');
           app.host = appHost[0];
           app.run(area);

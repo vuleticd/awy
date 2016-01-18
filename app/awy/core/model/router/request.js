@@ -73,12 +73,17 @@ class Core_Model_Router_Request extends Class {
                 // Performs the function "resolve" when this.status is equal to 2xx
                 resolve(this.response);
               } else {
+                let resp = JSON.parse(this.response);
                 // Performs the function "reject" when this.status is different than 2xx
-                reject(this.statusText);
+                if (resp.error) {
+                    reject(resp.error);
+                } else {
+                    reject(this.statusText);
+                }
               }
             };
             client.onerror = function() {
-              reject(this.statusText);
+                reject(this.statusText);
             };
         });
     }

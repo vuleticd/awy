@@ -23,14 +23,16 @@ class AdminUser_Model extends Class {
 			});
     	});
     }
-
+    // @todo - this can create the Firebase user but fail to write user data to admin_user  
     async create(data){
 		let db = await Class.i('awy_core_model_db');
     	if (db._connection === null) {
             await db.connect();
         }
+        // only super admin can create admin user
+        let auth = await db.sudo();
     	let userData = await this.createUser(data.email, data.password);
-    	//delete data.email;
+    	delete data.email;
     	delete data.password;
 	    await db.rput(data, 'admin_user/' + userData.uid);
 		await db.rput(true, 'admin_role/superadmin/members/' + userData.uid);

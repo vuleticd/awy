@@ -8,7 +8,7 @@ let config =  {
             awy_admin: {
                 views: {
                     root: { },
-                    dashboard: { },
+                    dashboard: { view_class: 'awy_admin_view_default' },
                     login: { view_class: 'awy_admin_view_login' },
                     "password/recover": { view_class: 'awy_admin_view_password' },
                 },

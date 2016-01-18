@@ -21,13 +21,6 @@ class Awy_Admin_Controller extends Awy_Core_Controller_Abstract {
     async action_password_recover(){
     	await this.layout("/password/recover");
     }
-    // replace by binded view helper function
-    async action_logout() {
-        let admin = await Class.i('awy_admin_model_user');
-        await admin.logout();
-        let r = await Class.i('awy_core_model_router');
-        r.navigate('/admin');
-    }
 
 }
 

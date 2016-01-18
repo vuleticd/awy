@@ -47,49 +47,38 @@ class Awy_Core_Model_Db extends Class {
         return this._connection;
     }
 
+    /*
+     * the way to check if current active DB configuration is valid Super user with Firebase SECURE KEY 
+     */
+    async sudo() {
+        if (this._connection === null) {
+            await this.connect();
+        }
+        let cfg = this._config;
+        let ref = this._connection;
+        return new Promise(function(resolve, reject) {
+            ref.authWithCustomToken(cfg.key, function(error, authData) {
+                if (error) {
+                  reject("SUDO Failed!" + error);
+                } else {
+                  console.log("SuperAdmin Authenticated successfully:", authData);
+                  cfg['key'] = cfg.key;
+                  resolve(authData);
+                }
+            });
+        });
+    }
+
     async getDb() {
+      let cfg = this._config;
     	return new Promise(function(resolve, reject) {
             try {
-    		    let ref = new Firebase(this._config.host);
-                let auth = ref.getAuth();
-                if (auth) {
-                    console.log("User " + auth.uid + " is logged in with " + auth.provider);
-                    return resolve(ref);
-                }
-                let cfg = this._config;
-                if (!('key' in cfg)) {
-                    ref.authAnonymously(function(error, authData) {
-                        if (error) {
-                            //return reject("Database Authentication Failed!" + error);
-                            throw new Error("Database Authentication Failed!" + error);
-                        } else {
-                            console.log("Authenticated successfully with payload:", authData);
-                            cfg['key'] = authData.token; 
-                            return resolve(ref);
-                        }
-                    });
-                } else {
-                    // key set before db.connect
-                    return resolve(ref);
-                }
-                //return resolve(ref);
+    		        let ref = new Firebase(cfg.host);
+                resolve(ref);
             } catch(e) {
-                return reject("Database Authentication Failed!" + e);
+                reject(e);
             }
-            /*
-    		ref.authWithCustomToken(//this._config.key
-             MASTER_KEY, function(error, authData) {
-				if (error) {
-					return reject("Database Authentication Failed!" + error);
-					//throw new Error("Database Authentication Failed!" + error);
-				} else {
-					console.log("Authenticated successfully with payload:", authData);
-					return resolve(ref);
-				}
-			});
-            */
-
-    	}.bind(this));
+    	});
     }
 
     async get(path= null, name = null) {
@@ -112,8 +101,12 @@ class Awy_Core_Model_Db extends Class {
         if (this._connection === null) {
             await this.connect(name);
         }
+        let params = {"auth": this._config.key /*MASTER_KEY*/, "print": print};
+        if (typeof this._config.key === 'undefined'){
+          delete params.auth;
+        }
         let req = await Class.i('awy_core_model_router_request');
-        let result = await req.ajax('PUT', this._config.host + '/'+ path +'.json', {"auth": this._config.key /*MASTER_KEY*/, "print": print}, JSON.stringify(data));
+        let result = await req.ajax('PUT', this._config.host + '/'+ path +'.json', params, JSON.stringify(data));
         return result;
     }   
     /*
@@ -127,8 +120,12 @@ class Awy_Core_Model_Db extends Class {
         if (this._connection === null) {
             await this.connect(name);
         }
+        let params = {"auth": this._config.key /*MASTER_KEY*/, "print": print};
+        if (typeof this._config.key === 'undefined'){
+          delete params.auth;
+        }
         let req = await Class.i('awy_core_model_router_request');
-        let result = await req.ajax('PATCH', this._config.host + '/'+ path +'.json', {"auth": this._config.key /*MASTER_KEY*/, "print": print}, JSON.stringify(data));
+        let result = await req.ajax('PATCH', this._config.host + '/'+ path +'.json', params, JSON.stringify(data));
         return result;
     }
     /*
@@ -141,8 +138,12 @@ class Awy_Core_Model_Db extends Class {
         if (this._connection === null) {
             await this.connect(name);
         }
+        let params = {"auth": this._config.key /*MASTER_KEY*/, "print": print};
+        if (typeof this._config.key === 'undefined'){
+          delete params.auth;
+        }
         let req = await Class.i('awy_core_model_router_request');
-        let result = await req.ajax('POST', this._config.host + '/'+ path +'.json', {"auth": this._config.key /*MASTER_KEY*/, "print": print}, JSON.stringify(data));
+        let result = await req.ajax('POST', this._config.host + '/'+ path +'.json', params, JSON.stringify(data));
         return result;
     }
     /*
@@ -157,8 +158,12 @@ class Awy_Core_Model_Db extends Class {
         if (this._connection === null) {
             await this.connect(name);
         }
+        let params = {"auth": this._config.key /*MASTER_KEY*/ };
+        if (typeof this._config.key === 'undefined'){
+          delete params.auth;
+        }
         let req = await Class.i('awy_core_model_router_request');
-        let result = await req.ajax('DELETE', this._config.host + '/'+ path +'.json', {"auth": this._config.key /*MASTER_KEY*/});
+        let result = await req.ajax('DELETE', this._config.host + '/'+ path +'.json', params);
         return result;
     }
     /*
@@ -192,6 +197,9 @@ class Awy_Core_Model_Db extends Class {
             }
         }
         params["auth"] = this._config.key /*MASTER_KEY*/;
+        if (typeof this._config.key === 'undefined'){
+          delete params.auth;
+        }
         let result = await req.ajax('GET', this._config.host + '/'+ path +'.json', params);
         return result;
     }

@@ -24,12 +24,6 @@ let str = `
         </div>
     </div>
     <div class="row">
-        <div class="six columns">
-            <label class="required" for="username">User Name</label>
-            <input type="text" class="required u-full-width" name="username" data-bind="value username" placeholder="admin"/>
-        </div>
-    </div>
-    <div class="row">
         <div class="three columns">
             <label class="required" for="password">Password</label>
             <input type="password" class="required u-full-width" name="password" data-bind="value password" placeholder="******"/>

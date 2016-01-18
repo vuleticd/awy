@@ -8,8 +8,8 @@ let str = `
 	</div>
 	<div class="row">
     	<div class="u-full-width">
-            <label class="required" for="username">User Name or Email</label>
-    		<input type="text" class="required u-full-width" name="username" data-bind="value username" placeholder=""/>
+            <label class="required" for="email">Email</label>
+    		<input type="text" class="required u-full-width" name="email" data-bind="value email" placeholder="email@domain.tld"/>
     	</div>
     </div>
     <div class="row">

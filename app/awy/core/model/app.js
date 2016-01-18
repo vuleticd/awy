@@ -20,9 +20,11 @@ class Core_Model_App extends Class {
 
         let config = await Class.i('awy_core_model_config');
         let layout = await Class.i('awy_core_model_layout');
+        let db = await Class.i('awy_core_model_db');
         console.log(config);
         console.log(router);
         console.log(layout);
+        console.log(db);
         //setTimeout(router.navigate('install/step1'), 10000);
         //router.navigate('install/step1');
     } catch(e) {
@@ -100,7 +102,7 @@ class Core_Model_App extends Class {
 
     (await this.logger).debug('CORE CONFIG START');
     await config.initCoreConfiguration();
-    console.log('AFTER DB HOST CONFIG', JSON.parse(JSON.stringify(config)), JSON.parse(JSON.stringify(localStorage)));
+    console.log('AFTER CORE CONFIG', JSON.parse(JSON.stringify(config)), JSON.parse(JSON.stringify(localStorage)));
     req.area = area;
 
     return config;

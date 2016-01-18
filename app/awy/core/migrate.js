@@ -9,11 +9,11 @@ class Awy_Core_Migrate extends Class {
 		//let key = db._config.key;
 		let rules = { "rules": { 
 			"modules": {
-				".read": "auth !== null",
+				".read": true,
 				".write": false 
 			},
 			"config": {
-				".read": "auth !== null",
+				".read": true,
 				".write": false 
 			}
 		}};
