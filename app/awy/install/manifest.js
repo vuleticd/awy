@@ -11,6 +11,7 @@ let config =  {
                 step1: { view_class: 'awy_install_view_step1'},
                 step2: { view_class: 'awy_install_view_step2' },
                 step3: { view_class: 'awy_install_view_step3' },
+                migrate: { view_class: 'awy_install_view_migrate' },
             },
             //auto_use: [ 'bootstrap', 'views' ],
             //before_bootstrap: { callback: "awy_admin_admin.onBeforeBootstrap" },
@@ -34,6 +35,7 @@ let config =  {
 		['/install/step1','awy_install_controller.step1'],
 		['/install/step2','awy_install_controller.step2'],
 		['/install/step3','awy_install_controller.step3'],
+		['/migrate','awy_install_controller.migrate'],
 		['/install/.action','awy_install_controller']
 	],
 	/*default_config: {

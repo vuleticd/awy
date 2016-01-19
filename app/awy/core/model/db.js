@@ -61,9 +61,13 @@ class Awy_Core_Model_Db extends Class {
                 if (error) {
                   reject("SUDO Failed!" + error);
                 } else {
-                  console.log("SuperAdmin Authenticated successfully:", authData);
-                  cfg['key'] = cfg.key;
-                  resolve(authData);
+                  if (authData.provider != "custom") {
+                    reject("SUDO Failed!" + error);
+                  } else {
+                    console.log("SuperAdmin Authenticated successfully:", authData);
+                    cfg['key'] = cfg.key;
+                    resolve(authData);
+                  }
                 }
             });
         });

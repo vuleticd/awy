@@ -61,6 +61,12 @@ class Awy_Install_Controller extends Awy_Core_Controller_Abstract {
         let layout = await Class.i('awy_core_model_layout');
         await layout.applyLayout('/step3');
     }
+
+    async action_migrate(){
+        console.log('Awy_Install_Controller.action_migrate');
+        let layout = await Class.i('awy_core_model_layout');
+        await layout.applyLayout('/migrate');
+    }
 }
 
 export default Awy_Install_Controller

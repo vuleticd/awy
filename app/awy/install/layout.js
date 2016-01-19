@@ -39,6 +39,10 @@ let layout =  {
 	"/step3": [
 		{ include: 'base' },
 		{ hook: 'main', views: 'step3' },
+	],
+	"/migrate": [
+		{ include: 'base' },
+		{ hook: 'main', views: 'migrate' },
 	]
 }
 export default layout;
