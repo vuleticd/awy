@@ -14,6 +14,7 @@ class Awy_Core_Model_Router extends Class {
         this.mode = null;
         this.root = '/';
         this.current = null;
+        this._reload = false;
     }
 
     static getInstance(): Awy_Core_Model_Router {
@@ -124,6 +125,11 @@ class Awy_Core_Model_Router extends Class {
                 this.current = this.getFragment();
                 this.check(this.current);
             } 
+            if (this._reload) {
+                this.current = this.getFragment();
+                this.check(this.current);
+                this._reload = false;
+            }
         } catch(e){
             throw e;
         }
@@ -133,6 +139,17 @@ class Awy_Core_Model_Router extends Class {
         path = path ? path : '';
         if(this.mode === 'history') {
             history.pushState(null, null, this.root + this.clearSlashes(path));
+        } else {
+            window.location.href = window.location.href.replace(/#(.*)$/, '') + '#' + path;
+        }
+        return this;
+    }
+
+    async refresh(path): Awy_Core_Model_Router {
+        path = path ? path : '';
+        if(this.mode === 'history') {
+            history.pushState(null, null, this.root + this.clearSlashes(path));
+            this._reload = true;
         } else {
             window.location.href = window.location.href.replace(/#(.*)$/, '') + '#' + path;
         }

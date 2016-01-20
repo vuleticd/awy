@@ -11,8 +11,10 @@ let config =  {
                     dashboard: { view_class: 'awy_admin_view_default' },
                     login: { view_class: 'awy_admin_view_login' },
                     "password/recover": { view_class: 'awy_admin_view_password' },
+                    migrate: { view_class: 'awy_admin_view_migrate' },
                 },
                 routing: [
+                    ['/admin/migrate','awy_admin_controller.migrate'],
                     ['/admin','awy_admin_controller.index'],
                     [ '/admin/logout', 'awy_admin_controller.logout' ], // replace by binded view helper function
                     ['/admin/password/recover','awy_admin_controller.password_recover'],

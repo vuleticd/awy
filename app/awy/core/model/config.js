@@ -101,7 +101,7 @@ class Core_Model_Config extends Class {
         localStorage.setItem( filename, contents );
     }
     // save Core config to Firebase as part of installation
-    async writeCoreConfig(files = 'core') {
+    async writeCoreConfig() {
       let c = this.get(null, null, true);
       let copy = JSON.parse(JSON.stringify(c));
       delete(copy.db);

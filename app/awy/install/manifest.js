@@ -2,16 +2,16 @@ let config =  {
 	module_name: 'awy_install',
 	version: '0.0.0.2',
 	description: "Install sequence extension",
-	require: { module: { awy_core: '0.0.0.1' } },
+	require: { module: { awy_core: '0.0.0.1', awy_admin: '0.0.0.1' } },
 	areas: {
         awy_install: {
             views: {
                 root: {  },
-                index: { view_class: 'awy_core_view_index' },
+                index: { view_class: 'awy_install_view_index' },
                 step1: { view_class: 'awy_install_view_step1'},
                 step2: { view_class: 'awy_install_view_step2' },
                 step3: { view_class: 'awy_install_view_step3' },
-                migrate: { view_class: 'awy_install_view_migrate' },
+                //migrate: { view_class: 'awy_install_view_migrate' },
             },
             //auto_use: [ 'bootstrap', 'views' ],
             //before_bootstrap: { callback: "awy_admin_admin.onBeforeBootstrap" },
@@ -35,7 +35,7 @@ let config =  {
 		['/install/step1','awy_install_controller.step1'],
 		['/install/step2','awy_install_controller.step2'],
 		['/install/step3','awy_install_controller.step3'],
-		['/migrate','awy_install_controller.migrate'],
+		//['/migrate','awy_install_controller.migrate'],
 		['/install/.action','awy_install_controller']
 	],
 	/*default_config: {

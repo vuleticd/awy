@@ -8,9 +8,12 @@ class Awy_Admin_View_Default extends Awy_Core_Model_View {
 
 	async logout(){
 		let admin = await Class.i('awy_admin_model_user');
+		let config = await Class.i('awy_core_model_config');
+		config.add({db:{ key: null} }, true);
+    	config.writeStorage('db');
         await admin.logout();
         let r = await Class.i('awy_core_model_router');
-        r.redirect('/admin');
+        r.refresh('/admin');
 	}
 }
 

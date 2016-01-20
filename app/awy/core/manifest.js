@@ -14,7 +14,7 @@ let config =  {
         head_script: { view_class: 'awy_core_view_text' },
         head_css: { view_class: 'awy_core_view_text' },
         text: { view_class: 'awy_core_view_text' },
-        },
+    },
     observe: [
        // [ "awy_oauth_provider_basev1::getAccessToken:after", "awy_admin_main.onOAuthAfterGetAccessToken" ]
     ],

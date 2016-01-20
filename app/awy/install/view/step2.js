@@ -54,12 +54,17 @@ class Awy_Install_View_Step2 extends Awy_Core_Model_View {
 			return false;
 		}
 		// submit
-		/*
-		$this->BMigrate->migrateModules('FCom_Admin', true);
-		*/
+		let migri = await Class.i('awy_core_model_migrate');
+		try {
+        	await migri.migrateModules(['awy_admin'], true);
+    	} catch(e){
+    		this.set('errors', '<li><i class="fa-li fa fa-close"></i>' + e + '</li>');
+    		return false;
+    	}
+
 		let data = {
-			"email": this.get('email'),
-			"password": this.get('password'),
+			"email": this.get('email'),  // temp
+			"password": this.get('password'), // temp
 			"firstname": this.get('firstname'),
 			"lastname": this.get('lastname'),
 			"roles": {

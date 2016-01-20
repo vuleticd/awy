@@ -1,6 +1,6 @@
 import Awy_Core_Model_View from 'awy/core/model/view.js';
 
-class Awy_Core_View_Index extends Awy_Core_Model_View {
+class Install_Index_View extends Awy_Core_Model_View {
 	constructor(params) {
 		super();
 		this._params = params;
@@ -23,4 +23,4 @@ class Awy_Core_View_Index extends Awy_Core_Model_View {
 	}
 }
 
-export default Awy_Core_View_Index
+export default Install_Index_View

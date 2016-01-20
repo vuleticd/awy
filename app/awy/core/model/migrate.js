@@ -171,7 +171,9 @@ class Awy_Core_Model_Migrate extends Class {
                 if (mData.last_status === 'INSTALLING') { // error during last installation
                     await db.rdelete('modules/' + mKey);
                 } else {
-                    modules[mKey]['schema_version'] = mData.schema_version;
+                    if (mKey in modules) { // support execution for single module 
+                        modules[mKey]['schema_version'] = mData.schema_version;
+                    }
                 }
             });
 

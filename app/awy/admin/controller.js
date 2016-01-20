@@ -9,13 +9,21 @@ class Awy_Admin_Controller extends Awy_Core_Controller_Abstract {
     	console.log('Awy_Admin_Controller.action_index');
     	// if logged in 
         let db = await Class.i('awy_core_model_db');
+        if (db._connection === null) {
+            await db.connect();
+        }
         let authData = db._connection.getAuth();
         //console.log('authData: ', authData);
-        if (authData && authData.provider != 'anonymous') {
+        if (authData /*&& authData.provider != 'anonymous'*/) {
     	   await this.layout("/");
         } else {
     	   await this.layout("/login");
         }
+    }
+
+    async action_migrate(){
+        console.log('Awy_Admin_Controller.action_migrate');
+        await this.layout('/migrate');
     }
 
     async action_password_recover(){

@@ -36,7 +36,8 @@ class Awy_Admin_View_Login extends Awy_Admin_View_Default {
 		    let config = await Class.i('awy_core_model_config');
 		    config.writeLocalStorage('db', db._config);
 		    let r = await Class.i('awy_core_model_router');
-        	r.redirect('/admin');
+		    this.set('spin', '');
+        	r.refresh('/admin');
 		} catch(e) {
 			this.set('errors', '<li><i class="fa-li fa fa-close"></i>'+e.message+'</li>');
 			switch (e.code) {

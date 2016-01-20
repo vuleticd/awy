@@ -18,5 +18,9 @@ let layout =  {
 		{ include: 'base' },
 		{ hook: 'main', views: 'password/recover' }
 	],
+	"/migrate": [
+		{ include: 'base' },
+		{ hook: 'main', views: 'migrate' },
+	]
 }
 export default layout;
