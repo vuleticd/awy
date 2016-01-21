@@ -7,6 +7,9 @@ let modulesEnabled = {
 	},
 	awy_admin: {
 		enabled: true,
+	},
+	distro_frontend: {
+		enabled: true,
 	}
 }
 

@@ -72,7 +72,6 @@ class Awy_Core_Model_Layout extends Class {
     }
 
 	async addView(viewName, params = {}, reset = false) {
-        
         let view = await Class.i('awy_core_model_view');
         if (typeof params === 'string') {
             params = {view_class: params};
@@ -81,7 +80,6 @@ class Awy_Core_Model_Layout extends Class {
             let modReg = await Class.i('awy_core_model_module_registry');
             params['module_name'] = modReg.currentModuleName();
         }
-
         let viewAlias = params.view_alias || viewName;
         let viewFile = params.view_file || viewName;
 
