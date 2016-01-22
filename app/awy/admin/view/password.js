@@ -14,12 +14,20 @@ class Awy_Admin_View_Password extends Awy_Admin_View_Default {
 		this.set('errors', null);
 		if (!this.get('email') ) {
 			this.set('errors', '<li><i class="fa-li fa fa-close"></i>Please submit all required fields!</li>');
-			if (!this.get('email')) {
-				emailEl.parentElement.classList.add("has-errors");
-			}
+			emailEl.parentElement.classList.add("has-errors");
 			return false;
 		}
-		alert('resetPassword');
+		// submit
+		try {
+			let admin = await Class.i('awy_admin_model_user');
+			await admin.resetPassword(this.get('email'));
+			alert('Password reset email sent successfully!');
+			let r = await Class.i('awy_core_model_router');
+        	r.navigate('admin');
+		} catch(e){
+    		this.set('errors', '<li><i class="fa-li fa fa-close"></i>' + e + '</li>');
+    		return false;
+    	}
 	}
 
 	async back(){

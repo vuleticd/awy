@@ -1,5 +1,6 @@
 let layout =  {
 	base: [
+		{ hook: 'header', views: 'admin/header' },
 		{ view: 'head', do: [
 			[ 'css' , 'css/normalize.css@awy_core', 'css/skeleton.css@awy_core'],
 			[ 'css' , 'css/admin.css@awy_admin'],

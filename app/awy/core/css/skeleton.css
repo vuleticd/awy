@@ -416,3 +416,9 @@ there.
 
 /* Larger than Desktop HD */
 @media (min-width: 1200px) {}
+
+
+/* DISTRO extension */
+.centered {text-align: center;}
+.lefted {text-align: left;}
+.righted {text-align: right;}
