@@ -30,6 +30,13 @@ class Awy_Admin_Controller extends Awy_Core_Controller_Abstract {
     	await this.layout("/password/recover");
     }
 
+    // debug only
+    async onAfterDispatch() {
+        await super.onAfterDispatch();
+        let admin = await Class.i('awy_admin_model_user');
+        console.log("ADMIN USER: ", admin);
+    }
+
 }
 
 export default Awy_Admin_Controller
