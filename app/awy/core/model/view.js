@@ -291,6 +291,12 @@ class Awy_Core_Model_View extends Class {
         for (node of collection){
             await this.hook(node.dataset.hook, {parent: node});
         }
+
+        let collectionRender = Array.from(doc.querySelectorAll('[data-render]'));
+        let nodeRender;
+        for (nodeRender of collectionRender){
+            await this.renderer(nodeRender);
+        }
         
         parent.appendChild(doc);
         /*
@@ -348,6 +354,36 @@ class Awy_Core_Model_View extends Class {
         */
         (await this.logger).debug("END HOOK: " + hookName /*+ " WITH RESULT: " + result*/);
         return result;
+    }
+
+
+    async renderer(node) {
+        let parts = node.dataset.render.split(' ');
+        let rendererType = parts[0];
+        let propertyValue = this.get(parts[1]);
+        let parent = node;
+        if (propertyValue){
+            let renderedCallbackName = 'render_' + rendererType;
+            
+            console.log('RENDER: ' , propertyValue , parent);
+            let html = this[renderedCallbackName](propertyValue);
+            let itemFragment = this.fragmentFromString(html);
+            parent.appendChild(itemFragment);
+
+        }
+    }
+
+    hasObjects(node) {
+        for (let i in node) {
+            if (typeof node[i] === 'object') {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    isRootTree(node) {
+        return Object.is()
     }
 
     async getTemplateFileName(fileExt = null, quiet = false) {

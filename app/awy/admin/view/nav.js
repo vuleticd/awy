@@ -8,61 +8,70 @@ class Nav_View extends Awy_Admin_View_Default {
 		this.set('curNav',null);
 	}
 
-	async addNav(args){
-		let util = await Class.i('awy_core_util_misc');
-		let path = args[0];
-		let node = args[1];
-        let root = this.get('tree');
-        let pathArr = path.split('/');
-        let l = pathArr.length-1;
-        console.log('addNav', l, pathArr, node);
-        let i;
-        //root['/'] = {};
-        for (i in pathArr){
-        	let k = pathArr[i];
-        	console.log('addNav', i, k);
-        	console.log('addNav contains', !('/' in root));
-        	let parent = root;
-        	if (i < l && (!('/' in root) || !(k in root['/']))) {
-        		console.log('addNav', 'Invalid parent path');
-        	}
-
-        	if (!('/' in root)) {
-        		root['/'] = {};
-        	}
-        	root['/'][k] = node;
-        	root = root['/'][k];
-        }
-
-        //root = node;
-        return this;
-        /*
-        $l = sizeof($pathArr)-1;
-        foreach ($pathArr as $i => $k) {
-            $parent = $root;
-            if ($i < $l && empty($root['/'][$k])) {
-                $part = join('/', array_slice($pathArr, 0, $i + 1));
-                $this->BDebug->warning('addNav(' . $path . '): Invalid parent path: ' . $part);
-            }
-            $root =& $root['/'][$k];
-        }
-        if (empty($node['pos'])) {
-            $pos = 0;
-            if (!empty($parent['/'])) {
-                foreach ($parent['/'] as $k => $n) {
-                    if (!empty($n['pos'])) {
-                        $pos = max($pos, $n['pos']);
-                    }
+    render_nav(ref, html='') {
+        html += '<ul>';
+        for (let c in ref) {
+            let node = ref[c];
+            if (typeof node === 'object') {
+                let hasChildren = this.hasObjects(node);
+                html += '<li><a title="' + node.label + '" href="' + (node.href || '#') + '"><i class="' + node.icon_class + '"></i><span>' + node.label + '</span>';
+                if (hasChildren) {
+                    html += '<i class="icon-angle-down angle-down"></i>';
+                } 
+                html += '</a>';
+                if (hasChildren) {
+                    html = this.render_nav(node, html); // replace, don't append 
+                } else {
+                    html += '</li>';
                 }
             }
-            $node['pos'] = $pos + 10;
         }
-        if (!empty($node['href']) && !preg_match('/^https?:/', $node['href'])) {
-            $node['href'] = $this->BApp->href($node['href']);
+        //console.log('RENDER RESULT: ' , html);
+        html += '</ul>';
+        return html;
+    }
+
+    async addNav(args){
+        console.log('addNav merge' , JSON.parse(JSON.stringify(this.get('tree'))), args[0]);
+        this.objectMerge(this.get('tree'), args[0]);
+        return this;
+    }
+
+    async removeNav(args){
+        //console.log('removeNav' , JSON.parse(JSON.stringify(this.get('tree'))), args[0]);
+        let root = this.get('tree');
+        let path = args[0].split('/');
+        let key;
+        let parent;
+        // traverse to last member in path, remember parent reference and key to delete
+        for (let i in path){
+            key = path[i];
+            parent = root;
+            root = root[key];
         }
-        $root = $node;
-        return $this;
-        */
+        //console.log('removeNav' , parent, key, root);
+        delete parent[key];
+        return this;
+    }
+
+    objectMerge(...rest) {
+      let base = rest.shift();
+      for (let append of rest) {
+        // base is not mergable, replace instead with last argument passed
+        if (typeof base !== 'object') {
+          return append;
+        }
+        // both base and argument are objects
+        let key;
+        for (key in append) {
+            if (key in base) {
+              base[key] = this.objectMerge(base[key], append[key]);
+            } else {
+              Object.assign(base,append);
+            }
+        }
+      }
+      return base;
     }
 
 }

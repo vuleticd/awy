@@ -8,9 +8,13 @@ let layout =  {
 			[ 'css' , 'css/admin.css@awy_admin'],
 		] },
 		{ view: 'admin/nav', do: [
-			[ 'addNav' , 'dashboard', { label: 'Dashboard', href: '/', pos: 10, icon_class: 'icon-dashboard' }],
-			[ 'addNav', 'system', { label: 'System', pos: 900, icon_class: 'icon-cog' } ],
-            [ 'addNav', 'system/users', { label: 'Users', href: '/users'  } ]
+			[ 'addNav' , {dashboard: { label: 'Dashboard', href: '/', pos: 10, icon_class: 'icon-dashboard' }}],
+			[ 'addNav', {system: { label: 'System', pos: 900, icon_class: 'icon-cog' }} ],
+            [ 'addNav', {system: { users: { label: 'Users', href: '/users'  }}} ],
+            [ 'addNav', {system: { njanj: { label: 'njanj', href: '/njanj'  }}} ],
+            //[ 'addNav', {system: { users: { blah: { label: 'blah', href: '/users/blah'  }}}} ],
+            //[ 'removeNav', 'system/users/blah' ],
+             [ 'addNav', {modules: { label: 'Modules', pos: 800  }} ],
 		] }
 
 	],
