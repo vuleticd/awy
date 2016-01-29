@@ -9,13 +9,13 @@ let str = `
 	<div class="row">
     	<div class="u-full-width">
             <label class="required" for="email">Email</label>
-    		<input type="text" class="required u-full-width" autocomplete="off" name="email" data-bind="value email" placeholder="email@domain.tld"/>
+    		<input type="text" class="required u-full-width" name="email" data-bind="value email" placeholder="email@domain.tld" autocomplete="on"/>
     	</div>
     </div>
     <div class="row">
     	<div class="u-full-width">
             <label class="required" for="password">Password</label>
-    		<input type="text" class="required u-full-width" name="password" data-bind="value password" placeholder="******"/>
+    		<input type="text" class="required u-full-width" name="password" data-bind="value password" placeholder="******" autocomplete="off"/>
     	</div>
     </div>
     <div class="row">

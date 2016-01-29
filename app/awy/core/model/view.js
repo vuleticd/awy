@@ -34,7 +34,7 @@ class Awy_Core_Model_View extends Class {
                 };
             },
             value: function(node, propertyName, object) {
-                node.addEventListener('keyup', () => {
+                node.addEventListener('change', () => {
                     //object.updateObjectValue(propertyName, node.value);
                     object.set(propertyName, node.value);
                 });

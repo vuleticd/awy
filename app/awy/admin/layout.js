@@ -10,11 +10,11 @@ let layout =  {
 		{ view: 'admin/nav', do: [
 			[ 'addNav' , {dashboard: { label: 'Dashboard', href: '/', pos: 10, icon_class: 'icon-dashboard' }}],
 			[ 'addNav', {system: { label: 'System', pos: 900, icon_class: 'icon-cog' }} ],
-            [ 'addNav', {system: { users: { label: 'Users', href: '/users'  }}} ],
-            [ 'addNav', {system: { njanj: { label: 'njanj', href: '/njanj'  }}} ],
+           	[ 'addNav', {system: { users: { label: 'Users', href: '/users'  }}} ],
+           	//[ 'addNav', {system: { roles: { label: 'Roles', href: '/roles'  }}} ],
             //[ 'addNav', {system: { users: { blah: { label: 'blah', href: '/users/blah'  }}}} ],
-            //[ 'removeNav', 'system/users/blah' ],
-             [ 'addNav', {modules: { label: 'Modules', pos: 800  }} ],
+            //[ 'removeNav', 'system' ],
+            [ 'addNav', {modules: { label: 'Modules', pos: 800  }} ],
 		] }
 
 	],
