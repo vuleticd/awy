@@ -548,13 +548,13 @@ class Awy_Core_Model_Layout extends Class {
         return;
         
     }
-
+    /*
+     * changing the root view from layout directives
+     * { root: 'ROOT_VIEW_NAME' },
+     */
     async metaDirectiveRootCallback(args){
-        //console.log(args);
-        /*
-        $this->setRootView($d['name']);
-        BDebug::debug('SET ROOT VIEW: ' . $d['name']);
-        */
+        this.rootView = args['name'];
+        (await this.logger).debug('SET ROOT VIEW: ' + args['name']);
     }
 
     async metaDirectiveCallback(args) {

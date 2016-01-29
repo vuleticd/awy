@@ -67,6 +67,25 @@ class AdminUser_Model extends Class {
     	db._connection.unauth();
     }
 
+     async resetPassword(email) {
+        let db = await Class.i('awy_core_model_db');
+        if (db._connection === null) {
+            await db.connect();
+        }
+
+        return new Promise( (resolve, reject) => {
+            db._connection.resetPassword({
+              email    : email
+            }, (error) => {
+              if (error) {
+                reject(error);
+              } else {
+                resolve(true);
+              }
+            });
+        });
+     }
+
 }
 
 export default AdminUser_Model

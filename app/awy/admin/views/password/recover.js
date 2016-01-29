@@ -8,7 +8,7 @@ let str = `
 	</div>
 	<div class="row">
     	<div class="u-full-width">
-            <label class="required" for="email">E-mail or Username</label>
+            <label class="required" for="email">E-mail</label>
     		<input type="text" class="required u-full-width" name="email" data-bind="value email" placeholder=""/>
     	</div>
     </div>

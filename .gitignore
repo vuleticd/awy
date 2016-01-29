@@ -7,4 +7,5 @@
 /compile.php
 /app/db.js
 /c.php
-/es5
+#/es5
+#!/es5/autobuild.min.js
