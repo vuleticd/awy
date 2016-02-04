@@ -15,8 +15,7 @@ class Awy_Core_Model_Layout extends Class {
     	this._rootViewName = 'root';
         // Add view templates from these dirs after theme
         this._addViewsDirs = [];
-        // Load these layout files after theme
-        this._loadLayoutFiles = [];
+
         this._metaDirectives = {
             'remove': 'metaDirectiveRemoveCallback',
             'callback': 'metaDirectiveCallback',
@@ -133,8 +132,10 @@ class Awy_Core_Model_Layout extends Class {
         if (!curModName) {
             curModName = modReg.currentModuleName();
         }
+        //let mod = modReg._modules.get(curModName);
         (await this.logger).debug('Adding theme ' + themeName + ' from module ' + curModName);
         let paramsCopy = JSON.parse(JSON.stringify(params));
+
         ['area', 'parent', 'layout_before', 'layout_after', 'views_before', 'views_after'].forEach(t =>{
             if (t in paramsCopy && t !== 'area' && t !== 'parent') {
                 if (!Array.isArray(paramsCopy[t])) {
@@ -182,7 +183,7 @@ class Awy_Core_Model_Layout extends Class {
         evnt.fire('Layout::applyTheme:before', {'theme_name': themeName});
 
         await this.loadTheme(themeName);
-        await this.loadLayoutFilesFromAllModules();
+
         /*
         $theme = $this->_themes[$themeName];
         $modReg = $this->BModuleRegistry;
@@ -269,24 +270,6 @@ class Awy_Core_Model_Layout extends Class {
         return true;
     }
 
-    /**
-     * Add all view dirs and layouts declared in module manifest
-     */
-    async addModuleViewsDirsAndLayouts(module, area){
-        let util = await Class.i('awy_core_util_misc');
-        let areaDir = area.replace('awy_', '');
-        let moduleRootDir = module.root_dir;
-        if (util.contains(module.auto_use,'all') || util.contains(module.auto_use,'views')) {
-            await this.addAllViewsDir('/' + moduleRootDir + '/views');
-            await this.addAllViewsDir('/' + moduleRootDir + '/' + areaDir + '/views');
-        }
-        if (util.contains(module.auto_use,'all') || util.contains(module.auto_use,'layout')) {
-            this.loadLayoutAfterTheme( moduleRootDir + '/layout.js');
-            this.loadLayoutAfterTheme( moduleRootDir + '/' + areaDir + '/layout.js');
-        }
-        return this;
-    }  
-
     async addAllViewsDir(rootDir = null, prefix = '', curModule = null) {
         if (!curModule) {
             let modReg = await Class.i('awy_core_model_module_registry');
@@ -307,27 +290,6 @@ class Awy_Core_Model_Layout extends Class {
         } catch(e) {
             (await this.logger).warn('LAYOUT.LOAD.MISSING: ' + layoutFilename);
         }
-        return this;
-    }
-
-    /**
-     * Load layout update after theme has been initialized
-     */
-    loadLayoutAfterTheme(layoutFilename, first = false) {
-        if (first) {
-            this._loadLayoutFiles.unshift(layoutFilename);
-        } else {
-            this._loadLayoutFiles.push(layoutFilename);
-        }
-        return this;
-    }
-
-    async loadLayoutFilesFromAllModules(){
-        let layoutFile;
-        for (layoutFile of this._loadLayoutFiles) {
-            await this.loadLayout(layoutFile);
-        }
-        this._loadLayoutFiles = [];
         return this;
     }
 

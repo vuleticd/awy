@@ -13,7 +13,7 @@ let config =  {
                 step3: { view_class: 'awy_install_view_step3' },
                 //migrate: { view_class: 'awy_install_view_migrate' },
             },
-            //auto_use: [ 'bootstrap', 'views' ],
+            //auto_use: [ 'bootstrap' ],
             //before_bootstrap: { callback: "awy_admin_admin.onBeforeBootstrap" },
         },
     },

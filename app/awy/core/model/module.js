@@ -259,10 +259,6 @@ class Core_Model_Module extends Class {
                 this.bootstrap.push({ callback: this.module_name + '_' + areaDir + '.bootstrap'});
             }
         }
-
-        let layout = await Class.i('awy_core_model_layout');
-        layout.addModuleViewsDirsAndLayouts(this, area);
-        //console.log(layout);
     }
 
     async processRouting(){
