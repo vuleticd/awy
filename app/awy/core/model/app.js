@@ -121,6 +121,8 @@ class Core_Model_App extends Class {
     //runLevels['awy_core'] = 'REQUIRED';
     if (config.get('install_status') === 'installed') {
         runLevels[area] = 'REQUIRED';
+
+        //runLevels['change_frontend'] = 'REQUIRED';
     } else {
         config.set('module_run_levels', []);
         runLevels['awy_install'] = 'REQUIRED';

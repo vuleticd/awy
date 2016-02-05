@@ -152,8 +152,10 @@ class Awy_Core_Model_Layout extends Class {
             }
         });
         if (!(themeName in this._themes)) {
+             console.log('PARAMS COPY: ', JSON.parse(JSON.stringify(this._themes)), JSON.parse(JSON.stringify(paramsCopy)));
             this._themes[themeName] = paramsCopy;
         } else {
+             console.log('PARAMS COPY: ', JSON.parse(JSON.stringify(this._themes[themeName])), JSON.parse(JSON.stringify(paramsCopy)));
             this._themes[themeName] = this.objectMerge(this._themes[themeName], paramsCopy);
         }
         return this._themes[themeName];
@@ -313,6 +315,22 @@ class Awy_Core_Model_Layout extends Class {
                 this._layouts.set(layoutName, layout);
             } else {
                 (await this.logger).warn('!!NOT WORKING!! LAYOUT.UPDATE ' + layoutName);
+                let current = this._layouts.get(layoutName);
+                for(let directive of layout) {
+                    for(let oldDirective of current) {
+                        if ('hook' in directive) {
+                            if (directive.hook == oldDirective.hook) {
+                                console.log('update hook', JSON.parse(JSON.stringify(oldDirective)), JSON.parse(JSON.stringify(directive)));
+                                this.objectMerge(oldDirective, directive);
+                                break;
+                            }
+                        }
+                    }
+                    //console.log('add hook', JSON.parse(JSON.stringify(directive)));
+                   // let old = current[current.indexOf(directive)];
+                   // console.log(JSON.parse(JSON.stringify(old)), JSON.parse(JSON.stringify(layout)));
+                }
+                
                 //this.arrayMerge(this._layouts.get(layoutName), layout);
             }
         }
@@ -528,7 +546,7 @@ class Awy_Core_Model_Layout extends Class {
         //console.log(args);
         //TODO: implement
     }
-
+    /*
     objectMerge(...rest) {
       let base = rest.shift();
       for (let append of rest) {
@@ -548,7 +566,37 @@ class Awy_Core_Model_Layout extends Class {
       }
       return base;
     }
-
+    */
+    objectMerge(...rest) {
+      let base = rest.shift();
+      for (let append of rest) {
+        // base is not mergable, replace instead with last argument passed
+        if (typeof base !== 'object') {
+          return append;
+        }
+        // both base and argument are arrays
+        if (Array.isArray(append) && Array.isArray(base)) {
+            for (let val of append) {
+              if (!!~base.indexOf(val)) {
+                  base[base.indexOf(val)] = val;
+                  append.splice(append.indexOf(val), 1);
+              }
+            }
+            base.push(...append);
+            break;
+        }
+        // both base and argument are objects
+        let key;
+        for (key in append) {
+            if (key in base) {
+              base[key] = this.objectMerge(base[key], append[key]);
+            } else {
+              Object.assign(base,append);
+            }
+        }
+      }
+      return base;
+    }
     arrayMerge(...rest) {
         let base = rest.shift();
         for (let append of rest) {

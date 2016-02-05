@@ -10,6 +10,9 @@ let modulesEnabled = {
 	},
 	distro_frontend: {
 		enabled: true,
+	},
+	change_frontend: {
+		enabled: true,
 	}
 }
 

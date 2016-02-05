@@ -18,6 +18,9 @@ class Core_Model_Logger extends Class {
     this.slice = Array.prototype.slice;
     this.levels = {none: 0, error: 1, warn: 2, info: 3, debug: 4};
     this._level = this.levels.debug;
+    if(!System.trace) {
+      this._level = this.levels.none;
+    }
     return instances[this.id] || (instances[this.id] = this);
   }
 
