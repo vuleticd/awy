@@ -2,10 +2,9 @@
 /.project
 /.settings
 /BUILD.md
-/config-prod.js
-/config-build.js
-/compile.php
+#/config-prod.js
+#/config-build.js
 /app/db.js
-/c.php
+#/c.php
 #/es5
 #!/es5/autobuild.min.js
