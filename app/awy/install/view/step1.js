@@ -27,6 +27,20 @@ class Awy_Install_View_Step1 extends Awy_Core_Model_View {
 		let config = await Class.i('awy_core_model_config');
 		config.add({db:{ host: this.get('db_url'), key: this.get('db_key')} }, true);
     	config.writeStorage('db');
+        // check if Distro is already installed in this database
+        try {
+            let db = await Class.i('awy_core_model_db');
+            let dbConfig = await db.rget('config');
+            dbConfig = JSON.parse(dbConfig) || {};
+            if ('install_status' in dbConfig && dbConfig['install_status'] == 'installed'){
+                throw new Error('Distro is alreay installed in this firebase!!');
+            }
+        } catch(e){
+            localStorage.clear();
+            this.set('errors', '<li><i class="fa-li fa fa-close"></i>' + e + '</li>');
+            return false;
+        }
+
 
 		let migri = await Class.i('awy_core_model_migrate');
 		try {
