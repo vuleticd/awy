@@ -296,6 +296,7 @@ class Awy_Core_Model_Layout extends Class {
     }
 
     async addLayout(layoutName, layout = null) {
+        let util = await Class.i('awy_core_util_misc');
         if (typeof layoutName === "object") {
             let l;
             for (l in layoutName) {
@@ -314,24 +315,42 @@ class Awy_Core_Model_Layout extends Class {
                 (await this.logger).debug('LAYOUT.ADD ' + layoutName);
                 this._layouts.set(layoutName, layout);
             } else {
-                (await this.logger).warn('!!NOT WORKING!! LAYOUT.UPDATE ' + layoutName);
+                (await this.logger).warn('LAYOUT.UPDATE ' + layoutName);
                 let current = this._layouts.get(layoutName);
+                // propagate in inculdes ?? what if I have multiple includes ??
+                let includeDir = current.find((element) => {if ('include' in element) {return true;} return false;}) || false;
+                if (includeDir) {
+                    await this.addLayout(includeDir.include, layout);
+                }
                 for(let directive of layout) {
-                    for(let oldDirective of current) {
-                        if ('hook' in directive) {
-                            if (directive.hook == oldDirective.hook) {
-                                console.log('update hook', JSON.parse(JSON.stringify(oldDirective)), JSON.parse(JSON.stringify(directive)));
-                                this.objectMerge(oldDirective, directive);
-                                break;
+                    // process hook
+                    if ('hook' in directive) {
+                        let oldDirective = current.find((element) => {if ('hook' in element && element.hook == directive.hook) {return true;} return false;}) || false;
+                        if (!oldDirective) {
+                            // add hook
+                        } else {
+                            // update hook
+                            if ( 'clear' in directive ) {
+                                // clear all views in the hook
+                                if (directive['clear'] == 'ALL') {
+                                    delete oldDirective.views;
+                                } else {
+                                    // clear specific view or views from the hook
+                                }
+                            }
+
+                            if ( 'views' in directive ) {
+                                if ( 'views' in oldDirective ) {
+                                    // update views
+                                    oldDirective.views = util.arrayMergeRecursive([oldDirective.views, directive.views]);
+                                } else {
+                                    // add views
+                                    oldDirective['views'] = directive.views;
+                                }
                             }
                         }
                     }
-                    //console.log('add hook', JSON.parse(JSON.stringify(directive)));
-                   // let old = current[current.indexOf(directive)];
-                   // console.log(JSON.parse(JSON.stringify(old)), JSON.parse(JSON.stringify(layout)));
-                }
-                
-                //this.arrayMerge(this._layouts.get(layoutName), layout);
+                }                
             }
         }
         return this;

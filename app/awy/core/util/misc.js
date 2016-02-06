@@ -96,5 +96,17 @@ class Awy_Core_Util_Misc extends Class {
                 break;
         }
     }
+
+    /*
+     * Recursevely merge input arrays and strings, producing new array without duplicated values 
+     * @args - [[1, [1,3], 2, 3], [2, [1,2], 5, 6], 'a' , 'b', ['a','b','c']]
+     * @result -  [1, [1, 3], 2, 3, [1, 2], 5, 6]
+     */
+    arrayMergeRecursive(args){
+        console.log('merge in', args);
+        let res = [ ...new Set( Array.prototype.concat( ...args ) ) ];
+        console.log('merge out', res);
+        return res;
+    }
 }
 export default Awy_Core_Util_Misc

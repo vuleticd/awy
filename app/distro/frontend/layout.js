@@ -5,8 +5,8 @@ let l =  {
 			[ 'css' , 'css/bootstrap.css@distro_frontend'],
 		] },
 		{ hook: 'before_body_end', views: 'bottom_scripts' },
-		{ hook: 'header', views: ['header'] },
-		{ hook: 'footer', views: ['footer'] }
+		{ hook: 'header', views: 'header' },
+		{ hook: 'footer', views: 'footer' }
 	],
 	"/": [
 		{ include: 'base' },
