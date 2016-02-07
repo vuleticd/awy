@@ -35,6 +35,7 @@ class Bootstrap extends Class {
       try {
           let doc = await this.ready(window);
           let appHost = doc.querySelectorAll('[distro]');
+          //let pace = await Class.i('awy_core_util_pace', appHost[0]);
           let app = await Class.i('awy_core_model_app');
           app.host = appHost[0];
           await app.run(area);
