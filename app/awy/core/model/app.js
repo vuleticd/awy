@@ -122,11 +122,11 @@ class Core_Model_App extends Class {
     if (config.get('install_status') === 'installed') {
         runLevels[area] = 'REQUIRED';
 
-        //runLevels['change_frontend'] = 'REQUIRED';
+        runLevels['change_frontend'] = 'REQUIRED'; // temporary only for testing 
     } else {
         config.set('module_run_levels', []);
-        runLevels['awy_install'] = 'REQUIRED';
-        area = 'awy_install';
+        runLevels['distro_install'] = 'REQUIRED';
+        area = 'distro_install';
         req.area = area;
     }
 

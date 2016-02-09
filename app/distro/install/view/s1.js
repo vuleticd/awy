@@ -1,6 +1,6 @@
-import Awy_Core_Model_View from 'awy/core/model/view.js';
+import CoreView from 'awy/core/model/view.js';
 
-class Awy_Install_View_Step1 extends Awy_Core_Model_View {
+class Step1View extends CoreView {
 	constructor(params) {
 		super();
 		this._params = params;
@@ -53,8 +53,8 @@ class Awy_Install_View_Step1 extends Awy_Core_Model_View {
         config.saveDbHostConfig();
 
 		let r = await Class.i('awy_core_model_router');
-        r.navigate('install/step2');
+        r.navigate('install/s2');
 	}
 }
 
-export default Awy_Install_View_Step1
+export default Step1View

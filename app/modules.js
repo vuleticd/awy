@@ -2,7 +2,7 @@ let modulesEnabled = {
 	awy_core: {
 		enabled: true,
 	},
-	awy_install: {
+	distro_install: {
 		enabled: true,
 	},
 	awy_admin: {

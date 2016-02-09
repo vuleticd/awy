@@ -1,14 +1,21 @@
 let layout =  {
 	/*
-	base: [
-		{ hook: 'head', views: 'head' },
-		{ view: 'head', do: [
-			[ 'css' , 'css/normalize.css@awy_core', 'css/skeleton.css@awy_core'],
-			//[ 'css_raw', 'media=screen','title=awy_style'],
-			//[ 'css_rule', 'awy_style','div.panel','text-align: center; color:red;']
-		] }
+	mixin OR route : [
+		{
+			if: "class_name.method" // apply this block only if this method return true
+			hook: 'hook_name', views: 'view_name' // Add a view to a hook
+			view: 'view_name', do: [
+				[ 'css' , 'path_from_module_root.css@module_name'], // add CSS file / link tag
+				[ 'css_raw', 'media=screen','title=awy_style'], // add blank and named style tag
+				[ 'css_rule', 'awy_style','.container','left: 50%;'] // add css rule to named style tag
+			], set: {
+				X: 'Y' // <==> VIEW_CLASS._params['args']['X'] = 'Y'
+			}, param: {
+				X: 'Y' // <==> VIEW_CLASS._params['X'] = 'Y'
+			}
 
-	],
+		}
+	]
 	*/
 }
 export default layout;

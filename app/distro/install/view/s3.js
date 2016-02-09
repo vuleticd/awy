@@ -1,6 +1,6 @@
-import Awy_Core_Model_View from 'awy/core/model/view.js';
+import CoreView from 'awy/core/model/view.js';
 
-class Awy_Install_View_Step3 extends Awy_Core_Model_View {
+class Step3View extends CoreView {
 	constructor(params) {
 		super();
 		this._params = params;
@@ -57,4 +57,4 @@ class Awy_Install_View_Step3 extends Awy_Core_Model_View {
 	}
 }
 
-export default Awy_Install_View_Step3
+export default Step3View

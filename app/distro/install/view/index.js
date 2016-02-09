@@ -1,10 +1,9 @@
-import Awy_Core_Model_View from 'awy/core/model/view.js';
+import CoreView from 'awy/core/model/view.js';
 
-class Install_Index_View extends Awy_Core_Model_View {
+class IndexView extends CoreView {
 	constructor(params) {
 		super();
 		this._params = params;
-		this.set('agree', false); // default value @todo: fetch from sessionStorage
 	}
 
 	async completeStep(){
@@ -19,8 +18,7 @@ class Install_Index_View extends Awy_Core_Model_View {
 		}
 		// submit
 		let r = await Class.i('awy_core_model_router');
-        r.navigate('install/step1');
+        r.navigate('install/s1');
 	}
 }
-
-export default Install_Index_View
+export default IndexView
