@@ -3,7 +3,6 @@ let config =  {
 	version: '0.0.0.1',
     /*require: { module: { awy_admin: '0.0.0.1' } },*/
 	description: "Base Awy classes and JS libraries",
-    //auto_use: [ ],
     before_bootstrap: { callback: "awy_core_model_app.onBeforeBootstrap" },
     routing: [
             [ '/initialize.js', 'awy_core_controller_main.initialize_js' ],

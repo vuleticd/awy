@@ -13,8 +13,7 @@ let c =  {
                 },
                 routing: [
                     [ '/', 'distro_frontend_controller.index' ]
-                ],
-                auto_use: [ 'bootstrap']
+                ]
             }
     },
 	themes: { distro_frontend_defaultTheme: {

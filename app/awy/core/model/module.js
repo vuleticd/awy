@@ -174,7 +174,6 @@ class Core_Model_Module extends Class {
         this.processAutoload();
         this.processTranslations();
         await this.processViews(); // before auto_use to initialize custom view classes
-        await this.processAutoUse();
         await this.processRouting();
         await this.processObserve();
         /*
@@ -234,30 +233,6 @@ class Core_Model_Module extends Class {
         for (let v in this.views) {
             await layout.addView(v, this.views[v]);
             (await this.logger).debug('ADD VIEW: ' + v + ' -> ' + this.views[v]['view_class'] + ' @ ' + this.module_name );
-        }
-    }
-
-    async processAutoUse() {
-        if (!('auto_use' in this)) {
-            return;
-        }
-        // array_flip -> Map
-        let req = await Class.i('awy_core_model_router_request');
-        let util = await Class.i('awy_core_util_misc');
-        let area = req.area;
-        let areaDir = area.replace('awy_', '');
-        if (util.contains(this.auto_use,'all') || util.contains(this.auto_use,'bootstrap')) {
-            if (!('bootstrap' in this)) {
-                this['bootstrap'] = [];
-            }
-            let mainExist = await this.methodExists(this.module_name + '_main', 'bootstrap');
-            if (mainExist) {
-                this.bootstrap.push({ callback: this.module_name + '_main.bootstrap'});
-            }
-            let areaExist = await this.methodExists(this.module_name + '_' + areaDir, 'bootstrap');
-            if (areaExist) {
-                this.bootstrap.push({ callback: this.module_name + '_' + areaDir + '.bootstrap'});
-            }
         }
     }
 

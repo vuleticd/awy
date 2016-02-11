@@ -22,7 +22,10 @@ let config =  {
                     [ '/admin/logout', 'awy_admin_controller.logout' ], // replace by binded view helper function
                     ['/admin/password/recover','awy_admin_controller.password_recover'],
                 ],
-                auto_use: [ 'bootstrap' ],
+                bootstrap: [
+                    { callback: "awy_admin_main.bootstrap" },
+                    { callback: "awy_admin_admin.bootstrap" } 
+                ],
                 before_bootstrap: { callback: "awy_admin_admin.onBeforeBootstrap" },
             },
         },
