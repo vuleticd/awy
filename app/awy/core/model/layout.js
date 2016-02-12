@@ -290,7 +290,7 @@ class Awy_Core_Model_Layout extends Class {
             layoutData = layoutData.default;
             await this.addLayout(layoutData);
         } catch(e) {
-            (await this.logger).warn('LAYOUT.LOAD.MISSING: ' + layoutFilename);
+            (await this.logger).warn('LAYOUT.LOAD.MISSING: ' + e);
         }
         return this;
     }
@@ -309,10 +309,16 @@ class Awy_Core_Model_Layout extends Class {
         }
         
         if (!Array.isArray(layout)) {
-            (await this.logger).debug('LAYOUT.ADD ' + layoutName + ': Invalid or empty layout');
+            (await this.logger).debug('LAYOUT.INVALID_OR_EMPTY ' + layoutName);
         } else {
             if (!this._layouts.has(layoutName)) {
                 (await this.logger).debug('LAYOUT.ADD ' + layoutName);
+                // propagate in inculdes ?? what if I have multiple includes ??
+                // probably not good idea for perdformance
+                //let includeDir1 = layout.find((element) => {if ('include' in element) {return true;} return false;}) || false;
+                //if (includeDir1 && this._layouts.has(includeDir1.include)) {
+                //    await this.addLayout(includeDir1.include, layout);
+                //}
                 this._layouts.set(layoutName, layout);
             } else {
                 (await this.logger).warn('LAYOUT.UPDATE ' + layoutName);
@@ -327,18 +333,28 @@ class Awy_Core_Model_Layout extends Class {
                     if ('hook' in directive) {
                         let oldDirective = current.find((element) => {if ('hook' in element && element.hook == directive.hook) {return true;} return false;}) || false;
                         if (!oldDirective) {
+                            //console.log('add hook: ', directive);
                             // add hook
                         } else {
                             // update hook
                             if ( 'clear' in directive ) {
-                                // clear all views in the hook
-                                if (directive['clear'] == 'ALL') {
-                                    delete oldDirective.views;
-                                } else {
-                                    // clear specific view or views from the hook
+                                let clearArray = util.arrayMergeRecursive([[], directive['clear']]);
+                                for (let clearValue of clearArray) {
+                                    //console.log('clearArray: ', clearValue, oldDirective.views);
+                                    // clear all views in the hook
+                                    if (clearValue == 'ALL') {
+                                        delete oldDirective.views;
+                                    } else {
+                                        // clear specific view or views from the hook
+                                        if (!Array.isArray(oldDirective.views)) {
+                                            oldDirective.views = [oldDirective.views];
+                                        }
+                                        oldDirective.views = oldDirective.views.filter((elVal) => elVal != clearValue );
+                                    }
+
                                 }
                             }
-
+                            //console.log('clearArray: ', JSON.parse(JSON.stringify(oldDirective.views)));
                             if ( 'views' in directive ) {
                                 if ( 'views' in oldDirective ) {
                                     // update views
