@@ -175,6 +175,7 @@ class Awy_Core_Model_View extends Class {
 
 	setParam(key, value = null) {
         if (typeof key === 'object') {
+            let k;
             for (k in key) {
                 this.setParam(k, key[k]);
             }
