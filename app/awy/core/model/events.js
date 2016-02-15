@@ -111,12 +111,21 @@ class Awy_Core_Model_Events extends Class {
             this._events.delete(eventName);
             return this;
         }
-        let e = this._events.get(eventName);
+
+        let e = this._events.get(eventName) || false;
+        if (!e) {
+            return this;
+        }
+
         if (typeof alias === "number") {
             e.observers.splice(alias,1);
             return this;
         }
-        e.observers.splice(e.observers.indexOf(alias),1);
+        
+        let hasAlias = e.observers.find((element) => { if (element.alias == alias) {return true;} return false;}) || false;
+        if (hasAlias) {
+            e.observers.splice(e.observers.indexOf(hasAlias),1);
+        }
         return this;
     }
     /*

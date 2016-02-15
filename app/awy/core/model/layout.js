@@ -313,21 +313,10 @@ class Awy_Core_Model_Layout extends Class {
         } else {
             if (!this._layouts.has(layoutName)) {
                 (await this.logger).debug('LAYOUT.ADD ' + layoutName);
-                // propagate in inculdes ?? what if I have multiple includes ??
-                // probably not good idea for perdformance
-                //let includeDir1 = layout.find((element) => {if ('include' in element) {return true;} return false;}) || false;
-                //if (includeDir1 && this._layouts.has(includeDir1.include)) {
-                //    await this.addLayout(includeDir1.include, layout);
-                //}
                 this._layouts.set(layoutName, layout);
             } else {
                 (await this.logger).warn('LAYOUT.UPDATE ' + layoutName);
                 let current = this._layouts.get(layoutName);
-                // propagate in inculdes ?? what if I have multiple includes ??
-                let includeDir = current.find((element) => {if ('include' in element) {return true;} return false;}) || false;
-                if (includeDir) {
-                    await this.addLayout(includeDir.include, layout);
-                }
                 for(let directive of layout) {
                     // process hook
                     if ('hook' in directive) {
@@ -336,32 +325,16 @@ class Awy_Core_Model_Layout extends Class {
                             //console.log('add hook: ', directive);
                             // add hook
                         } else {
-                            // update hook
-                            if ( 'clear' in directive ) {
-                                let clearArray = util.arrayMergeRecursive([[], directive['clear']]);
-                                for (let clearValue of clearArray) {
-                                    //console.log('clearArray: ', clearValue, oldDirective.views);
-                                    // clear all views in the hook
-                                    if (clearValue == 'ALL') {
-                                        delete oldDirective.views;
+                            let directiveArgument;
+                            for (directiveArgument of ['clear', 'views', 'text']) {
+                                if ( directiveArgument in directive ) {
+                                    if ( directiveArgument in oldDirective ) {
+                                        // update Argument
+                                        oldDirective[directiveArgument] = util.arrayMergeRecursive([oldDirective[directiveArgument], directive[directiveArgument]]);
                                     } else {
-                                        // clear specific view or views from the hook
-                                        if (!Array.isArray(oldDirective.views)) {
-                                            oldDirective.views = [oldDirective.views];
-                                        }
-                                        oldDirective.views = oldDirective.views.filter((elVal) => elVal != clearValue );
+                                        // add Argument
+                                        oldDirective[directiveArgument] = directive[directiveArgument];
                                     }
-
-                                }
-                            }
-                            //console.log('clearArray: ', JSON.parse(JSON.stringify(oldDirective.views)));
-                            if ( 'views' in directive ) {
-                                if ( 'views' in oldDirective ) {
-                                    // update views
-                                    oldDirective.views = util.arrayMergeRecursive([oldDirective.views, directive.views]);
-                                } else {
-                                    // add views
-                                    oldDirective['views'] = directive.views;
                                 }
                             }
                         }
@@ -455,6 +428,30 @@ class Awy_Core_Model_Layout extends Class {
         return this;
     }
     /**
+     * Unregister single or all views as call back to a hook
+     * viewNames - string == ALL or boolean == true, 
+     * or an array of view names to unregister.
+     */
+    async hookClear(hookName, viewNames) {
+        let evtHlp = await Class.i('awy_core_model_events');
+        let util = await Class.i('awy_core_util_misc');
+        let eventName = 'Layout::hook:' + hookName;
+        if (true === viewNames || 'ALL' === viewNames) {
+            evtHlp.off(eventName, true);
+        } else {
+            // type cast to array
+            viewNames = util.arrayMergeRecursive([[], viewNames]);
+            if (Array.isArray(viewNames)) {
+                let clearViewName;
+                for ( clearViewName of viewNames ) {
+                    evtHlp.off(eventName, clearViewName);
+                }
+            }
+        }
+        return this;
+    }
+
+    /**
      * Register a call back to a hook
      */
     async hook(hookName, callback, args = {}, params = {}) {
@@ -475,7 +472,6 @@ class Awy_Core_Model_Layout extends Class {
             return;
         }
         layoutsApplied.push(args['name']);
-        //console.log(layoutsApplied);
         await this.applyLayout(args['name']);
     }
 
@@ -525,11 +521,8 @@ class Awy_Core_Model_Layout extends Class {
                 $this->hook($d['name'], $cb, $args, $params);
             }
         }
-        if (!empty($d['clear'])) {
-            $this->hookClear($d['name'], $d['clear']);
-        }
         */
-        // process this as example layout directive
+        
         // { hook: 'main', views: 'index' }
         if ('views' in args) {
             if (!Array.isArray(args.views)) {
@@ -546,6 +539,11 @@ class Awy_Core_Model_Layout extends Class {
             if ('use_meta' in args) {
                 //this.view(v).useMetaData();
             }
+        }
+        // { hook: 'main', clear: 'index' } 
+        // after view to enable { hook: 'main', clear: 'index' , views: 'index' }
+        if ('clear' in args) {
+            await this.hookClear(args.name, args['clear']);
         }
         // process this as example layout directive
         // { hook: 'main', text: 'Blah Blah' }

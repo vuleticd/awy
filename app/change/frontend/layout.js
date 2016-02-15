@@ -2,7 +2,7 @@ let l =  {
     /* apply changes on global mixin */
 	base: [
         /* append new custom view to footer */
-		{ hook: 'footer', clear: 'footer', views: 'customblock' },
+		{ hook: 'footer', views: 'customblock' },
         /* append multiple new custom views to footer */
         //{ hook: 'footer', views: ['customblock', 'anotherview'] },
         /* replace all footer content with custom view */
@@ -27,7 +27,7 @@ let l =  {
     */
 	"/custompage": [
 		{ include: 'base' },
-        //{ hook: 'footer', clear: 'footer' },
+        { hook: 'footer', clear: 'footer' },
 		{ hook: 'main', views: 'custompage' }
 	]
 }
